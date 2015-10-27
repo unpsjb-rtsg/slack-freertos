@@ -167,7 +167,7 @@ def main():
     if(args.bins):        
         # generate bins
         print("Generate binaries...")
-        subprocess.call("make -C {0} BATCH_TEST=1 DEBUG={1} TASK_CNT={2} RELEASE_CNT={3} SLACK={4} SLACK_K={5} SLACK_METHOD={6}".format(args.srcpath, args.debug, args.taskcnt, args.releasecnt, args.slack, slack_calc[args.slackcalc], slack_methods[args.slackmethod]), shell=True)
+        subprocess.call("make -C {0} BATCH_TEST=1 DEBUG={1} TASK_CNT={2} RELEASE_CNT={3} SLACK={4} SLACK_K={5} SLACK_METHOD={6} TEST_PATH={0}".format(args.srcpath, args.debug, args.taskcnt, args.releasecnt, args.slack, slack_calc[args.slackcalc], slack_methods[args.slackmethod]), shell=True)
     
     print("Done!")
 
