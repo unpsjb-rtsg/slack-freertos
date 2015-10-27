@@ -6,6 +6,7 @@ import glob
 import os
 import sys
 import csv
+import util
 from argparse import ArgumentParser
 from time import sleep
 
@@ -32,9 +33,9 @@ def read_results(ser, taskcnt):
 def get_args():
     """ Procesa argumentos de la linea de comandos """
     parser = ArgumentParser()
-    parser.add_argument("--port", help="Puerto COM", default=1, type=int)
+    parser.add_argument("--port", help="Puerto COM", default=None, type=str)
     parser.add_argument("--baudrate", help="Baudios", default=9600, type=int)
-    parser.add_argument("--drive", help="mbed drive", type=str)    
+    parser.add_argument("--drive", help="mbed drive", type=str, default=None)    
     parser.add_argument("--binpath", help="bin directory", type=str)
     parser.add_argument("--timeout", help="individual test timeout", type=int, default=None)
     parser.add_argument("--savefile", help="Save file", type=str, default="")
@@ -43,17 +44,50 @@ def get_args():
     parser.add_argument("--taskcnt", help="Number of tasks in the rts", type=int, default=10)
 
     return parser.parse_args()
-
-
+    
+    
+def get_mbed_drive_and_port():
+    mdslabels = ("mbed", "nucleo", "frdm")
+    disks = util.get_logicaldisks()
+    ports = util.get_serialports()
+    
+    mbed_drive = ""
+    mbed_port = ""
+    
+    for item in disks:
+        if (not item['name'] or not any([l in item['name'].lower() for l in mdslabels])):
+            continue
+        mbed_drive = item['disk']
+        break
+        
+    for item in ports:
+        if (not item['description'] or not any([l in item['description'].lower() for l in mdslabels])):
+            continue
+        mbed_port = item['port']
+        break
+        
+    return [mbed_drive, mbed_port]
+        
+    
 def main():
     args = get_args()
+    
+    mbeddp = get_mbed_drive_and_port()
+    
+    mbed_port = args.port
+    if args.port is None:
+        mbed_port = mbeddp[1]
+    
+    mbed_drive = ""
+    if args.drive is None:
+        mbed_drive = mbeddp[0]
     
     slack = { 0:'noss', 1:'ss' }
     slack_k = { 0:'d', 1:'k' }
     slack_method = { 0:'fixed', 1:'davis' }
 
     # create and configure serial connection to the mbed microcontroller
-    ser = serial.Serial(port=args.port - 1, baudrate=args.baudrate, timeout=args.timeout)
+    ser = serial.Serial(port=mbed_port, baudrate=args.baudrate, timeout=args.timeout)
     ser.setBreak(True)
 
     # search for all the bin files previously generated
@@ -103,8 +137,8 @@ def main():
             while(True):
                 try:
                     print("Copying {0}".format(bin_file))
-                    shutil.copy(bin_file, "/cygdrive/{0}/test.bin".format(args.drive))                    
-                    print("Testing {0}...".format(bin_file))
+                    shutil.copy(bin_file, os.path.join(mbed_drive, "test.bin"))
+                    print("Testing {0} ...".format(bin_file))
                     sleep(1)
                     ser.sendBreak()
                     r, results, s1, s2, s3 = read_results(ser, args.taskcnt)
@@ -121,13 +155,13 @@ def main():
                     break
                 except ValueError:
                     # something is wrong...
-                    print("Error testing {0}, trying again...".format(bin_file), file=sys.stderr)
+                    print("Error testing {0}, trying again ...".format(bin_file), file=sys.stderr)
                 except IndexError:
                     # 
-                    print("IndexError: {0}, trying again...".format(r), file=sys.stderr)
+                    print("IndexError: {0}, trying again ...".format(r), file=sys.stderr)
                 except (IOError, os.error) as why:
                     # an error with shutil.copy()
-                    print("IOerror: {0}, trying again...".format(str(why)), file=sys.stderr)
+                    print("IOerror: {0}, trying again ...".format(str(why)), file=sys.stderr)
                     break
             sleep(1)
 
