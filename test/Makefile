@@ -64,7 +64,7 @@ all: freertos $(BINS)
 
 clean:
 	@$(MAKE) -C $(FREERTOS_DIR) -f Makefile.mk clean TARGET=$(TARGET) USE_SLACK=1
-	@rm -f $(OBJS) $(ELFS) $(BINS) $(DEPS)
+	@$(RM) -f $(OBJS) $(ELFS) $(BINS) $(DEPS)
 	@echo "Cleaning binary files..."
 	
 freertos:
