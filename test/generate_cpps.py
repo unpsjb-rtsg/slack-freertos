@@ -109,8 +109,8 @@ def main():
     xml_file_list = glob.glob("{0}/*.xml".format(args.xmlpath));
         
     # remove previous generated bin files
-    print("Remove previous bin files...")
-    subprocess.call("make -C {0} clean".format(args.srcpath), shell=True)
+    print("Remove previous binary files...")
+    subprocess.call("make -C {0} clean".format(args.srcpath), shell=True, stdout=None, stderr=None)
 	
     if args.cpps:
         # remove previous generated source code files
@@ -167,7 +167,7 @@ def main():
     if(args.bins):        
         # generate bins
         print("Generate binaries...")
-        subprocess.call("make -C {0} BATCH_TEST=1 DEBUG={1} TASK_CNT={2} RELEASE_CNT={3} SLACK={4} SLACK_K={5} SLACK_METHOD={6} TEST_PATH={0}".format(args.srcpath, args.debug, args.taskcnt, args.releasecnt, args.slack, slack_calc[args.slackcalc], slack_methods[args.slackmethod]), shell=True)
+        subprocess.call("make -C {0} BATCH_TEST=1 DEBUG={1} TASK_CNT={2} RELEASE_CNT={3} SLACK={4} SLACK_K={5} SLACK_METHOD={6} TEST_PATH={0}".format(args.srcpath, args.debug, args.taskcnt, args.releasecnt, args.slack, slack_calc[args.slackcalc], slack_methods[args.slackmethod]), shell=True, stdout=None, stderr=None)
     
     print("Done!")
 

@@ -39,3 +39,6 @@
 .project
 .cproject
 language.settings.xml
+
+# Other
+Makefile.mine

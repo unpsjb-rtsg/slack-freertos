@@ -47,13 +47,16 @@ endif
 all: $(PROJECT).a
 
 clean:
-	rm -f $(PROJECT).bin $(PROJECT).a $(OBJECTS) $(DEPS)
+	@rm -f $(PROJECT).bin $(PROJECT).a $(OBJECTS) $(DEPS)
+	@echo "Cleaning FreeRTOS object files..."
 
 .c.o:
-	$(CC) $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu99 $(INCLUDE_PATHS) -o $@ $<
+	@$(CC) $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu99 $(INCLUDE_PATHS) -o $@ $<
+	@echo "CC $<"
 
 $(PROJECT).a: $(OBJECTS) $(SYS_OBJECTS)
-	$(AR) $(AR_FLAGS) $@ $^ 
+	@$(AR) $(AR_FLAGS) $@ $^ -c
+	@echo "AR $@"
 
 DEPS = $(OBJECTS:.o=.d) $(SYS_OBJECTS:.o=.d)
 -include $(DEPS)

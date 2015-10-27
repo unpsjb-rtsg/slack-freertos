@@ -29,13 +29,14 @@ else
   CC_FLAGS += -DNDEBUG -Os
 endif
 
-all: out/$(EXAMPLE).bin
+all: out/$(EXAMPLE).bin size
 
 generate_rtos: $(EXAMPLE).elf
 	$(OBJCOPY) -O binary $< $(RTOS_BIN_NAME)
 
 clean:
-	rm -f out/$(EXAMPLE).bin out/$(EXAMPLE).elf $(OBJECTS) $(DEPS)
+	@rm -f out/$(EXAMPLE).bin out/$(EXAMPLE).elf $(OBJECTS) $(DEPS)
+	@echo "Cleaning $(TARGET) files..."
 
 install:
 	 cp $(EXAMPLE).bin /cygdrive/g/
@@ -44,17 +45,23 @@ install:
 	$(AS) $(CPU) -o $@ $<
 
 .c.o:
-	$(CC)  $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu99   $(INCLUDE_PATHS) -o $@ $<
+	@$(CC)  $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu99   $(INCLUDE_PATHS) -o $@ $<
+	@echo "CC $<"
 
 .cpp.o:
-	$(CPP) $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu++98 $(INCLUDE_PATHS) -o $@ $<
-
+	@$(CPP) $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu++98 $(INCLUDE_PATHS) -o $@ $<
+	@echo "CPP $<"
 
 out/$(EXAMPLE).elf: $(OBJECTS) $(SYS_OBJECTS)
-	$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS)
+	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS)
+	@echo "LD $@"
 
 out/$(EXAMPLE).bin: out/$(EXAMPLE).elf
-	$(OBJCOPY) -O binary $< $@
+	@$(OBJCOPY) -O binary $< $@
+	@echo "OBJCOPY $@"
+	
+size: out/$(EXAMPLE).elf
+	$(SIZE) $<
 
 DEPS = $(OBJECTS:.o=.d) $(SYS_OBJECTS:.o=.d)
 -include $(DEPS)
