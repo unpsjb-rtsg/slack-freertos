@@ -21,7 +21,7 @@ Source code and scripts for executing the tests performed for the paper.
 4. Finally, execute the `generate_cpps.py` script in order to generate the source code and binary files. For example, in order to create binary files for the first 10 real-time systems in each XML file in `/rts/xmldir/`:
 
 ```
-python generate_cpps.py --template main.cpp --xmlpath /rts/xmldir/ --srcpath tests/Test1 --start 1 --count 50 --taskcnt 10 --releasecnt 10 --testsched --bins --cpps
+python generate_cpps.py --template main.cpp --xmlpath /rts/xmldir/ --srcpath tests/Test1 --start 1 --count 10 --taskcnt 10 --releasecnt 10 --testsched --bins --cpps
 ```
 
 ## Running the test
