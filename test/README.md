@@ -1,6 +1,6 @@
 # Tests
 
-This folder contains code for executing the tests performed in the paper.
+Source code and scripts for executing the tests performed for the paper.
 
 ## Required software
 
@@ -12,20 +12,22 @@ This folder contains code for executing the tests performed in the paper.
 
 ## Create a test
 
-1. Create a separate directory where all the required test files should be placed. In this example, we will use the Test1 as the name for this folder.
+1. Create a dedicated directory under the `tests` directory. All the required files will be placed in this directory. In this example, we will use `Test1` as the name for this folder.
 
-2. Copy into the Test1 directory the file the Makefile file. Update the variables GCC\_BIN, MBED\_DIR, FREERTOS\_DIR and SLACK\_DIR with the paths to the ARM C compiler, the mbed library, the FreeRTOS source code and the slack stealing modification.
+2. Copy into the `Test1` directory the `Makefile` file. Change the variable `GCC_BIN` with the path to the ARM C Compiler `bin` directory. Next, update the variables `MBED_DIR`, `FREERTOS_DIR` and `SLACK_DIR` if needed.
 
-3. Copy the FreeRTOSConfig.h file into the Test1 directory.
+3. Copy the `FreeRTOSConfig.h` file into the `Test1` directory.
 
-4. Execute the generate\_cpps.py script in order to generate the source code and binary files. For example:
-
-```
-python generate\_cpps.py --template main.cpp --xmlpath /rts/xmldir/ --srcpath Test1 --start 1 --count 50 --taskcnt 10 --releasecnt 10 --testsched --bins
-```
-
-5. Execute the run\_timing\_tests.py script to perform the tests. For example:
+4. Finally, execute the `generate_cpps.py` script in order to generate the source code and binary files. For example:
 
 ```
-python run\_timing\_tests.py --port 4 --baudrate 9600 --drive h --binpath Test1
+python generate_cpps.py --template main.cpp --xmlpath /rts/xmldir/ --srcpath tests/Test1 --start 1 --count 50 --taskcnt 10 --releasecnt 10 --testsched --bins --cpps
+```
+
+## Running the test
+
+Execute the `run_timing_tests.py` script to perform the tests. For example, if the mbed board was assigned the COM3 port, and is the H drive:
+
+```
+python run_timing_tests.py --port 4 --baudrate 9600 --drive h --binpath tests/Test1
 ```
