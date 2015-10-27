@@ -47,7 +47,7 @@ endif
 all: $(PROJECT).a
 
 clean:
-	@rm -f $(PROJECT).bin $(PROJECT).a $(OBJECTS) $(DEPS)
+	@$(RM) -f $(PROJECT).bin $(PROJECT).a $(OBJECTS) $(DEPS)
 	@echo "Cleaning FreeRTOS object files..."
 
 .c.o:
