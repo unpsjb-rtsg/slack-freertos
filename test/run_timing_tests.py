@@ -50,7 +50,7 @@ def main():
     
     slack = { 0:'noss', 1:'ss' }
     slack_k = { 0:'d', 1:'k' }
-    slack_method = { 0:'fixed', 1:'fast', 2:'davis', 3:'fixed2' }
+    slack_method = { 0:'fixed', 1:'davis' }
 
     # create and configure serial connection to the mbed microcontroller
     ser = serial.Serial(port=args.port - 1, baudrate=args.baudrate, timeout=args.timeout)

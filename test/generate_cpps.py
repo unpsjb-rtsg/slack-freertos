@@ -98,7 +98,7 @@ def main():
     args = get_args()
     
     slack_calc = { 'ss':0, 'k':1 }
-    slack_methods = { 'fixed':0, 'fast':1, 'davis':2, 'fixed2':3 } 
+    slack_methods = { 'fixed':0, 'davis':1 } 
     
     # make freertos library
 #    if args.freertos:
