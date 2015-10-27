@@ -3,9 +3,10 @@
 
 GCC_BIN=/cygdrive/c/Users/fep/Documents/bin/gcc-arm-none-eabi-4_9-2015q3/bin/
 
-# Use the mbed library and freertos version provided by default
-MBED_DIR=../../libs/mbed
-FREERTOS_DIR=../../libs/FreeRTOS
+# mbed library and freertos version provided by default
+MBED_DIR=../../../libs/mbed
+FREERTOS_DIR=../../../libs/FreeRTOS
+SLACK_DIR=../../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 
 FREERTOS_KERNEL_VERSION_NUMBER=v8.1.2
 
@@ -15,11 +16,11 @@ SYS_OBJECTS = $(MBED_DIR)/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/retarget.o $(MBED_DIR
 
 MBED_INCLUDE_PATHS = -I$(MBED_DIR) -I$(MBED_DIR)/TARGET_LPC1768 -I.$(MBED_DIR)/TARGET_LPC1768/TOOLCHAIN_GCC_ARM -I$(MBED_DIR)/TARGET_LPC1768/TARGET_NXP -I$(MBED_DIR)/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X -I$(MBED_DIR)/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X/TARGET_MBED_LPC1768
 FREERTOS_INCLUDE_PATHS =  -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable -I./
-INCLUDE_PATHS = -I. $(FREERTOS_INCLUDE_PATHS) $(MBED_INCLUDE_PATHS) -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
+INCLUDE_PATHS = -I. $(FREERTOS_INCLUDE_PATHS) $(MBED_INCLUDE_PATHS) -I$(SLACK_DIR)
 
 LIBRARY_PATHS = -L$(MBED_DIR)/TARGET_LPC1768/TOOLCHAIN_GCC_ARM -L$(FREERTOS_DIR)
 LIBRARIES = -lmbed -lfreertos
-LINKER_SCRIPT = ../LPC1768.ld
+LINKER_SCRIPT = ../../LPC1768.ld
 
 ############################################################################### 
 AS      = $(GCC_BIN)arm-none-eabi-as
