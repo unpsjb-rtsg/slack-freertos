@@ -5,9 +5,13 @@ This directory contains the source code, scripts and other resources needed to r
 ## Available tests
 
 The available tests are:
+
 1. Cost in CPU cycles of the vTaskDelayUntil() kernel function.
+
 2. Amount of ceil and floor operations performed by the Slack Stealing method.
+
 3. Execution cost of the Slack Stealing method in CPU cycles.
+
 4. Amount of for and while loops required by the Slack Stealing method.
 
 Modify the `configKERNEL_TEST` clause in the `FreeRTOSConfig.h` file to specify which test will be implemented in the BIN files.
