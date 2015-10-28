@@ -213,7 +213,7 @@ typedef struct tskTaskControlBlock
     
 	#endif /* configUSE_SLACK_STEALING */
     
-    #if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TRACE == 1 )
+    #if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TEST == 1 )
     BaseType_t xId;
     #endif
     
@@ -544,11 +544,11 @@ static inline void vSlackDecrementTasksSlack( TaskHandle_t pxTask, const TickTyp
 
     static BaseType_t xTaskCalculateTasksWcrt( void ) PRIVILEGED_FUNCTION;
     
-    #if ( configKERNEL_TRACE == 2 )
+    #if ( configKERNEL_TEST == 2 )
     static BaseType_t xCeilFloorCost = 0;
     #endif
 
-    #if ( configKERNEL_TRACE == 4 )
+    #if ( configKERNEL_TEST == 4 )
     static BaseType_t xLoopCost = 0;
     #endif
 
@@ -3995,7 +3995,7 @@ TickType_t uxReturn;
 	#include "tasks_test_access_functions.h"
 #endif
 
-#if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TRACE == 1 )
+#if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TEST == 1 )
     void vTaskSetParams( TaskHandle_t xTask, const BaseType_t xId )
 	{
 		TCB_t *pxTCB;
@@ -4131,7 +4131,7 @@ TickType_t uxReturn;
         // Until we process all the maximum priority tasks (including pxTask)        
         while( pxSsTaskListEndMarker != pxTaskListItem )
         {
-            #if ( configKERNEL_TRACE == 4 )
+            #if ( configKERNEL_TEST == 4 )
             xLoopCost = xLoopCost + 1;
             #endif
 
@@ -4140,7 +4140,7 @@ TickType_t uxReturn;
             // The number of instances of pxHigherPrioTask in [0, xT)
             xA = U_FLOOR( xTc, pxTask->xPeriod );
             
-            #if ( configKERNEL_TRACE == 2 )
+            #if ( configKERNEL_TEST == 2 )
             xCeilFloorCost = xCeilFloorCost + 1;
             #endif
 
@@ -4184,7 +4184,7 @@ TickType_t uxReturn;
         // process all the maximum priority tasks
         while( pxSsTaskListEndMarker != pxTaskListItem )
         {
-            #if ( configKERNEL_TRACE == 4 )
+            #if ( configKERNEL_TEST == 4 )
                 xLoopCost = xLoopCost + 1;
             #endif
 
@@ -4192,7 +4192,7 @@ TickType_t uxReturn;
         	// accumulated workload of higher priority tasks in [0, xT)
         	xW = xW + ( U_CEIL( xT, pxTask->xPeriod ) * pxTask->xWcet );
             
-            #if ( configKERNEL_TRACE == 2 )
+            #if ( configKERNEL_TEST == 2 )
                 xCeilFloorCost = xCeilFloorCost + 1;
             #endif
             
@@ -4283,13 +4283,13 @@ TickType_t uxReturn;
 
     static void prvTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc )
     {
-        #if ( configKERNEL_TRACE == 2 )
+        #if ( configKERNEL_TEST == 2 )
         xCeilFloorCost = 0;
         #endif
-        #if ( configKERNEL_TRACE == 3 )
+        #if ( configKERNEL_TEST == 3 )
         STOPWATCH_RESET();
         #endif
-        #if ( configKERNEL_TRACE == 4 )
+        #if ( configKERNEL_TEST == 4 )
         xLoopCost = 0;
         #endif
         
@@ -4300,13 +4300,13 @@ TickType_t uxReturn;
     	prvTaskCalculateSlack_davis1( xTask, xTc );
         #endif
         
-        #if ( ( configKERNEL_TRACE == 2 ) || ( configKERNEL_TRACE == 4 ) )
+        #if ( ( configKERNEL_TEST == 2 ) || ( configKERNEL_TEST == 4 ) )
         if (xTc > 0)
         {
             vTaskGetTraceInfo();
         }
         #endif
-        #if ( configKERNEL_TRACE == 3 )
+        #if ( configKERNEL_TEST == 3 )
         uint32_t cycles = CPU_CYCLES;
         if (xTc > 0)
         {
@@ -4396,7 +4396,7 @@ TickType_t uxReturn;
         // Find the slack in [intervalo, xDi)
         do
         {            
-            #if ( configKERNEL_TRACE == 4 )
+            #if ( configKERNEL_TEST == 4 )
             xLoopCost = xLoopCost + 1;
             #endif            
 
@@ -4404,13 +4404,13 @@ TickType_t uxReturn;
 
             xii = U_CEIL( xIntervalo, pxHigherPrioTask->xPeriod ) * pxHigherPrioTask->xPeriod;
             
-            #if ( configKERNEL_TRACE == 2 )
+            #if ( configKERNEL_TEST == 2 )
             xCeilFloorCost = xCeilFloorCost + 1;
             #endif            
 
             while( xii < xDi )
             {
-                #if ( configKERNEL_TRACE == 4 )
+                #if ( configKERNEL_TEST == 4 )
                 xLoopCost = xLoopCost + 1;
                 #endif            
 
@@ -4712,7 +4712,7 @@ TickType_t uxReturn;
     #endif
     /*-----------------------------------------------------------*/
 
-#if ( configKERNEL_TRACE == 2 )
+#if ( configKERNEL_TEST == 2 )
     /* Slack method cost measured in ceil/floor operations */
     void vTaskGetTraceInfo()
     {
@@ -4725,7 +4725,7 @@ TickType_t uxReturn;
 #endif
     /*-----------------------------------------------------------*/
 
-#if ( configKERNEL_TRACE == 3 )
+#if ( configKERNEL_TEST == 3 )
     /* Measures the cost of prvTaskCalculateSlack() in cpu cycles */
     void vTaskGetTraceInfo( const uint32_t cycles )
     {
@@ -4738,7 +4738,7 @@ TickType_t uxReturn;
 #endif
     /*-----------------------------------------------------------*/
 
-#if ( configKERNEL_TRACE == 4 )
+#if ( configKERNEL_TEST == 4 )
     /* Slack method cost measured in ceil/floor operations */
     void vTaskGetTraceInfo()
     {
@@ -4753,7 +4753,7 @@ TickType_t uxReturn;
 
 #endif /* configUSE_SLACK_STEALING */
 
-#if ( configKERNEL_TRACE == 1 )
+#if ( configKERNEL_TEST == 1 )
     void vTaskGetTraceInfo( xType *pxArray, uint32_t time, uint32_t r )
     {
         if ( (*pxArray)[pxCurrentTCB->xId][0] < RELEASE_COUNT )

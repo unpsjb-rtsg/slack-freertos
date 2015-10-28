@@ -87,7 +87,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_TICK_HOOK				0
 #define configCPU_CLOCK_HZ				( SystemCoreClock )
 #define configTICK_RATE_HZ				( ( TickType_t ) 1000 )
-#define configMAX_PRIORITIES			TASK_CNT + 2
+#define configMAX_PRIORITIES			TASK_COUNT_PARAM + 2
 #define configMINIMAL_STACK_SIZE		( ( unsigned short ) 140 )
 #define configTOTAL_HEAP_SIZE			( ( size_t ) ( 23 * 1024 ) )
 #define configMAX_TASK_NAME_LEN			( 10 )
@@ -211,15 +211,16 @@ header file. */
 uint32_t ulCalcUsecsFromStopwatch( uint32_t cycles );
 uint32_t ulCalcNsecsFromStopwatch( uint32_t cycles );
 
-#define TASK_COUNT TASK_CNT
-#define RELEASE_COUNT RELEASE_CNT
+#define TASK_COUNT TASK_COUNT_PARAM
+#define RELEASE_COUNT RELEASE_COUNT_PARAM
 
 /* trace */
 #define configDO_SLACK_TRACE 0
-#define configKERNEL_TRACE 3
+/* Test to perform. */
+#define configKERNEL_TEST 3
 
 /* === delay_until() cost ================================================== */
-#if configKERNEL_TRACE == 1
+#if configKERNEL_TEST == 1
 void vMacroTaskDelay( void );
 void vMacroTaskSwitched( void );
 #define traceTASK_DELAY_UNTIL() vMacroTaskDelay();
@@ -234,21 +235,21 @@ void vTaskGetTraceInfo( xType *pxArray, uint32_t time, uint32_t r );
 /* ========================================================================= */
 
 /* === slack methods ceil/floor cost ======================================= */
-#if configKERNEL_TRACE == 2
+#if configKERNEL_TEST == 2
 typedef uint32_t xType[TASK_COUNT][RELEASE_COUNT + 1];
 void vTaskGetTraceInfo( void );
 #endif
 /* ========================================================================= */
 
 /* === prvTaskCalculateSlack cost ========================================== */
-#if configKERNEL_TRACE == 3
+#if configKERNEL_TEST == 3
 typedef uint32_t xType[TASK_COUNT][RELEASE_COUNT + 1];
 void vTaskGetTraceInfo( uint32_t cycles );
 #endif
 /* ========================================================================= */
 
 /* === prvTaskCalculateSlack cost measured in loops ======================== */
-#if configKERNEL_TRACE == 4
+#if configKERNEL_TEST == 4
 typedef uint32_t xType[TASK_COUNT][RELEASE_COUNT + 1];
 void vTaskGetTraceInfo( void );
 #endif

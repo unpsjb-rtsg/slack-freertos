@@ -17,13 +17,13 @@ void vTasksGetSlacks( int32_t *taskSlackArray ) PRIVILEGED_FUNCTION;
     extern int xRecSlackIdx;
 #endif
 
-#if ( configKERNEL_TRACE == 2 ) || ( configKERNEL_TRACE == 3 ) || ( configKERNEL_TRACE == 4 )
+#if ( configKERNEL_TEST == 2 ) || ( configKERNEL_TEST == 3 ) || ( configKERNEL_TEST == 4 )
     extern xType *cs_costs;
 #endif
 
 #endif /* configUSE_SLACK_STEALING */
 
-#if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TRACE == 1 )
+#if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TEST == 1 )
     /* Set the Id */
     void vTaskSetParams( TaskHandle_t xTask, const BaseType_t xId ) PRIVILEGED_FUNCTION;
 #endif

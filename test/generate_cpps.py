@@ -102,12 +102,6 @@ def main():
     slack_calc = { 'ss':0, 'k':1 }
     slack_methods = { 'fixed':0, 'davis':1 } 
     
-    # make freertos library
-#    if args.freertos:
-#        print("Make FreeRTOS library...")
-#        subprocess.call("make -C {0}/FreeRTOS/ clean".format(args.srcpath), shell=True)
-#        subprocess.call("make -C {0}/FreeRTOS/ SLACK={1} SLACK_K={2} SLACK_METHOD={3} DEBUG={4} TASK_CNT={5} RELEASE_CNT={6}".format(args.srcpath, args.slack, slack_calc[args.slackcalc], slack_methods[args.slackmethod], args.debug, args.taskcnt, args.releasecnt), shell=True)
-    
     xml_file_list = glob.glob("{0}/*.xml".format(args.xmlpath));
         
     # remove previous generated bin files
@@ -169,7 +163,7 @@ def main():
     if(args.bins):        
         # generate bins
         print("Generate binaries...")
-        returncode = subprocess.call("make -C {0} BATCH_TEST=1 DEBUG={1} TASK_CNT={2} RELEASE_CNT={3} SLACK={4} SLACK_K={5} SLACK_METHOD={6} TEST_PATH={0}".format(args.srcpath, args.debug, args.taskcnt, args.releasecnt, args.slack, slack_calc[args.slackcalc], slack_methods[args.slackmethod]), shell=True, stdout=None, stderr=None)
+        returncode = subprocess.call("make -C {0} BATCH_TEST=1 DEBUG={1} TASK_COUNT_PARAM={2} RELEASE_COUNT_PARAM={3} SLACK={4} SLACK_K={5} SLACK_METHOD={6} TEST_PATH={0}".format(args.srcpath, args.debug, args.taskcnt, args.releasecnt, args.slack, slack_calc[args.slackcalc], slack_methods[args.slackmethod]), shell=True, stdout=None, stderr=None)
     
     if returncode != 0:
         print "Something went wrong!"
