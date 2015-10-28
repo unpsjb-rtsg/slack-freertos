@@ -120,7 +120,7 @@ xType *cs_costs;
 
 int main() 
 {
-    #if ( configKERNEL_TRACE == 1 )
+    #if ( configKERNEL_TEST == 1 )
     ulDelayTime = 0;
     ulDelayTime1 = 0;
     #endif
@@ -147,7 +147,7 @@ for idx, task in enumerate( rts_to_test ):
 // [[[end]]]
 #endif
 
-#if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TRACE == 1 )
+#if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TEST == 1 )
     /* vTaskSetParams( task_handle[ 0 ], 0 ); */
 /* [[[cog
 for idx, task in enumerate( rts_to_test ):
@@ -162,13 +162,13 @@ for idx, task in enumerate( rts_to_test ):
     /* Zeroes cs_cost[][] */
     for(int i = 0; i < TASK_COUNT; i++)
     {
-        #if ( configKERNEL_TRACE == 1 )
+        #if ( configKERNEL_TEST == 1 )
         for(int j = 0; j < RELEASE_COUNT + 2; j++) 
         {            
             (*cs_costs)[i][j] = 0;
         }
         #endif
-        #if ( configKERNEL_TRACE == 2 || configKERNEL_TRACE == 3 || configKERNELTRACE == 4 )
+        #if ( configKERNEL_TEST == 2 || configKERNEL_TEST == 3 || configKERNELTRACE == 4 )
         for(int j = 0; j < RELEASE_COUNT + 1; j++) 
         {            
             (*cs_costs)[i][j] = 0;
@@ -204,12 +204,12 @@ void task_body( void* params )
 				for(int i = 0; i < TASK_COUNT; i++)
 				{
 					pc.printf("%d\t", i);
-                    #if ( configKERNEL_TRACE == 1 )
+                    #if ( configKERNEL_TEST == 1 )
 					for(int j = 2; j < RELEASE_COUNT + 2; j++) {
 						pc.printf( "%d\t", (*cs_costs)[i][j]);
 					}
                     #endif
-                    #if ( configKERNEL_TRACE == 2 || configKERNEL_TRACE == 3 || configKERNEL_TRACE == 4 )
+                    #if ( configKERNEL_TEST == 2 || configKERNEL_TEST == 3 || configKERNEL_TEST == 4 )
                     for(int j = 1; j < RELEASE_COUNT + 1; j++) {
 						pc.printf( "%d\t", (*cs_costs)[i][j]);
 					}
@@ -325,7 +325,7 @@ void vEatCpu( BaseType_t ticks )
 
 /* ========================================================================= */
 
-#if ( configKERNEL_TRACE == 1 )
+#if ( configKERNEL_TEST == 1 )
 void vMacroTaskDelay()
 {
 	STOPWATCH_RESET();
