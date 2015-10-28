@@ -1,12 +1,12 @@
-# Tests
+# MBED LPC1768 tests
 
-Source code and scripts for executing the tests performed for the paper.
+This directory contains the source code, scripts and other resources needed to run several performance tests. This evaluations run on the mbed LPC1768 board.
 
 ## Required software
 
 * ARM C Compiler. We recommend GNU Tools for ARM (https://launchpad.net/gcc-arm-embedded).
-* Mbed library.
-* FreeRTOS source code.
+* Mbed library. A copy is provided in the `libs/mbed` directory.
+* FreeRTOS source code. A copy of FreeRTOS is provided in the `libs/FreeRTOS` directory.
 * Python 2.7 (3.x should work fine too).
 * Python modules cog (http://nedbatchelder.com/code/cog/) and pyserial (http://pyserial.sourceforge.net/).
 
