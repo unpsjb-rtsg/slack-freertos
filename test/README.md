@@ -26,8 +26,14 @@ python generate_cpps.py --template main.cpp --xmlpath /rts/xmldir/ --srcpath tes
 
 ## Running the test
 
-Execute the `run_timing_tests.py` script to perform the tests. For example, if the mbed board was assigned the COM4 port, and is the H drive:
+Execute the `run_timing_tests.py` script to perform the tests. For example, if the mbed board was assigned the COM4 port and the H drive letter:
 
 ```
-python run_timing_tests.py --port 4 --baudrate 9600 --drive h --binpath tests/Test1
+python run_timing_tests.py --port COM4 --baudrate 9600 --drive H: --binpath tests/Test1
+```
+
+The script can detect the mbed board, and then only the `binpath` parameter is required:
+
+```
+python run_timing_tests.py --binpath tests/Test1
 ```
