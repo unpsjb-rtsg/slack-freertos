@@ -53,8 +53,6 @@ endif
 
 ############################################################################### 
 
-OBJDIR=bin
-
 SRCS = $(wildcard *.cpp)
 OBJS = $(SRCS:.cpp=.o)
 ELFS = $(OBJS:.o=.elf)
