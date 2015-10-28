@@ -216,7 +216,12 @@ uint32_t ulCalcNsecsFromStopwatch( uint32_t cycles );
 
 /* trace */
 #define configDO_SLACK_TRACE 0
-/* Test to perform. */
+/* Test to perform.:
+1. Cost in CPU cycles of the vTaskDelayUntil() kernel function.
+2. Amount of ceil and floor operations performed by the Slack Stealing method.
+3. Execution cost of the Slack Stealing method in CPU cycles.
+4. Amount of for and while loops required by the Slack Stealing method.
+*/
 #define configKERNEL_TEST 3
 
 /* === delay_until() cost ================================================== */
