@@ -3,10 +3,10 @@ library(stringr)    # str_extract
 library(reshape2)   # melt
 library(ggplot2)    # ggplot
 
-source('summarySE.r')  # SummarySE function
+source('summarySE.R')  # SummarySE function
 
 # read the results
-r <- read.table("resultados2.txt")
+r <- read.table("tests/Test1/results.txt")
 
 # extract UF and number of tasks
 r$u <- str_extract(r$V12, "u[0-9]*")
