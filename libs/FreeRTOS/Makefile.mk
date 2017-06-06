@@ -1,22 +1,42 @@
 # FreeRTOS library Makefile
 
-GCC_BIN?=$(GCC_BIN_PATH)
+GCC_BIN ?= $(GCC_BIN_PATH)
 
 PROJECT = libfreertos
-OBJECTS = ./queue.o ./list.o ./portable/heap_1.o ./portable/port.o
-INCLUDE_PATHS = -I. -I./include -I./portable -I$(APP_DIR)
+
+OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/queue.o 
+OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/list.o 
+OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/MemMang/heap_1.o 
+OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM3/port.o
+
+INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)
+INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/include
+INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM3
+INCLUDE_PATHS += -I$(APP_DIR)
 
 ifeq ($(USE_SLACK), 1)
   OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
   INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 else
-  OBJECTS += ./tasks.o
+  OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
 endif
 
 ifeq ($(TZ), 1)
-  OBJECTS += ../Tracealizer/trcBase.o ../Tracealizer/trcHardwarePort.o ../Tracealizer/trcKernel.o ../Tracealizer/trcKernelPortFreeRTOS.o ../Tracealizer/trcUser.o
-  MBED_INCLUDE_PATHS = -I../../libs/mbed/TARGET_LPC1768 -I../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X/TARGET_MBED_LPC1768
-  INCLUDE_PATHS += -I../Tracealizer/Include -I../Tracealizer/ConfigurationTemplate $(MBED_INCLUDE_PATHS)  
+  OBJECTS += ../Tracealizer/trcBase.o
+  OBJECTS += ../Tracealizer/trcHardwarePort.o
+  OBJECTS += ../Tracealizer/trcKernel.o
+  OBJECTS += ../Tracealizer/trcKernelPortFreeRTOS.o
+  OBJECTS += ../Tracealizer/trcUser.o
+  
+  MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768
+  MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM
+  MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP
+  MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X
+  MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X/TARGET_MBED_LPC1768
+  
+  INCLUDE_PATHS += -I../Tracealizer/Include
+  INCLUDE_PATHS += -I../Tracealizer/ConfigurationTemplate
+  INCLUDE_PATHS +=$(MBED_INCLUDE_PATHS)  
 endif
 
 ############################################################################### 
