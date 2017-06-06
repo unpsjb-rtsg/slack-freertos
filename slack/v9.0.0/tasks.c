@@ -1132,22 +1132,6 @@ UBaseType_t x;
 
 #endif /* configUSE_SLACK_STEALING */
 
-	#if ( configUSE_SLACK_STEALING == 1 )
-	{
-		/* The new task is now in the ready list, so it is its first
-		release. */
-		pxNewTCB->uxReleaseCount = 1UL;
-
-		if( uxPriority != tskIDLE_PRIORITY )
-		{
-			if( uxPriority < ( configMAX_PRIORITIES - 1 ) )
-			{
-				vListInsert( &xSsTaskList, &( ( pxNewTCB )->xSsTaskListItem ) );
-			}
-		}
-	}
-	#endif
-
 	if( ( void * ) pxCreatedTask != NULL )
 	{
 		/* Pass the handle out in an anonymous way.  The handle can be used to
@@ -1219,6 +1203,22 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB )
 		traceTASK_CREATE( pxNewTCB );
 
 		prvAddTaskToReadyList( pxNewTCB );
+
+#if ( configUSE_SLACK_STEALING == 1 )
+{
+	/* The new task is now in the ready list, so it is its first
+	release. */
+	pxNewTCB->uxReleaseCount = 1UL;
+
+	if( pxNewTCB->uxPriority != tskIDLE_PRIORITY )
+	{
+		if( pxNewTCB->uxPriority < ( configMAX_PRIORITIES - 1 ) )
+		{
+			vListInsert( &xSsTaskList, &( ( pxNewTCB )->xSsTaskListItem ) );
+		}
+	}
+}
+#endif
 
 		portSETUP_TCB( pxNewTCB );
 	}
