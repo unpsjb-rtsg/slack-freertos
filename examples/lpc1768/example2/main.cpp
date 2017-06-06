@@ -49,6 +49,7 @@ TickType_t xTaskPeriods[] = { TASK_1_PERIOD, TASK_2_PERIOD, TASK_3_PERIOD, TASK_
 int main()
 {
 	pc.baud(9600);
+    pc.printf("Example 2\n");
 
 	// turn off all the on board LEDs.
 	leds[0] = 0;
@@ -72,8 +73,6 @@ int main()
     /* Aperiodic task -- it must start suspended */
     xTaskCreate ( aperiodic_task_body, "TaskA", 256, NULL, configMAX_PRIORITIES - 1, NULL );
 #endif
-
-    pc.printf("Example 2\n");
 
     vTaskStartScheduler();
 
