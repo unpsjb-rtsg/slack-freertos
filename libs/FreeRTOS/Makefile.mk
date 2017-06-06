@@ -40,8 +40,8 @@ ifeq ($(TZ), 1)
 endif
 
 ############################################################################### 
-AR		= $(GCC_BIN)arm-none-eabi-ar
-CC      = $(GCC_BIN)arm-none-eabi-gcc
+AR = $(GCC_BIN)arm-none-eabi-ar
+CC = $(GCC_BIN)arm-none-eabi-gcc
 
 CPU = -mcpu=cortex-m3 -mthumb
 # removed -fno-common
@@ -51,7 +51,11 @@ CC_SYMBOLS = -D__REDLIB__ -D__CODE_RED -DTARGET_LPC1768 -DTARGET_M3 -DTARGET_NXP
 
 # Required for the test (see test directory)
 ifeq ($(TEST), 1)
-  CC_SYMBOLS +=  -DTASK_COUNT_PARAM=$(TASK_COUNT_PARAM) -DRELEASE_COUNT_PARAM=$(RELEASE_COUNT_PARAM) -DSLACK=$(SLACK) -DSLACK_K=$(SLACK_K) -DSLACK_METHOD=$(SLACK_METHOD)
+  CC_SYMBOLS += -DTASK_COUNT_PARAM=$(TASK_COUNT_PARAM)
+  CC_SYMBOLS += -DRELEASE_COUNT_PARAM=$(RELEASE_COUNT_PARAM)
+  CC_SYMBOLS += -DSLACK=$(SLACK) 
+  CC_SYMBOLS += -DSLACK_K=$(SLACK_K)
+  CC_SYMBOLS += -DSLACK_METHOD=$(SLACK_METHOD)
 endif
 
 AR_FLAGS = -r
@@ -64,19 +68,19 @@ else
   CC_SYMBOLS += -DNDEBUG
 endif
 
-all: $(PROJECT).a
+all: $(PROJECT).a	
 
 clean:
-	@$(RM) -f $(PROJECT).bin $(PROJECT).a $(OBJECTS) $(DEPS)
-	@echo "Cleaning FreeRTOS object files..."
+	+@echo "Cleaning FreeRTOS object files..."
+	@rm -f $(PROJECT).bin $(PROJECT).a $(OBJECTS) $(DEPS)	
 
 .c.o:
+	+@echo "Compile: $<"
 	@$(CC) $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu99 $(INCLUDE_PATHS) -o $@ $<
-	@echo "CC $<"
 
 $(PROJECT).a: $(OBJECTS) $(SYS_OBJECTS)
+	+@echo "Linking: $@"
 	@$(AR) $(AR_FLAGS) $@ $^ -c
-	@echo "AR $@"
 
 DEPS = $(OBJECTS:.o=.d) $(SYS_OBJECTS:.o=.d)
 -include $(DEPS)

@@ -49,3 +49,6 @@ Makefile.mine
 # mbed object files and libraries should be versioned
 !libs/mbed/**/*.o
 !libs/mbed/**/*.a
+
+# build directory
+build
