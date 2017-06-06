@@ -43,6 +43,7 @@ language.settings.xml
 
 # Other
 *.pdf
+*.rhistory
 Makefile.mine
 
 # mbed object files and libraries should be versioned
