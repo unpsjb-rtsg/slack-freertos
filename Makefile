@@ -4,6 +4,7 @@
 -include Makefile.mine
 
 ############################################################################### 
+GCC_BIN =
 AS      = $(GCC_BIN)arm-none-eabi-as
 CC      = $(GCC_BIN)arm-none-eabi-gcc
 CPP     = $(GCC_BIN)arm-none-eabi-g++
