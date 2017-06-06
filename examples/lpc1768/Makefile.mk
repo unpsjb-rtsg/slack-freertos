@@ -8,12 +8,32 @@ EXAMPLE = $(TARGET)
 OBJECTS += ./$(EXAMPLE)/main.o 
 OBJECTS += ./utils/utils.o
 
-SYS_OBJECTS = ../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/retarget.o ../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/system_LPC17xx.o ../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/board.o ../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/cmsis_nvic.o ../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/startup_LPC17xx.o 
-MBED_INCLUDE_PATHS = -I../../libs/mbed -I../../libs/mbed/TARGET_LPC1768 -I../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X/TARGET_MBED_LPC1768
-FREERTOS_INCLUDE_PATHS =  -I../../libs/FreeRTOS/$(FREERTOS_KERNEL_VERSION_NUMBER)/include -I../../libs/FreeRTOS/$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM3
-INCLUDE_PATHS = -I./$(EXAMPLE)/ $(FREERTOS_INCLUDE_PATHS) $(MBED_INCLUDE_PATHS) -I./utils/ -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
-LIBRARY_PATHS = -L../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM -L../../libs/FreeRTOS
+SYS_OBJECTS += ../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/retarget.o 
+SYS_OBJECTS += ../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/system_LPC17xx.o
+SYS_OBJECTS += ../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/board.o 
+SYS_OBJECTS += ../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/cmsis_nvic.o 
+SYS_OBJECTS += ../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/startup_LPC17xx.o 
+
+MBED_INCLUDE_PATHS += -I../../libs/mbed 
+MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768
+MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM
+MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP
+MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X
+MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X/TARGET_MBED_LPC1768
+
+FREERTOS_INCLUDE_PATHS += -I../../libs/FreeRTOS/$(FREERTOS_KERNEL_VERSION_NUMBER)/include
+FREERTOS_INCLUDE_PATHS += -I../../libs/FreeRTOS/$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM3
+
+INCLUDE_PATHS += -I./$(EXAMPLE)
+INCLUDE_PATHS += -I./utils/ 
+INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
+INCLUDE_PATHS += $(FREERTOS_INCLUDE_PATHS) 
+INCLUDE_PATHS += $(MBED_INCLUDE_PATHS) 
+
+LIBRARY_PATHS += -L../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM 
+LIBRARY_PATHS += -L../../libs/FreeRTOS
 LIBRARIES = -lmbed -lfreertos
+
 LINKER_SCRIPT = ./LPC1768.ld
 
 ifeq ($(TZ), 1)
@@ -40,8 +60,8 @@ generate_rtos: $(BUILD_DIR)/$(EXAMPLE).elf
 	$(OBJCOPY) -O binary $< $(RTOS_BIN_NAME)
 
 clean:
+	+@echo "Cleaning $(TARGET) files..."
 	@rm -f $(BUILD_DIR)/$(EXAMPLE).bin $(BUILD_DIR)/$(EXAMPLE).elf $(OBJECTS) $(DEPS)
-	@echo "Cleaning $(TARGET) files..."
 
 install:
 	 cp $(EXAMPLE).bin /cygdrive/g/
@@ -50,20 +70,20 @@ install:
 	$(AS) $(CPU) -o $@ $<
 
 .c.o:
-	@$(CC)  $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu99   $(INCLUDE_PATHS) -o $@ $<
-	@echo "CC $<"
+	+@echo "Compile: $<"
+	@$(CC)  $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu99   $(INCLUDE_PATHS) -o $@ $<	
 
 .cpp.o:
-	@$(CPP) $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu++98 $(INCLUDE_PATHS) -o $@ $<
-	@echo "CPP $<"
+	+@echo "Compile: $<"
+	@$(CPP) $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu++98 $(INCLUDE_PATHS) -o $@ $<	
 
 $(BUILD_DIR)/$(EXAMPLE).elf: $(OBJECTS) $(SYS_OBJECTS)
+	+@echo "LD $@"
 	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS)
-	@echo "LD $@"
 
 $(BUILD_DIR)/$(EXAMPLE).bin: $(BUILD_DIR)/$(EXAMPLE).elf
+	+@echo "OBJCOPY $@"
 	@$(OBJCOPY) -O binary $< $@
-	@echo "OBJCOPY $@"
 	
 size: $(BUILD_DIR)/$(EXAMPLE).elf
 	$(SIZE) $<
