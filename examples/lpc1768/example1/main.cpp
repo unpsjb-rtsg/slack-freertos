@@ -57,10 +57,10 @@ int main()
 	leds[3] = 0;
 
     // create periodic tasks
-    xTaskCreate( task_body, "Task1", 256, ( TickType_t * ) 0, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
-    xTaskCreate( task_body, "Task2", 256, ( TickType_t * ) 1, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
-    xTaskCreate( task_body, "Task3", 256, ( TickType_t * ) 2, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
-    xTaskCreate( task_body, "Task4", 256, ( TickType_t * ) 3, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
+    xTaskCreate( task_body, "T1", 256, ( TickType_t * ) 0, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
+    xTaskCreate( task_body, "T2", 256, ( TickType_t * ) 1, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
+    xTaskCreate( task_body, "T3", 256, ( TickType_t * ) 2, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
+    xTaskCreate( task_body, "T4", 256, ( TickType_t * ) 3, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
     // additional parameters needed by the slack stealing framework
@@ -91,7 +91,7 @@ void task_body( void* params )
 
         vTaskSuspendAll();
 		vTasksGetSlacks( slackArray );
-		pc.printf("%s - Tick: %d - AS: %d - [ %d, %d, %d, %d ]\n",
+		pc.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\n",
 				pcTaskGetTaskName(NULL), slackArray[0], slackArray[2],
 				slackArray[3], slackArray[4], slackArray[5], slackArray[6]);
 		xTaskResumeAll();
