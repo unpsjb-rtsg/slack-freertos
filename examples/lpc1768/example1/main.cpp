@@ -48,6 +48,7 @@ TickType_t xTaskPeriods[] = { TASK_1_PERIOD, TASK_2_PERIOD, TASK_3_PERIOD, TASK_
 int main()
 {
 	pc.baud(9600);
+    pc.printf("Example 1\n");
 
 	// turn off all the on board LEDs.
 	leds[0] = 0;
@@ -56,10 +57,10 @@ int main()
 	leds[3] = 0;
 
     // create periodic tasks
-    xTaskCreate( task_body, "Task1", 256, ( TickType_t * ) 0, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
-    xTaskCreate( task_body, "Task2", 256, ( TickType_t * ) 1, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
-    xTaskCreate( task_body, "Task3", 256, ( TickType_t * ) 2, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
-    xTaskCreate( task_body, "Task4", 256, ( TickType_t * ) 3, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
+    xTaskCreate( task_body, "T1", 256, ( TickType_t * ) 0, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
+    xTaskCreate( task_body, "T2", 256, ( TickType_t * ) 1, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
+    xTaskCreate( task_body, "T3", 256, ( TickType_t * ) 2, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
+    xTaskCreate( task_body, "T4", 256, ( TickType_t * ) 3, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
     // additional parameters needed by the slack stealing framework
@@ -68,8 +69,6 @@ int main()
     vTaskSetParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
     vTaskSetParams( task_handles[ 3 ], TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 #endif
-
-    pc.printf("Example 1\n");
 
     vTaskStartScheduler();
 
@@ -90,12 +89,12 @@ void task_body( void* params )
 		vUtilsEatCpu( 1000 );
 		leds[ xTaskId ] = 0;
 
-        taskENTER_CRITICAL();
+        vTaskSuspendAll();
 		vTasksGetSlacks( slackArray );
-		pc.printf("%s - Tick: %d - AS: %d - [ %d, %d, %d, %d ]\n",
+		pc.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\n",
 				pcTaskGetTaskName(NULL), slackArray[0], slackArray[2],
 				slackArray[3], slackArray[4], slackArray[5], slackArray[6]);
-		taskEXIT_CRITICAL();
+		xTaskResumeAll();
 
 		vTaskDelayUntil( &xPreviousWakeTime, xTaskPeriods[ xTaskId ] );
     }

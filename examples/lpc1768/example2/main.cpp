@@ -49,6 +49,7 @@ TickType_t xTaskPeriods[] = { TASK_1_PERIOD, TASK_2_PERIOD, TASK_3_PERIOD, TASK_
 int main()
 {
 	pc.baud(9600);
+    pc.printf("Example 2\n");
 
 	// turn off all the on board LEDs.
 	leds[0] = 0;
@@ -57,10 +58,10 @@ int main()
 	leds[3] = 0;
 
     // create periodic tasks
-    xTaskCreate( task_body, "Task1", 256, ( TickType_t * ) 0, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
-    xTaskCreate( task_body, "Task2", 256, ( TickType_t * ) 1, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
-    xTaskCreate( task_body, "Task3", 256, ( TickType_t * ) 2, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
-    xTaskCreate( task_body, "Task4", 256, ( TickType_t * ) 3, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
+    xTaskCreate( task_body, "T1", 256, ( TickType_t * ) 0, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
+    xTaskCreate( task_body, "T2", 256, ( TickType_t * ) 1, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
+    xTaskCreate( task_body, "T3", 256, ( TickType_t * ) 2, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
+    xTaskCreate( task_body, "T4", 256, ( TickType_t * ) 3, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
     // additional parameters needed by the slack stealing framework
@@ -70,10 +71,8 @@ int main()
     vTaskSetParams( task_handles[ 3 ], TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 
     /* Aperiodic task -- it must start suspended */
-    xTaskCreate ( aperiodic_task_body, "TaskA", 256, NULL, configMAX_PRIORITIES - 1, NULL );
+    xTaskCreate ( aperiodic_task_body, "TA", 256, NULL, configMAX_PRIORITIES - 1, NULL );
 #endif
-
-    pc.printf("Example 2\n");
 
     vTaskStartScheduler();
 
@@ -86,21 +85,23 @@ void aperiodic_task_body( void* params )
 
 	for(;;)
 	{
-		taskENTER_CRITICAL();
+		vTaskSuspendAll();
 		vTasksGetSlacks( slackArray );
-		pc.printf("%s - Tick: %d - AS: %d - [ %d, %d, %d, %d ] (START)\n",
+		//pc.printf("%s - Tick: %d - AS: %d - [ %d, %d, %d, %d ] (START)\n",
+		pc.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\tS\n",
 				pcTaskGetTaskName(NULL), slackArray[0], slackArray[2],
 				slackArray[3], slackArray[4], slackArray[5], slackArray[6]);
-		taskEXIT_CRITICAL();
+		xTaskResumeAll();
 
 		vUtilsEatCpu( 2000 );
 
-		taskENTER_CRITICAL();
+		vTaskSuspendAll();
 		vTasksGetSlacks( slackArray );
-		pc.printf("%s - Tick: %d - AS: %d - [ %d, %d, %d, %d ] (END)\n",
+		//pc.printf("%s - Tick: %d - AS: %d - [ %d, %d, %d, %d ] (END)\n",
+		pc.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\tE\n",
 				pcTaskGetTaskName(NULL), slackArray[0], slackArray[2],
 				slackArray[3], slackArray[4], slackArray[5], slackArray[6]);
-		taskEXIT_CRITICAL();
+		xTaskResumeAll();
 
 		vTaskDelay( rand() % 4000 );
 	}
@@ -122,7 +123,7 @@ void task_body( void* params )
 
         taskENTER_CRITICAL();
 		vTasksGetSlacks( slackArray );
-		pc.printf("%s - Tick: %d - AS: %d - [ %d, %d, %d, %d ]\n",
+		pc.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\n",
 				pcTaskGetTaskName(NULL), slackArray[0], slackArray[2],
 				slackArray[3], slackArray[4], slackArray[5], slackArray[6]);
 		taskEXIT_CRITICAL();
