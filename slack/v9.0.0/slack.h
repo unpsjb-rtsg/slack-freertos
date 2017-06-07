@@ -68,7 +68,7 @@ void vSlackDecrementAllTasksSlack( const TickType_t xTicks, const TickType_t xTi
 void vSlackDecrementTasksSlack( TaskHandle_t pxTask, const TickType_t xTicks, const TickType_t xTickCount, const List_t * pxTasksList );
 
 TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList );
-void prvTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList );
+void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList );
 
 #if ( configUSE_SLACK_METHOD == 0 )
 BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask, const TickType_t xTc, const TickType_t xT, const TickType_t xWc, const List_t * pxTasksList );

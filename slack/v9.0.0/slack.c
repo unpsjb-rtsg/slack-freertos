@@ -23,7 +23,9 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const TickType_t xPeriod, const Ti
 /*-----------------------------------------------------------*/
 
 /**
- * Worst Case Response Time calculation -- Sjodin method.
+ * RTA - Worst Case Response Time calculation.
+ * "Improved Response-Time Analysis Calculations"
+ * http://doi.ieeecomputersociety.org/10.1109/REAL.1998.739773
  */
 BaseType_t xSlackCalculateTasksWcrt( List_t * pxTasksList )
 {
@@ -259,7 +261,7 @@ inline BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask, const TickType_t x
 #endif
 /*-----------------------------------------------------------*/
 
-void prvTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList )
+void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList )
 {
     #if ( configKERNEL_TEST == 2 )
     xCeilFloorCost = 0;

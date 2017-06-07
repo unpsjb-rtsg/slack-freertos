@@ -1042,7 +1042,8 @@ UBaseType_t x;
 		vListInitialiseItem( &( pxNewSsTCB->xDeadlineTaskListItem ) );
 		listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xDeadlineTaskListItem ), pxNewTCB );
 		listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xDeadlineTaskListItem ), pxNewSsTCB->xDeadline );
-		/* The list item value of xDeadlineTaskListItem is initialized in vTaskSetParams(). */
+		/* The list item value of xDeadlineTaskListItem is updated when the
+		task is moved into the ready list. */
 	}
 
 	pxNewSsTCB->xSlack = 0U;
@@ -1352,7 +1353,7 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB )
 			{
 				/* The current tick is considered as consumed. */
 #if ( configUSE_SLACK_K == 0 )
-				prvTaskCalculateSlack( pxCurrentTCB, xConstTickCount + ( TickType_t ) 1U, &xSsTaskList );
+				vTaskCalculateSlack( pxCurrentTCB, xConstTickCount + ( TickType_t ) 1U, &xSsTaskList );
 #else
 				pxCurrentSsTCB->xSlack = pxCurrentSsTCB->xSlackK;
 #endif
@@ -2068,7 +2069,6 @@ BaseType_t xReturn;
 #if ( configUSE_SLACK_STEALING == 1 )
 {
     /* Calculate worst case execution times of tasks. */
-    //BaseType_t xSchedulable = xTaskCalculateTasksWcrt();
     BaseType_t xSchedulable = xSlackCalculateTasksWcrt( &xSsTaskList );
 
     if( xSchedulable == pdFALSE )
@@ -2114,7 +2114,7 @@ BaseType_t xReturn;
 				TCB_t *pxTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
 				SsTCB_t *pxTaskSs = getSsTCB( pxTask );
 
-				prvTaskCalculateSlack( pxTask, xTickCount, &xSsTaskList );
+				vTaskCalculateSlack( pxTask, xTickCount, &xSsTaskList );
 				pxTaskSs->xSlackK = pxTaskSs->xSlack;
 
 				/* Deadline */
@@ -2331,7 +2331,6 @@ BaseType_t xAlreadyYielded = pdFALSE;
 					/* Resume slack-delayed tasks if there is enough available slack. */
 					if( listLIST_IS_EMPTY( &xSsTaskBlockedList ) == pdFALSE )
 					{
-						//xSwitchRequired = xTaskSlackResume();
 						xTaskSlackResume();
 					}
 				}
@@ -2951,7 +2950,6 @@ BaseType_t xSwitchRequired = pdFALSE;
 	#endif /* configUSE_PREEMPTION */
 
 #if ( configUSE_SLACK_STEALING == 1 )
-	//if( uxPendedTicks == ( UBaseType_t ) 0U )
 	if( uxSchedulerSuspended == ( UBaseType_t ) pdFALSE )
 	{
 		SsTCB_t *pxCurrentSsTCB = getSsTCB( pxCurrentTCB );
