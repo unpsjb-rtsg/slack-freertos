@@ -14,25 +14,20 @@
 #define TASK_3_WCET 1000
 #define TASK_4_WCET 1000
 
-/* Prototypes for the standard FreeRTOS callback/hook functions implemented
- * within this file. The extern "C" is required to avoid name mangling between
- * C and C++ code. */
-#if defined (__cplusplus)
-extern "C" {
-#endif
-
+/* The extern "C" is required to avoid name mangling between C and C++ code. */
+extern "C"
+{
+// FreeRTOS callback/hook functions
 void vApplicationMallocFailedHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 
+// Slack Stealing
 #if( configUSE_SLACK_STEALING == 1 )
 void vApplicationDebugAction( void *param );
 void vApplicationNotSchedulable( void );
 void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
 #endif
-
-#if defined (__cplusplus)
 }
-#endif
 
 void task_body( void* params );
 
@@ -86,7 +81,7 @@ void task_body( void* params )
 	for(;;)
     {
 		leds[ xTaskId ] = 1;
-		vUtilsEatCpu( 1000 );
+		vUtilsEatCpu( 600 );
 		leds[ xTaskId ] = 0;
 
         vTaskSuspendAll();
