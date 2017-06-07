@@ -2,6 +2,10 @@
 #include "task.h"
 #include "slack.h"
 
+#if ( configKERNEL_TEST > 0 )
+#include "slack_tests.h"
+#endif
+
 #if ( configUSE_SLACK_METHOD == 0 )
 static inline void prvTaskCalculateSlack_fixed1( TaskHandle_t  xTask, const TickType_t xTc, const List_t * pxTasksList ) __attribute__((always_inline));
 #endif
@@ -283,14 +287,14 @@ void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc, const List_t
     #if ( ( configKERNEL_TEST == 2 ) || ( configKERNEL_TEST == 4 ) )
     if (xTc > 0)
     {
-        vTaskGetTraceInfo();
+        vTaskGetTraceInfo( xTask );
     }
     #endif
     #if ( configKERNEL_TEST == 3 )
     uint32_t cycles = CPU_CYCLES;
     if (xTc > 0)
     {
-        vTaskGetTraceInfo( cycles );
+        vTaskGetTraceInfo( xTask, cycles );
     }
     #endif
 }
@@ -547,4 +551,3 @@ static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickT
 }
 #endif /* configUSE_SLACK_METHOD == 1 */
 /*-----------------------------------------------------------*/
-
