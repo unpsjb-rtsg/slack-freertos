@@ -2147,6 +2147,13 @@ BaseType_t xReturn;
 				prvTaskCalculateSlack( pxTask, xTickCount );
 				pxTaskSs->xSlackK = pxTaskSs->xSlack;
 
+				/* Deadline */
+				if( pxTask->uxPriority != tskIDLE_PRIORITY )
+				{
+					listSET_LIST_ITEM_VALUE( &( ( pxTaskSs )->xDeadlineTaskListItem ), pxTaskSs->xDeadline );
+					vListInsert( &xDeadlineTaskList, &( ( pxTaskSs )->xDeadlineTaskListItem ) );
+				}
+
 				pxTaskListItem = listGET_NEXT( pxTaskListItem );
 			}
 
@@ -5174,38 +5181,6 @@ const TickType_t xConstTickCount = xTickCount;
 #endif
 
 #if ( configUSE_SLACK_STEALING == 1 )
-
-	void vTaskSetParams( TaskHandle_t xTask, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId )
-	{
-		TCB_t *pxTCB;
-
-		if( xTask != NULL )
-		{
-			pxTCB = ( TCB_t * ) xTask;
-		}
-		else
-		{
-			pxTCB = pxCurrentTCB;
-		}
-
-		SsTCB_t *pxSsTCB = getSsTCB( pxTCB );
-
-		pxSsTCB->xPeriod = xPeriod;
-		pxSsTCB->xDeadline = xDeadline;
-		pxSsTCB->xWcet = xWcet;
-		pxSsTCB->xA = xWcet;
-		pxSsTCB->xB = xPeriod;
-        pxSsTCB->xId = xId;
-
-        /* Deadline */
-		if( pxTCB->uxPriority != tskIDLE_PRIORITY )
-		{
-			listSET_LIST_ITEM_VALUE( &( ( pxSsTCB )->xDeadlineTaskListItem ), pxSsTCB->xDeadline );
-			vListInsert( &xDeadlineTaskList, &( ( pxSsTCB )->xDeadlineTaskListItem ) );
-		}
-	}
-	/*-----------------------------------------------------------*/
-
 	/**
 	 * Worst Case Response Time calculation -- Sjodin method.
 	 */
