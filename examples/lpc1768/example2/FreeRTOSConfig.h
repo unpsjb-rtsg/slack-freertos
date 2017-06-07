@@ -118,6 +118,8 @@ extern uint32_t SystemCoreClock;
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
 
+#define INCLUDE_xTaskGetIdleTaskHandle  1 /* Required for identify the IDLE task in slacks methods and deadline check */
+
 /*
  * Slack methods available:
  * 0 = Fixed
@@ -126,13 +128,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_SLACK_STEALING 		1 /* 1: Use slack stealing methods, 0: No slack. */
 #define configUSE_SLACK_METHOD          0 /* Slack method to use */
 #define configUSE_SLACK_K               0 /* Only calculate slack at the scheduler start */
-
-/*
- * Amount of maximum priority levels that are used for slack.
- */
-#define configMAX_SLACK_PRIO            1
-#define INCLUDE_xTaskGetIdleTaskHandle  1 /* Required for identify the IDLE task in slacks methods and deadline check */
-
+#define configMAX_SLACK_PRIO            1 /* priority levels that are used for slack. */
 /* ========================================================================= */
 
 /* Set the following definitions to 1 to include the API function, or zero
