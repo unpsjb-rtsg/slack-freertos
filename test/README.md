@@ -33,7 +33,7 @@ Two python scripts are provided to generate and run the tests:
   * `--slackmethod`: specify the Slack Stealing algorithm to implement. Currently you could choose between `fixed` (Urriza et. al.) and `davis` (Davis et. al.) slack calculation methods.
   * `--slackcalc`: indicates if the slack stealing algorithm should be executed each time that a task instance finish (`ss`) or only at the system startup (`k`). 
 
-* `run_tests.py`: perform the execution of the tests, copying each BIN file in the specified mbed board, reading back the results through the serial port and saving them in a file.
+* `run_timing_tests.py`: perform the execution of the tests, copying each BIN file in the specified mbed board, reading back the results through the serial port and saving them in a file.
 
 ## Create a test
 
