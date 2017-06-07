@@ -14,13 +14,9 @@
 #define TASK_3_WCET 1000
 #define TASK_4_WCET 1000
 
-/* Prototypes for the standard FreeRTOS callback/hook functions implemented
- * within this file. The extern "C" is required to avoid name mangling between
- * C and C++ code. */
-#if defined (__cplusplus)
-extern "C" {
-#endif
-
+/* The extern "C" is required to avoid name mangling between C and C++ code. */
+extern "C"
+{
 void vApplicationMallocFailedHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 
@@ -29,10 +25,7 @@ void vApplicationDebugAction( void *param );
 void vApplicationNotSchedulable( void );
 void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
 #endif
-
-#if defined (__cplusplus)
 }
-#endif
 
 void task_body( void* params );
 void aperiodic_task_body( void* params );
@@ -65,11 +58,18 @@ int main()
 
 #if( configUSE_SLACK_STEALING == 1 )
     // additional parameters needed by the slack stealing framework
+#if( tskKERNEL_VERSION_MAJOR == 8 )
     vTaskSetParams( task_handles[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
     vTaskSetParams( task_handles[ 1 ], TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
     vTaskSetParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
     vTaskSetParams( task_handles[ 3 ], TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
-
+#endif
+#if( tskKERNEL_VERSION_MAJOR == 9 )
+    vSlackSetTaskParams( task_handles[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
+    vSlackSetTaskParams( task_handles[ 1 ], TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
+    vSlackSetTaskParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
+    vSlackSetTaskParams( task_handles[ 3 ], TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
+#endif
     /* Aperiodic task -- it must start suspended */
     xTaskCreate ( aperiodic_task_body, "TA", 256, NULL, configMAX_PRIORITIES - 1, NULL );
 #endif
@@ -83,12 +83,13 @@ void aperiodic_task_body( void* params )
 {
 	int32_t slackArray[ 7 ];
 
+	SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
+
 	for(;;)
 	{
 		vTaskSuspendAll();
 		vTasksGetSlacks( slackArray );
-		//pc.printf("%s - Tick: %d - AS: %d - [ %d, %d, %d, %d ] (START)\n",
-		pc.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\tS\n",
+		pc.printf("%s\tS\t%d\t%d\t%d\t%d\t%d\t%d\n",
 				pcTaskGetTaskName(NULL), slackArray[0], slackArray[2],
 				slackArray[3], slackArray[4], slackArray[5], slackArray[6]);
 		xTaskResumeAll();
@@ -97,10 +98,10 @@ void aperiodic_task_body( void* params )
 
 		vTaskSuspendAll();
 		vTasksGetSlacks( slackArray );
-		//pc.printf("%s - Tick: %d - AS: %d - [ %d, %d, %d, %d ] (END)\n",
-		pc.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\tE\n",
+		pc.printf("%s\tE\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
 				pcTaskGetTaskName(NULL), slackArray[0], slackArray[2],
-				slackArray[3], slackArray[4], slackArray[5], slackArray[6]);
+				slackArray[3], slackArray[4], slackArray[5], slackArray[6],
+				pxTaskSsTCB->xCur);
 		xTaskResumeAll();
 
 		vTaskDelay( rand() % 4000 );
@@ -113,20 +114,30 @@ void task_body( void* params )
 
 	uint32_t xTaskId = ( uint32_t ) params;
 
+	SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
+
     int32_t slackArray[ 7 ];
 
 	for(;;)
     {
+		vTaskSuspendAll();
+		vTasksGetSlacks( slackArray );
+		pc.printf("%s\tS\t%d\t%d\t%d\t%d\t%d\t%d\n",
+				pcTaskGetTaskName(NULL), slackArray[0], slackArray[2],
+				slackArray[3], slackArray[4], slackArray[5], slackArray[6]);
+		xTaskResumeAll();
+
 		leds[ xTaskId ] = 1;
 		vUtilsEatCpu( 500 );
 		leds[ xTaskId ] = 0;
 
-        taskENTER_CRITICAL();
+		vTaskSuspendAll();
 		vTasksGetSlacks( slackArray );
-		pc.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\n",
+		pc.printf("%s\tE\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
 				pcTaskGetTaskName(NULL), slackArray[0], slackArray[2],
-				slackArray[3], slackArray[4], slackArray[5], slackArray[6]);
-		taskEXIT_CRITICAL();
+				slackArray[3], slackArray[4], slackArray[5], slackArray[6],
+				pxTaskSsTCB->xCur);
+		xTaskResumeAll();
 
 		vTaskDelayUntil( &xPreviousWakeTime, xTaskPeriods[ xTaskId ] );
     }
