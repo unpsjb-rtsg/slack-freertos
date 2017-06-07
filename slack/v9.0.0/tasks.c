@@ -454,7 +454,7 @@ PRIVILEGED_DATA static volatile UBaseType_t uxSchedulerSuspended	= ( UBaseType_t
 	 * list of FreeRTOS stores real-time tasks that are blocked in waiting of
 	 * a resource -- with a timeout or for an unspecified amount of time. If
 	 * this list were used to store the slack-blocked tasks, there will be no
-	 * way to separate it for the resources-blocked ones.
+	 * way to separate it for the resource-blocked ones.
 	 */
 	PRIVILEGED_DATA static List_t xSsTaskBlockedList;
 
@@ -476,12 +476,6 @@ PRIVILEGED_DATA static volatile UBaseType_t uxSchedulerSuspended	= ( UBaseType_t
 #if( configSUPPORT_STATIC_ALLOCATION == 1 )
 	extern void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );
 #endif
-
-#if ( configUSE_SLACK_STEALING == 1 )
-	extern void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
-#endif
-
-extern void vApplicationNotSchedulable( void );
 
 #if ( configUSE_DEBUG == 1 )
     extern void vApplicationDebugAction( void *param );

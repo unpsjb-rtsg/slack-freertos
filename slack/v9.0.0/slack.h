@@ -7,8 +7,6 @@
 extern "C" {
 #endif
 
-#if ( configUSE_SLACK_STEALING == 1 )
-
 #define U_CEIL( x, y )    ( ( x / y ) + ( x % y != 0 ) )
 #define U_FLOOR( x, y )   ( x / y )
 #define ONE_TICK 	      ( TickType_t ) 1U
@@ -29,8 +27,8 @@ struct SsTCB
 
 	TickType_t xWcrt;				/* Worst case response time. */
 	TickType_t xWcet;				/* Worst case execution time. */
-	TickType_t xPeriod;			/* Task period. */
-	TickType_t xDeadline;			/* Task relative deadline. */
+	TickType_t xPeriod;			    /* Task period. */
+	TickType_t xDeadline;		 	/* Task relative deadline. */
 	TickType_t xA;					/* RTA3 */
 	TickType_t xB;					/* RTA3 */
 
@@ -40,13 +38,12 @@ struct SsTCB
 
 	TickType_t xCur; 				/* Accumulated execution time measured in ticks. */
 
-	BaseType_t xSlack;             /* Task slack */
-	BaseType_t xSlackK;			/* Task slack value at the critical instant. */
+	BaseType_t xSlack;              /* Task slack */
+	BaseType_t xSlackK;			    /* Task slack value at the critical instant. */
 
 #if ( configUSE_SLACK_METHOD == 0 )
-	/* Used by Fast Slack Stealing method. */
-	TickType_t xTtma;              /* Maximally delayed completion time */
-	TickType_t xDi;                /* The absolute deadline of the next release */
+	TickType_t xTtma;               /* Maximally delayed completion time */
+	TickType_t xDi;                 /* The absolute deadline of the next release */
 #endif
 
 	/* Stores the tick at which the task release ended. This a dirty
@@ -59,6 +56,9 @@ struct SsTCB
 
 typedef struct SsTCB SsTCB_t;
 
+void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
+void vApplicationNotSchedulable( void );
+
 void vSlackSetTaskParams( TaskHandle_t xTask, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId );
 BaseType_t xSlackCalculateTasksWcrt( List_t * pxTasksList );
 
@@ -68,12 +68,11 @@ void vSlackDecrementAllTasksSlack( const TickType_t xTicks, const TickType_t xTi
 void vSlackDecrementTasksSlack( TaskHandle_t pxTask, const TickType_t xTicks, const TickType_t xTickCount, const List_t * pxTasksList );
 
 TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList );
+void prvTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList );
 
 #if ( configUSE_SLACK_METHOD == 0 )
 BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask, const TickType_t xTc, const TickType_t xT, const TickType_t xWc, const List_t * pxTasksList );
 #endif
-
-void prvTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList );
 
 void vTasksGetSlacks( int32_t *taskSlackArray ) PRIVILEGED_FUNCTION;
 
@@ -85,8 +84,6 @@ void vTasksGetSlacks( int32_t *taskSlackArray ) PRIVILEGED_FUNCTION;
 #if ( configKERNEL_TEST == 2 ) || ( configKERNEL_TEST == 3 ) || ( configKERNEL_TEST == 4 )
     extern xType *cs_costs;
 #endif
-
-#endif /* configUSE_SLACK_STEALING */
 
 #if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TEST == 1 )
     /* Set the Id */
