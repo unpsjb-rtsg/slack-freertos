@@ -40,6 +40,7 @@
 .project
 .cproject
 language.settings.xml
+*.launch
 
 # Other
 *.pdf
