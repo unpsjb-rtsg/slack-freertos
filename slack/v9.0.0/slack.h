@@ -9,6 +9,12 @@ extern "C" {
 
 #if ( configUSE_SLACK_STEALING == 1 )
 
+#define U_CEIL( x, y )    ( ( x / y ) + ( x % y != 0 ) )
+#define U_FLOOR( x, y )   ( x / y )
+#define ONE_TICK 	      ( TickType_t ) 1U
+
+#define getTaskSsTCB( x ) ( ( SsTCB_t * ) pvTaskGetThreadLocalStoragePointer( ( TaskHandle_t ) x, 0 ) )
+
 struct SsTCB
 {
 	/* Release count for this task. The release count is incremented each
@@ -19,26 +25,28 @@ struct SsTCB
 	UBaseType_t uxReleaseCount;
 	UBaseType_t uxDelayUntil;
 
-	TickType_t  xWcrt;				/* Worst case response time. */
-	TickType_t  xWcet;				/* Worst case execution time. */
-	TickType_t  xPeriod;			/* Task period. */
-	TickType_t  xDeadline;			/* Task relative deadline. */
-	TickType_t 	xA;					/* RTA3 */
-	TickType_t 	xB;					/* RTA3 */
+	TickType_t xTimeToWake;         /* Tick time at which the task wants to wake. */
 
-	ListItem_t  xSsTaskListItem;    /* Item for the xSsTaskList list */
-	ListItem_t  xSsTaskBlockedListItem;
-	ListItem_t 	xDeadlineTaskListItem;  /* Used to reference the task from the xDeadlineTaskList */
+	TickType_t xWcrt;				/* Worst case response time. */
+	TickType_t xWcet;				/* Worst case execution time. */
+	TickType_t xPeriod;			/* Task period. */
+	TickType_t xDeadline;			/* Task relative deadline. */
+	TickType_t xA;					/* RTA3 */
+	TickType_t xB;					/* RTA3 */
 
-	TickType_t	xCur; 				/* Accumulated execution time measured in ticks. */
+	ListItem_t xSsTaskListItem;    /* Item for the xSsTaskList list */
+	ListItem_t xSsTaskBlockedListItem;
+	ListItem_t xDeadlineTaskListItem;  /* Used to reference the task from the xDeadlineTaskList */
 
-	BaseType_t  xSlack;             /* Task slack */
-	BaseType_t	xSlackK;			/* Task slack value at the critical instant. */
+	TickType_t xCur; 				/* Accumulated execution time measured in ticks. */
+
+	BaseType_t xSlack;             /* Task slack */
+	BaseType_t xSlackK;			/* Task slack value at the critical instant. */
 
 #if ( configUSE_SLACK_METHOD == 0 )
 	/* Used by Fast Slack Stealing method. */
-	TickType_t  xTtma;              /* Maximally delayed completion time */
-	TickType_t  xDi;                /* The absolute deadline of the next release */
+	TickType_t xTtma;              /* Maximally delayed completion time */
+	TickType_t xDi;                /* The absolute deadline of the next release */
 #endif
 
 	/* Stores the tick at which the task release ended. This a dirty
@@ -51,7 +59,22 @@ struct SsTCB
 
 typedef struct SsTCB SsTCB_t;
 
-void vTaskSetParams( TaskHandle_t xTask, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId ) PRIVILEGED_FUNCTION;
+void vSlackSetTaskParams( TaskHandle_t xTask, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId );
+BaseType_t xSlackCalculateTasksWcrt( List_t * pxTasksList );
+
+void vSlackUpdateAvailableSlack( volatile BaseType_t * xSlackSD, const List_t * pxTasksList );
+void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks, const List_t * pxTasksList );
+void vSlackDecrementAllTasksSlack( const TickType_t xTicks, const TickType_t xTickCount, const List_t * pxTasksList );
+void vSlackDecrementTasksSlack( TaskHandle_t pxTask, const TickType_t xTicks, const TickType_t xTickCount, const List_t * pxTasksList );
+
+TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList );
+
+#if ( configUSE_SLACK_METHOD == 0 )
+BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask, const TickType_t xTc, const TickType_t xT, const TickType_t xWc, const List_t * pxTasksList );
+#endif
+
+void prvTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList );
+
 void vTasksGetSlacks( int32_t *taskSlackArray ) PRIVILEGED_FUNCTION;
 
 #if ( configDO_SLACK_TRACE == 1)
