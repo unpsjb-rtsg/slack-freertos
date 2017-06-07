@@ -116,6 +116,7 @@ extern uint32_t SystemCoreClock;
 
 /* ========================================================================= */
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
 
 /*
  * Slack methods available:
