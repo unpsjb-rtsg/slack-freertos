@@ -134,10 +134,8 @@ def main():
                     break
                 except ValueError as err:
                     # something is wrong...
-                    print("Error testing {0}".format(bin_file), file=sys.stderr)
                     print("ValueError: {0}".format(str(err)), file=sys.stderr)
                 except IndexError as err:
-                    print("Error testing {0}".format(bin_file), file=sys.stderr)
                     print("IndexError: {0}".format(str(err)), file=sys.stderr)
                 except (IOError, os.error) as err:
                     print("IOerror: {0}".format(str(err)), file=sys.stderr)
@@ -145,14 +143,15 @@ def main():
             sleep(1)
 
     # print results and end
+    print("Results saved in {0}".format(save_file_path))
     print("{0} rts evaluated.".format(ok_counter))
     print("{0} rts with errors:".format(errors[0]))
-    print("\tdeadline missed: {0}".format(errors[1]))
-    print("\tnot schedulable: {0}".format(errors[2]))    
-    print("\tstack overflow: {0}".format(errors[4]))
-    print("\tmalloc failed: {0}".format(errors[5]))  
-    print("\tother error: {0}".format(errors[3]))
-    print("Done!")
+    if errors[0] > 0:
+        print("\tdeadline missed: {0}".format(errors[1]))
+        print("\tnot schedulable: {0}".format(errors[2]))    
+        print("\tstack overflow: {0}".format(errors[4]))
+        print("\tmalloc failed: {0}".format(errors[5]))  
+        print("\tother error: {0}".format(errors[3]))
 
 
 if __name__ == '__main__':
