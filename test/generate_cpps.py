@@ -34,7 +34,7 @@ def test_rts(id, xmlfile):
 
     context = et.iterparse(xmlfile, events=('start', 'end', ))
     context = iter(context)
-    event, root = context.__next__()
+    event, root = next(context) #context.next()
     for event, elem in context:
         rts_id, rts_to_test = get_rts_from_element(elem)
         if rts_to_test_id == rts_id and rts_to_test and event == "end":
@@ -49,6 +49,8 @@ def test_rts(id, xmlfile):
 
 def joseph_wcrt(rts):
     """ Verify schedulability """
+    import math
+
     wcrt = [0] * len(rts)
     schedulable = True
     wcrt[0] = rts[0]["C"]
@@ -99,14 +101,13 @@ def main():
     
     return_code = 0
     
-    slack_calc = { 'ss':0, 'k':1 }
-    slack_methods = { 'fixed':0, 'davis':1 } 
+    slack_calc = { 'ss': 0, 'k': 1 }
+    slack_methods = { 'fixed': 0, 'davis': 1 } 
     
     xml_file_list = glob.glob("{0}/*.xml".format(args.xmlpath));
         
     # remove previous generated bin files
-    print("Remove previous binary files...")
-    subprocess.call("make -C {0} clean".format(args.srcpath), shell=True, stdout=None, stderr=None)
+    subprocess.call("make --no-print-directory -C {0} clean".format(args.srcpath), shell=True, stdout=None, stderr=None)
 	
     if args.cpps:
         # remove previous generated source code files
@@ -162,13 +163,12 @@ def main():
     
     if(args.bins):        
         # generate bins
-        print("Generate binaries...")
-        returncode = subprocess.call("make -C {0} BATCH_TEST=1 DEBUG={1} TASK_COUNT_PARAM={2} RELEASE_COUNT_PARAM={3} SLACK={4} SLACK_K={5} SLACK_METHOD={6} TEST_PATH={0}".format(args.srcpath, args.debug, args.taskcnt, args.releasecnt, args.slack, slack_calc[args.slackcalc], slack_methods[args.slackmethod]), shell=True, stdout=None, stderr=None)
+        returncode = subprocess.call("make --no-print-directory -C {0} BATCH_TEST=1 DEBUG={1} TASK_COUNT_PARAM={2} RELEASE_COUNT_PARAM={3} SLACK={4} SLACK_K={5} SLACK_METHOD={6} TEST_PATH={0}".format(args.srcpath, args.debug, args.taskcnt, args.releasecnt, args.slack, slack_calc[args.slackcalc], slack_methods[args.slackmethod]), shell=True, stdout=None, stderr=None)
     
     if returncode != 0:
-        print "Something went wrong!"
+        print("Something went wrong!")
     else:   
-        print "Done!"
+        print("Done!")
 
 
 if __name__ == '__main__':

@@ -6,26 +6,25 @@ import glob
 import os
 import sys
 import csv
-import util
 from argparse import ArgumentParser
 from time import sleep
 
 
 def read_results(ser, taskcnt):
     results = []
-
+    
     # first line indicates if an error ocurred
-    fail = int(ser.readline().decode())
+    fail = int(ser.readline().decode().rstrip())
 
     if fail:
         return (fail, [], 0, 0, 0)
         
-    slack = int(ser.readline().decode())
-    slack_method = int(ser.readline().decode())
-    slack_k = int(ser.readline().decode())
+    slack = int(ser.readline().decode().rstrip())
+    slack_method = int(ser.readline().decode().rstrip())
+    slack_k = int(ser.readline().decode().rstrip())
 
     for _ in range(taskcnt):
-        results.append(ser.readline().decode())
+        results.append(ser.readline().decode().rstrip())
 
     return (0, results, slack, slack_method, slack_k)
 
@@ -33,11 +32,11 @@ def read_results(ser, taskcnt):
 def get_args():
     """ Procesa argumentos de la linea de comandos """
     parser = ArgumentParser()
-    parser.add_argument("--port", help="Puerto COM", default=None, type=str)
+    parser.add_argument("--port", help="COM port", default=None, type=str)
     parser.add_argument("--baudrate", help="Baudios", default=9600, type=int)
     parser.add_argument("--drive", help="mbed drive", type=str, default=None)    
     parser.add_argument("--binpath", help="bin directory", type=str)
-    parser.add_argument("--timeout", help="individual test timeout", type=int, default=None)
+    parser.add_argument("--timeout", help="individual test timeout", type=int, default=25)
     parser.add_argument("--savefile", help="Save file", type=str, default="")
     parser.add_argument("--append", help="Append results in save file", action="store_true")
     parser.add_argument("--cont", help="Continue from previous execution", action="store_true")
@@ -46,49 +45,26 @@ def get_args():
     return parser.parse_args()
     
     
-def get_mbed_drive_and_port():
-    mdslabels = ("mbed", "nucleo", "frdm")
-    disks = util.get_logicaldisks()
-    ports = util.get_serialports()
-    
-    mbed_drive = ""
-    mbed_port = ""
-    
-    for item in disks:
-        if (not item['name'] or not any([l in item['name'].lower() for l in mdslabels])):
-            continue
-        mbed_drive = item['disk']
-        break
-        
-    for item in ports:
-        if (not item['description'] or not any([l in item['description'].lower() for l in mdslabels])):
-            continue
-        mbed_port = item['port']
-        break
-        
-    return [mbed_drive, mbed_port]
-        
-    
 def main():
     args = get_args()
     
-    mbeddp = get_mbed_drive_and_port()
-    
-    mbed_port = args.port
-    if args.port is None:
-        mbed_port = mbeddp[1]
-    
-    mbed_drive = ""
-    if args.drive is None:
-        mbed_drive = mbeddp[0]
-    
-    slack = { 0:'noss', 1:'ss' }
-    slack_k = { 0:'d', 1:'k' }
-    slack_method = { 0:'fixed', 1:'davis' }
+    slack = { 0: 'noss', 1: 'ss' }
+    slack_k = { 0: 'd', 1: 'k' }
+    slack_method = { 0: 'fixed', 1: 'davis' }
 
     # create and configure serial connection to the mbed microcontroller
-    ser = serial.Serial(port=mbed_port, baudrate=args.baudrate, timeout=args.timeout)
-    ser.setBreak(True)
+    try:
+        ser = serial.Serial(port=args.port, baudrate=args.baudrate, timeout=args.timeout, write_timeout=5, xonxoff=True, dsrdtr=True)
+    except serial.SerialException as err:
+        print("SerialException: {0}.".format(err))
+        sys.exit(1)
+    except ValueError as err:
+        print("ValueError: {0}.".format(err))
+        sys.exit(1)
+
+    # reset mbed board and wait
+    ser.send_break(0.5)
+    sleep(1)
 
     # search for all the bin files previously generated
     bin_files = glob.glob("{0}/*.bin".format(args.binpath))
@@ -136,12 +112,15 @@ def main():
             
             while(True):
                 try:
-                    print("Copying {0}".format(bin_file))
-                    shutil.copy(bin_file, os.path.join(mbed_drive, "test.bin"))
-                    print("Testing {0} ...".format(bin_file))
-                    sleep(1)
-                    ser.sendBreak()
+                    print("Testing: {0}".format(bin_file))
+                    
+                    shutil.copy(bin_file, os.path.join(args.drive, "test.bin"))
+                    
+                    sleep(0.5)
+                    ser.sendBreak(0.5)                    
+                    
                     r, results, s1, s2, s3 = read_results(ser, args.taskcnt)
+                    
                     if results:
                         # save results in save_file file
                         for r in results:
@@ -153,15 +132,15 @@ def main():
                         errors[r] = errors[r] + 1
                         deadline_miss.append(os.path.basename(bin_file))
                     break
-                except ValueError:
+                except ValueError as err:
                     # something is wrong...
-                    print("Error testing {0}, trying again ...".format(bin_file), file=sys.stderr)
-                except IndexError:
-                    # 
-                    print("IndexError: {0}, trying again ...".format(r), file=sys.stderr)
-                except (IOError, os.error) as why:
-                    # an error with shutil.copy()
-                    print("IOerror: {0}, trying again ...".format(str(why)), file=sys.stderr)
+                    print("Error testing {0}".format(bin_file), file=sys.stderr)
+                    print("ValueError: {0}".format(str(err)), file=sys.stderr)
+                except IndexError as err:
+                    print("Error testing {0}".format(bin_file), file=sys.stderr)
+                    print("IndexError: {0}".format(str(err)), file=sys.stderr)
+                except (IOError, os.error) as err:
+                    print("IOerror: {0}".format(str(err)), file=sys.stderr)
                     break
             sleep(1)
 

@@ -196,7 +196,6 @@ void task_body( void* params )
             {
 				vTaskSuspendAll();
 				pc.printf("%d\n", 0);
-                
                 pc.printf("%d\n", SLACK);
                 pc.printf("%d\n", SLACK_METHOD);
                 pc.printf("%d\n", SLACK_K);
