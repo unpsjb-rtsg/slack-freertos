@@ -1,10 +1,10 @@
-# mbed LPC1768 tests
+# Perfomance evaluations
 
-This directory contains the source code, scripts and other resources needed to run several performance tests. This evaluation are designed to run on a mbed LPC1768 board.
+This directory contains the source code, scripts and other resources needed to run several tests that evaluate the perfomance of the Slack Stealing framework according to different metrics. These evaluations are designed to run on a mbed LPC1768 development board.
 
 ## Available tests
 
-The available tests are:
+The following evaluations are available:
 
 1. Execution cost measured in CPU cycles of the `vTaskDelayUntil()` kernel function.
 2. Amount of ceil and floor operations performed by the selected Slack Stealing method.
@@ -13,22 +13,24 @@ The available tests are:
 
 Modify the `configKERNEL_TEST` clause in the `FreeRTOSConfig.h` file to specify which test will be implemented in the BIN files.
 
-## Required software and files
+## Required software
 
-Required software:
-* ARM C Compiler, for example GNU Tools for ARM (https://launchpad.net/gcc-arm-embedded).
+The following tools are required for generating and running the tests:
+* An ARM C Compiler, for example the GNU Tools for ARM (https://launchpad.net/gcc-arm-embedded).
 * Mbed library. A copy is provided in the `libs/mbed` directory.
-* FreeRTOS source code. Copies of FreeRTOS are provided in the `libs/FreeRTOS` directory.
-* Python 2.7 (3.x should work fine too).
-* Python modules *cog* (http://nedbatchelder.com/code/cog/) and *pyserial* (http://pyserial.sourceforge.net/).
+* FreeRTOS source code. Copies of supported FreeRTOS versions are provided in the `libs/FreeRTOS` directory.
+* Python 2.7 installed (3.x should work fine too).
+* Python modules *cog* (http://nedbatchelder.com/code/cog/), for generating the CPP files, and *pyserial* (http://pyserial.sourceforge.net/), for getting back the results from the mbed board through the serial port.
 
-Also, one or more xml files with tasks groups, generated with the RTTSG tool (available at http://goo.gl/GqQPUK) are needed. These files are used to generate the periodic tasks that each program will execute in the microcontroller. A set of example xml files could be found in the `rts` directory, with groups of 10 tasks and utilization factor from 10% to 90%.
+## Required resources
+
+One or more xml files with tasks groups, generated with the RTTSG tool (available at http://goo.gl/GqQPUK) are needed. These files are used to generate the periodic tasks that each program will execute in the microcontroller. A set of example xml files could be found in the `rts` directory, with groups of 10 tasks and utilization factor from 10% to 90%.
 
 ## Python scripts
 
-Two python scripts are provided to generate and run the tests:
+Two python scripts are provided to generate the CPP files, and run the tests:
 
-* `generate_cpps.py`: parse the xml files and generate bin files into the specificied directory. The most important options are (use `--help` to see all the available options):
+* `generate_cpps.py`: get the specified number of task-sets from the xml files, and generate cpp files into the specificied directory. Optionaly, compile each source code file. Use the `--help` parameter to see all the available options. The most important options are:
   * `--slack`: if present the generated programs will implement Slack Stealing.
   * `--slackmethod`: specify the Slack Stealing algorithm to implement. Currently you could choose between `fixed` (Urriza et. al.) and `davis` (Davis et. al.) slack calculation methods.
   * `--slackcalc`: indicates if the slack stealing algorithm should be executed each time that a task instance finish (`ss`) or only at the system startup (`k`). 
