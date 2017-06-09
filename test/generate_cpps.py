@@ -188,11 +188,9 @@ def main():
     
         # ahora si eliminamos el archivo temporal
         os.remove(tmp_file.name)
-    
-    if(args.bins):
-        # generate bins        
-        make_string = [ "make --no-print-directory -C {0}".format(args.srcpath), 
-                        "MAX_PRIO=1",
+
+        # cog para generar el template para makefile
+        make_config = [ "MAX_PRIO=1",
                         "DEBUG={0}".format(args.debug),
                         "TASK_COUNT_PARAM={0}".format(args.taskcnt),
                         "RELEASE_COUNT_PARAM={0}".format(args.releasecnt),
@@ -203,7 +201,11 @@ def main():
                         "KERNEL_TEST={0}".format(test_names[args.test]),
                         "FREERTOS_KERNEL_VERSION_NUMBER={0}".format(args.freertos),
                         "FREERTOS_KERNEL_VERSION_NUMBER_MAJOR={0}".format(int(args.freertos[1])) ]
-        returncode = subprocess.call(" ".join(make_string), shell=True, stdout=None, stderr=None)
+        subprocess.call("python -m cogapp -d -D {0} -o {1} {2}".format(" -D ".join(make_config), os.path.join(args.srcpath, "Makefile.config"), "Makefile.config.template"), shell=True)
+    
+    if(args.bins):
+        # generate bins        
+        returncode = subprocess.call("make --no-print-directory -C {0} {1}".format(args.srcpath, " ".join(make_config)), shell=True, stdout=None, stderr=None)
     
     if returncode != 0:
         print("Something went wrong!")

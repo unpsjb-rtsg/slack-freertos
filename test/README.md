@@ -53,7 +53,7 @@ Follow the next steps to prepare the required files for running a test:
 python generate_cpps.py --srcpath ./tests/Test1 --taskcnt 10 --releasecnt 10 --testsched --slack 10 ./rts/*.xml
 ```
 
-Once the CPPs files are generated, the binary files could be recompiled executig `make` in the `Test1` directory. 
+The binary files could be recompiled executig `make` in the `Test1` directory. A file `Makefile.config` is created into the `Test1` directory with the options used. 
 
 ## Running the test
 
