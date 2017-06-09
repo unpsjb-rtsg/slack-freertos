@@ -26,9 +26,9 @@ void prvTaskRecSlack()
 /*-----------------------------------------------------------*/
 
 #if ( configKERNEL_TEST == 1 )
-void vTaskGetTraceInfo( xType *pxArray, uint32_t time, uint32_t r )
+void vTaskGetTraceInfo( TaskHandle_t xTask, xType *pxArray, uint32_t time, uint32_t r )
 {
-	SsTCB_t *pxSsTCB = getSsTCB( pxCurrentTCB );
+	SsTCB_t *pxSsTCB = getTaskSsTCB( xTask );
 
 	if ( (*pxArray)[pxSsTCB->xId][0] < RELEASE_COUNT )
 	{
@@ -53,7 +53,7 @@ void vTaskGetTraceInfo( xType *pxArray, uint32_t time, uint32_t r )
 
 #if ( configKERNEL_TEST == 2 )
 /* Slack method cost measured in ceil/floor operations */
-void vTaskGetTraceInfo( TaskHandle_t xTask )
+void vTaskGetTraceInfo( TaskHandle_t xTask, BaseType_t xCeilFloorCost )
 {
 	SsTCB_t *pxSsTCB = getTaskSsTCB( xTask );
 
@@ -83,7 +83,7 @@ void vTaskGetTraceInfo( TaskHandle_t xTask, const uint32_t cycles )
 
 #if ( configKERNEL_TEST == 4 )
 /* Slack method cost measured in ceil/floor operations */
-void vTaskGetTraceInfo( TaskHandle_t xTask )
+void vTaskGetTraceInfo( TaskHandle_t xTask, BaseType_t xLoopCost )
 {
 	SsTCB_t *pxSsTCB = getTaskSsTCB( xTask );
 

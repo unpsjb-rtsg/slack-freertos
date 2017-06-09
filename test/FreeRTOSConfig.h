@@ -109,27 +109,28 @@ extern uint32_t SystemCoreClock;
 
 /* Software timer definitions. */
 #define configUSE_TIMERS				0
-/*
+#if ( configUSE_TIMERS == 1 )
 #define configTIMER_TASK_PRIORITY		( 2 )
 #define configTIMER_QUEUE_LENGTH		5
 #define configTIMER_TASK_STACK_DEPTH	( configMINIMAL_STACK_SIZE * 2 )
-*/
+#endif
 
 /* ========================================================================= */
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
 
-#define INCLUDE_xTaskGetIdleTaskHandle  1 /* Required for identify the IDLE task in slacks methods and deadline check */
+#define INCLUDE_xTaskGetIdleTaskHandle    1 /* Required for identify the IDLE task in slacks methods and deadline check */
+#define INCLUDE_xTaskGetCurrentTaskHandle 1
 
 /*
  * Slack methods available:
  * 0 = Fixed
  * 1 = Davis
  */
-#define configUSE_SLACK_STEALING 		1 /* 1: Use slack stealing methods, 0: No slack. */
-#define configUSE_SLACK_METHOD          0 /* Slack method to use */
-#define configUSE_SLACK_K               0 /* Only calculate slack at the scheduler start */
-#define configMAX_SLACK_PRIO            1 /* priority levels that are used for slack. */
+#define configUSE_SLACK_STEALING 		SLACK /* 1: Use slack stealing methods, 0: No slack. */
+#define configUSE_SLACK_METHOD          SLACK_METHOD /* Slack method to use */
+#define configUSE_SLACK_K               SLACK_K /* Only calculate slack at the scheduler start */
+#define configMAX_SLACK_PRIO            MAX_PRIO /* priority levels that are used for slack. */
 /* ========================================================================= */
 
 /* Set the following definitions to 1 to include the API function, or zero
@@ -177,8 +178,6 @@ header file. */
 #define xPortPendSVHandler PendSV_Handler
 #define xPortSysTickHandler SysTick_Handler
 
-#endif /* FREERTOS_CONFIG_H */
-
 /* Timing: 
  * http://stackoverflow.com/questions/13379220/generating-nano-second-delay-in-c
  * http://stackoverflow.com/questions/11530593/cycle-counter-on-arm-cortex-m4-or-m3
@@ -204,21 +203,35 @@ header file. */
 	DWT_CONTROL = DWT_CONTROL | COUNTER_ENABLE_BIT;		\
 }
 
-uint32_t ulCalcUsecsFromStopwatch( uint32_t cycles );
-uint32_t ulCalcNsecsFromStopwatch( uint32_t cycles );
-
 #define TASK_COUNT TASK_COUNT_PARAM
 #define RELEASE_COUNT RELEASE_COUNT_PARAM
 
 /* trace */
 #define configDO_SLACK_TRACE 0
+
 /* Test to perform.:
 1. Cost in CPU cycles of the vTaskDelayUntil() kernel function.
 2. Amount of ceil and floor operations performed by the Slack Stealing method.
 3. Execution cost of the Slack Stealing method in CPU cycles.
 4. Amount of for and while loops required by the Slack Stealing method.
 */
-#define configKERNEL_TEST 3
+#define configKERNEL_TEST KERNEL_TEST
+
+#if ( FREERTOS_VERSION == 9 )
+
+/* === delay_until() cost ================================================== */
+/* The trace macro definitions must be in this header file.                  */
+#if configKERNEL_TEST == 1
+void vMacroTaskDelay( void );
+void vMacroTaskSwitched( void );
+#define traceTASK_DELAY_UNTIL(xTimeToWake) vMacroTaskDelay();
+#define traceTASK_SWITCHED_OUT()           vMacroTaskSwitched();
+#endif
+/* ========================================================================= */
+
+#endif
+
+#if ( FREERTOS_VERSION == 8 )
 
 /* === delay_until() cost ================================================== */
 #if configKERNEL_TEST == 1
@@ -255,3 +268,7 @@ typedef uint32_t xType[TASK_COUNT][RELEASE_COUNT + 1];
 void vTaskGetTraceInfo( void );
 #endif
 /* ========================================================================= */
+
+#endif
+
+#endif /* FREERTOS_CONFIG_H */

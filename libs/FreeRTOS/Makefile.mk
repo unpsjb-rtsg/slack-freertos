@@ -24,6 +24,12 @@ else
   OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
 endif
 
+ifeq ($(TEST), 1)
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v9.0.0)
+     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.o
+  endif
+endif
+
 ifeq ($(TZ), 1)
   OBJECTS += ../Tracealizer/trcBase.o
   OBJECTS += ../Tracealizer/trcHardwarePort.o
@@ -59,6 +65,7 @@ ifeq ($(TEST), 1)
   CC_SYMBOLS += -DSLACK=$(SLACK) 
   CC_SYMBOLS += -DSLACK_K=$(SLACK_K)
   CC_SYMBOLS += -DSLACK_METHOD=$(SLACK_METHOD)
+  CC_SYMBOLS += -DFREERTOS_VERSION=$(FREERTOS_VERSION)
 endif
 
 AR_FLAGS = -r

@@ -75,24 +75,36 @@ def joseph_wcrt(rts):
     
 def get_args():
     """ Command line arguments """
-    parser = ArgumentParser(description="Generate CPPs")
-    parser.add_argument("--start", help="RTS to start from", type=int, default=1)
-    parser.add_argument("--count", help="Number of RTS to test", type=int)
-    parser.add_argument("--limit", help="Number of RTS to test for schedulability", type=int, default=1000)
-    parser.add_argument("--template", help="COG template file", type=str)
-    parser.add_argument("--srcpath", help="src directory", type=str)
-    parser.add_argument("--xmlpath", help="xml directory", type=str)
-    parser.add_argument("--ignore", nargs='+', type=int, help="rts ignore list", default=[])
-    parser.add_argument("--cpps", help="Generate cpp files", action="store_true", default=False)
-    parser.add_argument("--bins", help="Generate bin files", action="store_true")
-    parser.add_argument("--freertos", help="Build FreeRTOS", action="store_true")
-    parser.add_argument("--taskcnt", help="Number of tasks", type=int, default=10)
-    parser.add_argument("--releasecnt", help="Number of instances to test", type=int, default=10)
-    parser.add_argument("--testsched", help="Check rts schedulability", action="store_true")
-    parser.add_argument("--slack", help="Use Slack Stealing.", action="store_const", const=1, default=0)
-    parser.add_argument("--slackcalc", help="When to calculate slack.", choices=["ss","k"], default="ss")
-    parser.add_argument("--slackmethod", help="Slack Stealing method to test.", choices=["fixed", "davis"], default="fixed")
-    parser.add_argument("--debug", help="Set debug -G option.", action="store_const", const=1, default=0)
+    freertos_choices = ["v8.1.2", "v9.0.0"]
+    slack_choices = ["ss","k"]
+    slackmethod_choices = ["fixed", "davis"]
+
+    parser = ArgumentParser(description="Generate CPP files, each of them implementing a set of real-time tasks using the FreeRTOS real-time operating system.")
+
+    parser.add_argument("count", help="Number of CPP files to generate.", type=int)
+    
+    source_group = parser.add_argument_group('Source code files', 'This options control how the CPP files are generated from a task-set.')
+    source_group.add_argument("--start", help="RTS to start from. Defaults to %(default)s.", type=int, default=1)
+    source_group.add_argument("--template", help="Template file used by COG to generate the CPP files. Defaults to %(default)s.", type=str, default="main.cpp")
+    source_group.add_argument("--srcpath", help="Path to directory where the CPP files will be saved.", type=str)
+    source_group.add_argument("--xmlpath", help="Path to directory with xml files.", type=str)
+    source_group.add_argument("--ignore", nargs='+', type=int, help="A list of RTS to ignore in the XML files.", default=[])
+
+    schedtest_group = parser.add_argument_group('Scheduling evaluation', 'This options control if a scheduling analysis is to be performed before a CPP file is generated from a task-set.')
+    schedtest_group.add_argument("--testsched", help="Check the schedulability of each RTS before generating a CPP file. Defaults to %(default)s.", action="store_true", default=True)
+    schedtest_group.add_argument("--limit", help="Maximum amount of RTS to test for schedulability. Defaults to %(default)s.", type=int, default=1000)
+
+    bin_group = parser.add_argument_group('Compilation options', 'This options control how the CPP files are compiled.')
+    bin_group.add_argument("--bins", help="Compile the CPP files.", action="store_true", default=False)
+    bin_group.add_argument("--freertos", help="FreeRTOS version to use. Valid values are " + ', '.join(freertos_choices) + ". Defaults to %(default)s.", choices=freertos_choices, default=freertos_choices[0])
+    bin_group.add_argument("--taskcnt", help="Number of tasks in each RTS. Defaults to %(default)s.", type=int, default=10)
+    bin_group.add_argument("--releasecnt", help="Number of task releases to evaluate. Defaults to %(default)s.", type=int, default=10)
+    bin_group.add_argument("--slack", help="Use Slack Stealing.", action="store_const", const=1, default=0)
+    bin_group.add_argument("--slackcalc", help="When to calculate slack. Valid values are " + ', '.join(slack_choices) + ". Defaults to %(default)s.", choices=slack_choices, default=slack_choices[0])
+    bin_group.add_argument("--slackmethod", help="Slack Stealing method to test. Valid values are " + ', '.join(slackmethod_choices) + ". Defaults to %(default)s.", choices=slackmethod_choices, default=slackmethod_choices[0])
+    bin_group.add_argument("--debug", help="Set the GCC debug option (-G).", action="store_const", const=1, default=0)
+    bin_group.add_argument("--test", help="Test to perform.", choices=["1","2","3","4"], default=1 )
+
     return parser.parse_args()
 
 
@@ -102,14 +114,14 @@ def main():
     return_code = 0
     
     slack_calc = { 'ss': 0, 'k': 1 }
-    slack_methods = { 'fixed': 0, 'davis': 1 } 
-    
+    slack_methods = { 'fixed': 0, 'davis': 1 }
+
     xml_file_list = glob.glob("{0}/*.xml".format(args.xmlpath));
         
     # remove previous generated bin files
     subprocess.call("make --no-print-directory -C {0} clean".format(args.srcpath), shell=True, stdout=None, stderr=None)
 	
-    if args.cpps:
+    if xml_file_list:
         # remove previous generated source code files
         print("Remove previous source code files...")
         for src_file in glob.glob("{0}/*.cpp".format(args.srcpath)):
@@ -161,9 +173,21 @@ def main():
         # ahora si eliminamos el archivo temporal
         os.remove(tmp_file.name)
     
-    if(args.bins):        
-        # generate bins
-        returncode = subprocess.call("make --no-print-directory -C {0} BATCH_TEST=1 DEBUG={1} TASK_COUNT_PARAM={2} RELEASE_COUNT_PARAM={3} SLACK={4} SLACK_K={5} SLACK_METHOD={6} TEST_PATH={0}".format(args.srcpath, args.debug, args.taskcnt, args.releasecnt, args.slack, slack_calc[args.slackcalc], slack_methods[args.slackmethod]), shell=True, stdout=None, stderr=None)
+    if(args.bins):
+        # generate bins        
+        make_string = [ "make --no-print-directory -C {0}".format(args.srcpath), 
+                        "MAX_PRIO=1",
+                        "DEBUG={0}".format(args.debug),
+                        "TASK_COUNT_PARAM={0}".format(args.taskcnt),
+                        "RELEASE_COUNT_PARAM={0}".format(args.releasecnt),
+                        "SLACK={0}".format(args.slack),
+                        "SLACK_K={0}".format(slack_calc[args.slackcalc]),
+                        "SLACK_METHOD={0}".format(slack_methods[args.slackmethod]),
+                        "TEST_PATH={0}".format(args.srcpath),
+                        "KERNEL_TEST={0}".format(int(args.test)),
+                        "FREERTOS_KERNEL_VERSION_NUMBER={0}".format(args.freertos),
+                        "FREERTOS_KERNEL_VERSION_NUMBER_MAJOR={0}".format(int(args.freertos[1])) ]
+        returncode = subprocess.call(" ".join(make_string), shell=True, stdout=None, stderr=None)
     
     if returncode != 0:
         print("Something went wrong!")

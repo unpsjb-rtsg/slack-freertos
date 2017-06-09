@@ -51,7 +51,11 @@ del context
 #include "slack.h"
 #endif
 
-#define ONE_TICK ( ( configCPU_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL )
+#if ( configKERNEL_TEST > 0 ) && ( tskKERNEL_VERSION_MAJOR == 9 )
+#include "slack_tests.h"
+#endif
+
+#define ONE_TICK_CYCLES ( ( configCPU_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL )
 
 #ifndef TASK_COUNT
 /* [[[cog
@@ -138,12 +142,21 @@ for idx, task in enumerate( rts_to_test ):
 ]]]*/
 // [[[end]]]
 
-#if ( configUSE_SLACK_STEALING == 1 )
+#if ( configUSE_SLACK_STEALING == 1 ) && ( tskKERNEL_VERSION_MAJOR == 8 )
     /* vTaskSetParams( task_handle[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 0 ); */
 /* [[[cog
 for idx, task in enumerate( rts_to_test ):
     cog.outl("vTaskSetParams( task_handle[ {0} ], TASK_{1}_PERIOD, TASK_{1}_PERIOD, TASK_{1}_WCET, {0} );".format( idx, idx + 1 ))
 ]]]*/    
+// [[[end]]]
+#endif
+
+#if ( configUSE_SLACK_STEALING == 1 ) && ( tskKERNEL_VERSION_MAJOR == 9 )
+    /* vSlackSetTaskParams( task_handle[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 0 ); */
+/* [[[cog
+for idx, task in enumerate( rts_to_test ):
+    cog.outl("vSlackSetTaskParams( task_handle[ {0} ], TASK_{1}_PERIOD, TASK_{1}_PERIOD, TASK_{1}_WCET, {0} );".format( idx, idx + 1 ))
+]]]*/
 // [[[end]]]
 #endif
 
@@ -196,6 +209,7 @@ void task_body( void* params )
             {
 				vTaskSuspendAll();
 				pc.printf("%d\n", 0);
+				pc.printf("%d\n", configKERNEL_TEST );
                 pc.printf("%d\n", SLACK);
                 pc.printf("%d\n", SLACK_METHOD);
                 pc.printf("%d\n", SLACK_K);
@@ -314,7 +328,7 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, Ti
 void vEatCpu( BaseType_t ticks )
 {
     BaseType_t xI;
-    BaseType_t xLim = ( ticks * ONE_TICK ) / 5;
+    BaseType_t xLim = ( ticks * ONE_TICK_CYCLES ) / 5;
 
     for( xI = 0; xI < xLim; xI++ )
     {
@@ -323,8 +337,7 @@ void vEatCpu( BaseType_t ticks )
 }
 
 /* ========================================================================= */
-
-#if ( configKERNEL_TEST == 1 )
+#if ( configKERNEL_TEST == 1 ) && ( tskKERNEL_VERSION_MAJOR == 8 )
 void vMacroTaskDelay()
 {
 	STOPWATCH_RESET();
@@ -335,6 +348,21 @@ void vMacroTaskDelay()
 void vMacroTaskSwitched()
 {
 	ulDelayTime1 = CPU_CYCLES;
-    vTaskGetTraceInfo( cs_costs, ulDelayTime1, 1 );    
+    vTaskGetTraceInfo( cs_costs, ulDelayTime1, 1 );
+}
+#endif
+
+#if ( configKERNEL_TEST == 1 ) && ( tskKERNEL_VERSION_MAJOR == 9 )
+void vMacroTaskDelay()
+{
+	STOPWATCH_RESET();
+	ulDelayTime = CPU_CYCLES;
+    vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), cs_costs, ulDelayTime, 0 );
+}
+
+void vMacroTaskSwitched()
+{
+	ulDelayTime1 = CPU_CYCLES;
+    vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), cs_costs, ulDelayTime1, 1 );
 }
 #endif

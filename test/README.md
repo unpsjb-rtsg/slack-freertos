@@ -45,25 +45,17 @@ Follow the next steps to prepare the required files for running a test:
 
 3. Copy the `FreeRTOSConfig.h` file into the `Test1` directory. Assing to `configKERNEL_TEST` the number of the test to execute.
 
-4. Finally, run the `generate_cpps.py` script to generate the source code and binary files. For example, to create binary and source code files for the first 10 real-time systems in each XML found in the `rts` directory: 
-
+4. Finally, run the `generate_cpps.py` script to generate the source code and binary files. For example, to create binary and source code files for the first 10 real-time systems in each XML found in the `rts` directory:
 ```
 python generate_cpps.py --template main.cpp --xmlpath ./rts --srcpath ./tests/Test1 --start 1 --count 10 --taskcnt 10 --releasecnt 10 --testsched --bins --cpps --slack
 ```
 
 ## Running the test
 
-To execute the test run the `run_timing_tests.py` script. The script should detect the mbed board connected to the PC, so the only required parameter is `binpath`, which must point to the directory where the BIN files are:
-
-```
-python run_timing_tests.py --binpath ./stests/Test1
-```
-
-If the mbed board is not detected, or if more than one board is present, use the `port` and `drive` parameters to indicate the specific port and drive letter (or mount point). For example, if the board was assigned the COM4 port and the H drive letter:
-
+To execute the test run the `run_timing_tests.py` script. Use the `port` and `drive` parameters to indicate the serial port and drive letter (or mount point) assigned to the board, and specify the directory where the BIN files are with the `binpath` parameter. The results are saved by default in the file `binpath\results.txt`. For example:
 ```
 python run_timing_tests.py --port COM4 --baudrate 9600 --drive H: --binpath tests/Test1
 ```
+The `baudrate` argument is optional, as 9600 is the default value used when generating the binary files. Use the `--help` parameter to see all the available options.
 
-The `baudrate` argument is optional, as 9600 is the default value used when generating the binary files.
 

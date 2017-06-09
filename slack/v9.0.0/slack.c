@@ -4,6 +4,12 @@
 
 #if ( configKERNEL_TEST > 0 )
 #include "slack_tests.h"
+#if ( configKERNEL_TEST == 2 )
+static BaseType_t xCeilFloorCost = 0;
+#endif
+#if ( configKERNEL_TEST == 4 )
+static BaseType_t xLoopCost = 0;
+#endif
 #endif
 
 #if ( configUSE_SLACK_METHOD == 0 )
@@ -267,36 +273,43 @@ inline BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask, const TickType_t x
 
 void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList )
 {
-    #if ( configKERNEL_TEST == 2 )
-    xCeilFloorCost = 0;
-    #endif
-    #if ( configKERNEL_TEST == 3 )
-    STOPWATCH_RESET();
-    #endif
-    #if ( configKERNEL_TEST == 4 )
-    xLoopCost = 0;
-    #endif
+#if ( configKERNEL_TEST == 2 )
+	xCeilFloorCost = 0;
+#endif
+#if ( configKERNEL_TEST == 3 )
+	STOPWATCH_RESET();
+#endif
+#if ( configKERNEL_TEST == 4 )
+	xLoopCost = 0;
+#endif
 
-    #if ( configUSE_SLACK_METHOD == 0 )
+#if ( configUSE_SLACK_METHOD == 0 )
 	prvTaskCalculateSlack_fixed1( xTask, xTc, pxTasksList );
-    #endif
-    #if ( configUSE_SLACK_METHOD == 1 )
+#endif
+#if ( configUSE_SLACK_METHOD == 1 )
 	prvTaskCalculateSlack_davis1( xTask, xTc, pxTasksList );
-    #endif
+#endif
 
-    #if ( ( configKERNEL_TEST == 2 ) || ( configKERNEL_TEST == 4 ) )
+#if ( configKERNEL_TEST == 2 )
+	if (xTc > 0)
+	{
+		vTaskGetTraceInfo( xTask, xCeilFloorCost );
+	}
+#endif
+#if ( configKERNEL_TEST == 3 )
+	uint32_t cycles = CPU_CYCLES;
+	if (xTc > 0)
+	{
+		vTaskGetTraceInfo( xTask, cycles );
+	}
+#endif
+#if ( configKERNEL_TEST == 4 )
     if (xTc > 0)
     {
-        vTaskGetTraceInfo( xTask );
+    	vTaskGetTraceInfo( xTask, xLoopCost );
     }
-    #endif
-    #if ( configKERNEL_TEST == 3 )
-    uint32_t cycles = CPU_CYCLES;
-    if (xTc > 0)
-    {
-        vTaskGetTraceInfo( xTask, cycles );
-    }
-    #endif
+#endif
+
 }
 /*-----------------------------------------------------------*/
 
