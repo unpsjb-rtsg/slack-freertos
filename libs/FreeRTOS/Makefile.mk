@@ -16,9 +16,18 @@ INCLUDE_PATHS += -I$(APP_DIR)
 
 ifeq ($(USE_SLACK), 1)
   OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v9.0.0)
+    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
+  endif
   INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 else
   OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
+endif
+
+ifeq ($(TEST), 1)
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v9.0.0)
+     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.o
+  endif
 endif
 
 ifeq ($(TZ), 1)
@@ -56,6 +65,7 @@ ifeq ($(TEST), 1)
   CC_SYMBOLS += -DSLACK=$(SLACK) 
   CC_SYMBOLS += -DSLACK_K=$(SLACK_K)
   CC_SYMBOLS += -DSLACK_METHOD=$(SLACK_METHOD)
+  CC_SYMBOLS += -DFREERTOS_VERSION=$(FREERTOS_VERSION)
 endif
 
 AR_FLAGS = -r

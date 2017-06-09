@@ -14,13 +14,9 @@
 #define TASK_3_WCET 1000
 #define TASK_4_WCET 1000
 
-/* Prototypes for the standard FreeRTOS callback/hook functions implemented
- * within this file. The extern "C" is required to avoid name mangling between
- * C and C++ code. */
-#if defined (__cplusplus)
-extern "C" {
-#endif
-
+/* The extern "C" is required to avoid name mangling between C and C++ code. */
+extern "C"
+{
 void vApplicationMallocFailedHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 
@@ -29,10 +25,7 @@ void vApplicationDebugAction( void *param );
 void vApplicationNotSchedulable( void );
 void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
 #endif
-
-#if defined (__cplusplus)
 }
-#endif
 
 void task_body( void* params );
 void aperiodic_task_body( void* params );

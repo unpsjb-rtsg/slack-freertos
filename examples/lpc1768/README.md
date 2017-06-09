@@ -1,5 +1,5 @@
 # Example Programs
-Example projects that implements. These examples runs on the mbed LPC 1768 microcontroller.
+These examples runs on the mbed LPC 1768 microcontroller.
 
 To choose which example project build, change the `TARGET` parameter in the root `Makefile` to one of these values:
 * `example1`: Rate Monotonic scheduling + Slack Stealing.
