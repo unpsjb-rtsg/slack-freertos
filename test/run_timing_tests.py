@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import serial
 import shutil
 import glob
@@ -113,8 +111,9 @@ def main():
             while(True):
                 try:
                     print("Testing: {0}".format(bin_file))
+                    print(os.path.join(args.drive, "test.bin"))
                     
-                    shutil.copy(bin_file, os.path.join(args.drive, "test.bin"))
+                    shutil.copy(bin_file, os.path.join(args.drive, os.path.abspath("test.bin")))
                     
                     sleep(0.5)
                     ser.sendBreak(0.5)                    
@@ -145,7 +144,7 @@ def main():
     # print results and end
     print("Results saved in {0}".format(save_file_path))
     print("{0} rts evaluated.".format(ok_counter))
-    print("{0} rts with errors:".format(errors[0]))
+    print("{0} rts with errors:".format(errors[0]) if errors[0] > 0 else "No errors.")
     if errors[0] > 0:
         print("\tdeadline missed: {0}".format(errors[1]))
         print("\tnot schedulable: {0}".format(errors[2]))    

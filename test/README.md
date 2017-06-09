@@ -43,7 +43,7 @@ Follow the next steps to prepare the required files for running a test:
 
 1. First create a directory for the test under the `tests` directory. All the required files will be placed in this directory. For this example, `Test1` will be used as the name for this folder.
 
-2. Copy the `Makefile` file into the `Test1` directory. If the compiler path was not added to the system or user path, specify the path to the `bin` directory of the ARM C Compiler installation in the variable `GCC_BIN`. Next, update the variables `MBED_DIR`, `FREERTOS_DIR` and `SLACK_DIR` if needed.
+2. Copy the `Makefile` file into the `Test1` directory. If the path to a suitable compiler was not added to the system or user path, specify it in the variable `GCC_BIN`. Next, update the variables `MBED_DIR`, `FREERTOS_DIR` and `SLACK_DIR` if needed.
 
 3. Next, copy the `FreeRTOSConfig.h` file into the `Test1` directory.
 

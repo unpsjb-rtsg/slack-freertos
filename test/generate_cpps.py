@@ -84,11 +84,11 @@ def get_args():
     parser.add_argument("count", help="Number of CPP files to generate for each XML file. Each CPP file will implement a task-set of several periodic tasks.", type=int)
     
     source_group = parser.add_argument_group('Source code files', 'This options control how the CPP files are generated from a task-set.')
-    source_group.add_argument("--start", help="RTS to start from. Defaults to %(default)s.", type=int, default=1)
+    source_group.add_argument("--start", help="Start generating CPPs starting from this offset. Defaults to %(default)s.", type=int, default=1)
     source_group.add_argument("--template", help="Template file used by COG to generate the CPP files. Defaults to %(default)s.", type=str, default="main.cpp")
-    source_group.add_argument("--srcpath", help="Path to directory where the CPP files will be saved.", type=str)
-    source_group.add_argument("--xmlpath", help="Path to directory with xml files.", type=str)
-    source_group.add_argument("--ignore", nargs='+', type=int, help="A list of RTS to ignore in the XML files.", default=[])
+    source_group.add_argument("--srcpath", help="Save path where the generated CPP files will be stored.", type=str)
+    source_group.add_argument("--xmlpath", help="Xml files directory path.", type=str)
+    source_group.add_argument("--ignore", help="A list of RTS to ignore in the XML files.", nargs='+', type=int, default=[])
 
     schedtest_group = parser.add_argument_group('Scheduling evaluation', 'This options control if a scheduling analysis is to be performed before a CPP file is generated from a task-set.')
     schedtest_group.add_argument("--testsched", help="Check the schedulability of each RTS before generating a CPP file. Defaults to %(default)s.", action="store_true", default=True)
