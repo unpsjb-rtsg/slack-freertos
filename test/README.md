@@ -53,6 +53,8 @@ Follow the next steps to prepare the required files for running a test:
 python generate_cpps.py --srcpath ./tests/Test1 --taskcnt 10 --releasecnt 10 --testsched --slack 10 ./rts/*.xml
 ```
 
+Once the CPPs files are generated, the binary files could be recompiled executig `make` in the `Test1` directory. 
+
 ## Running the test
 
 To execute the test run the `run_timing_tests.py` script. Use the `port` and `drive` parameters to indicate the serial port and drive letter (or mount point) assigned to the board, and specify the directory where the BIN files are with the `binpath` parameter. The results are saved by default in the file `binpath\results.txt`. For example:
