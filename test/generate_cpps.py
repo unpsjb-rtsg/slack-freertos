@@ -81,7 +81,7 @@ def get_args():
 
     parser = ArgumentParser(description="Generate CPP files, each of them implementing a set of real-time tasks using the FreeRTOS real-time operating system.")
 
-    parser.add_argument("count", help="Number of CPP files to generate.", type=int)
+    parser.add_argument("count", help="Number of CPP files to generate for each XML file. Each CPP file will implement a task-set of several periodic tasks.", type=int)
     
     source_group = parser.add_argument_group('Source code files', 'This options control how the CPP files are generated from a task-set.')
     source_group.add_argument("--start", help="RTS to start from. Defaults to %(default)s.", type=int, default=1)
