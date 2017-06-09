@@ -9,7 +9,7 @@ The following evaluations are available:
 1. Execution cost measured in CPU cycles of the `vTaskDelayUntil()` kernel function.
 2. Amount of ceil and floor operations performed by the selected Slack Stealing method.
 3. Execution cost of the selected Slack Stealing method measured in CPU cycles.
-4. Amount of for and while loops performed by the selected Slack Stealing method.
+4. Amount of `for` and `while` loops performed by the selected Slack Stealing method.
 
 Modify the `configKERNEL_TEST` clause in the `FreeRTOSConfig.h` file to specify which test will be implemented in the BIN files.
 
@@ -17,8 +17,8 @@ Modify the `configKERNEL_TEST` clause in the `FreeRTOSConfig.h` file to specify 
 
 The following tools are required for generating and running the tests:
 * An ARM C Compiler, for example the GNU Tools for ARM (https://launchpad.net/gcc-arm-embedded).
-* Mbed library. A copy is provided in the `libs/mbed` directory.
-* FreeRTOS source code. Copies of supported FreeRTOS versions are provided in the `libs/FreeRTOS` directory.
+* The mbed library. A copy is provided in the `libs/mbed` directory.
+* The FreeRTOS source code. Copies of supported FreeRTOS versions are provided in the `libs/FreeRTOS` directory.
 * Python 2.7 installed (3.x should work fine too).
 * Python modules *cog* (http://nedbatchelder.com/code/cog/), for generating the CPP files, and *pyserial* (http://pyserial.sourceforge.net/), for getting back the results from the mbed board through the serial port.
 
@@ -30,10 +30,10 @@ One or more xml files with tasks groups, generated with the RTTSG tool (availabl
 
 Two python scripts are provided to generate the CPP files, and run the tests:
 
-* `generate_cpps.py`: get the specified number of task-sets from the xml files, and generate cpp files into the specificied directory. Optionaly, compile each source code file. Use the `--help` parameter to see all the available options. The most important options are:
+* `generate_cpps.py`: get the specified number of task-sets from the xml files, and generate cpp files into the specificied directory and, optionaly, compile each source code file. Use the `--help` parameter to see all the available options. The most important options are:
   * `--slack`: if present the generated programs will implement Slack Stealing.
-  * `--slackmethod`: specify the Slack Stealing algorithm to implement. Currently you could choose between `fixed` (Urriza et. al.) and `davis` (Davis et. al.) slack calculation methods.
-  * `--slackcalc`: indicates if the slack stealing algorithm should be executed each time that a task instance finish (`ss`) or only at the system startup (`k`). 
+  * `--slackcalc`: indicates if the slack stealing algorithm should be executed each time that a task instance finish (`ss`) or only at the system startup (`k`).
+  * `--slackmethod`: specify the Slack Stealing algorithm to implement. Currently you could choose between `fixed` (Urriza et. al.) and `davis` (Davis et. al.) slack calculation methods. 
 
 * `run_timing_tests.py`: perform the execution of the tests, copying each BIN file in the specified mbed board, reading back the results through the serial port and saving them in a file.
 
@@ -41,15 +41,15 @@ Two python scripts are provided to generate the CPP files, and run the tests:
 
 Follow the next steps to prepare the required files for running a test:
 
-1. Create a dedicated directory for the test under the `tests` directory. All the required files will be placed in this directory. For this example, we will use `Test1` as the name for this folder.
+1. First create a directory for the test under the `tests` directory. All the required files will be placed in this directory. For this example, `Test1` will be used as the name for this folder.
 
-2. Copy the `Makefile` file into the `Test1` directory. Change the variable `GCC_BIN` with the path to the ARM C Compiler `bin` directory, if the compiler was not added to the system or user path.  Next, update the variables `MBED_DIR`, `FREERTOS_DIR` and `SLACK_DIR` if needed.
+2. Copy the `Makefile` file into the `Test1` directory. If the compiler path was not added to the system or user path, specify the path to the `bin` directory of the ARM C Compiler installation in the variable `GCC_BIN`. Next, update the variables `MBED_DIR`, `FREERTOS_DIR` and `SLACK_DIR` if needed.
 
-3. Copy the `FreeRTOSConfig.h` file into the `Test1` directory. Assing to `configKERNEL_TEST` the number of the test to execute.
+3. Next, copy the `FreeRTOSConfig.h` file into the `Test1` directory.
 
-4. Finally, run the `generate_cpps.py` script to generate the source code and binary files. For example, to create binary and source code files for the first 10 real-time systems in each XML found in the `rts` directory:
+4. Run the `generate_cpps.py` script to generate the source code and binary files. For example, to create binary and source code files for the first 10 real-time systems in each XML found in the `rts` directory:
 ```
-python generate_cpps.py --template main.cpp --xmlpath ./rts --srcpath ./tests/Test1 --start 1 --count 10 --taskcnt 10 --releasecnt 10 --testsched --bins --cpps --slack
+python generate_cpps.py --xmlpath ./rts --srcpath ./tests/Test1 --taskcnt 10 --releasecnt 10 --testsched --bins --slack 10
 ```
 
 ## Running the test
