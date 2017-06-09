@@ -1,7 +1,9 @@
-import glob
 import os
+import sys
+import glob
 import tempfile
 import subprocess
+import collections
 from argparse import ArgumentParser
 
 def test_rts(id, xmlfile):
@@ -78,21 +80,22 @@ def get_args():
     freertos_choices = ["v8.1.2", "v9.0.0"]
     slack_choices = ["ss","k"]
     slackmethod_choices = ["fixed", "davis"]
+    test_choices = ['cycles-cs', 'ceils', 'cycles-ss', 'loops']
 
     parser = ArgumentParser(description="Generate CPP files, each of them implementing a set of real-time tasks using the FreeRTOS real-time operating system.")
 
     parser.add_argument("count", help="Number of CPP files to generate for each XML file. Each CPP file will implement a task-set of several periodic tasks.", type=int)
+    parser.add_argument("xml_files", help="XML file with real-time task-sets from which generate CPPs files.", nargs="+", metavar="xml")
     
     source_group = parser.add_argument_group('Source code files', 'This options control how the CPP files are generated from a task-set.')
     source_group.add_argument("--start", help="Start generating CPPs starting from this offset. Defaults to %(default)s.", type=int, default=1)
     source_group.add_argument("--template", help="Template file used by COG to generate the CPP files. Defaults to %(default)s.", type=str, default="main.cpp")
     source_group.add_argument("--srcpath", help="Save path where the generated CPP files will be stored.", type=str)
-    source_group.add_argument("--xmlpath", help="Xml files directory path.", type=str)
     source_group.add_argument("--ignore", help="A list of RTS to ignore in the XML files.", nargs='+', type=int, default=[])
 
     schedtest_group = parser.add_argument_group('Scheduling evaluation', 'This options control if a scheduling analysis is to be performed before a CPP file is generated from a task-set.')
     schedtest_group.add_argument("--testsched", help="Check the schedulability of each RTS before generating a CPP file. Defaults to %(default)s.", action="store_true", default=True)
-    schedtest_group.add_argument("--limit", help="Maximum amount of RTS to test for schedulability. Defaults to %(default)s.", type=int, default=1000)
+    schedtest_group.add_argument("--limit", help="Maximum amount of RTS to test for schedulability.", type=int, default=None)
 
     bin_group = parser.add_argument_group('Compilation options', 'This options control how the CPP files are compiled.')
     bin_group.add_argument("--bins", help="Compile the CPP files.", action="store_true", default=False)
@@ -103,20 +106,34 @@ def get_args():
     bin_group.add_argument("--slackcalc", help="When to calculate slack. Valid values are " + ', '.join(slack_choices) + ". Defaults to %(default)s.", choices=slack_choices, default=slack_choices[0])
     bin_group.add_argument("--slackmethod", help="Slack Stealing method to test. Valid values are " + ', '.join(slackmethod_choices) + ". Defaults to %(default)s.", choices=slackmethod_choices, default=slackmethod_choices[0])
     bin_group.add_argument("--debug", help="Set the GCC debug option (-G).", action="store_const", const=1, default=0)
-    bin_group.add_argument("--test", help="Test to perform.", choices=["1","2","3","4"], default=1 )
+    bin_group.add_argument("--test", help="Test to perform. Available tests are " + ', '.join(test_choices) + ". Defaults to %(default)s.", choices=test_choices, default=test_choices[0] )
 
     return parser.parse_args()
 
 
 def main():
+    slack_calc = collections.OrderedDict({ 'ss': 0, 'k': 1 })
+    slack_methods = { 'fixed': 0, 'davis': 1 }
+    test_names = { 'cycles-cs': 1, 'ceils': 2, 'cycles-ss': 3, 'loops': 4}
+    
     args = get_args()
     
-    return_code = 0
-    
-    slack_calc = { 'ss': 0, 'k': 1 }
-    slack_methods = { 'fixed': 0, 'davis': 1 }
+    if not os.path.isdir(args.srcpath):
+        print("{0}: path not found.".format(args.srcpath), file=sys.stderr)
+        sys.exit(1)
 
-    xml_file_list = glob.glob("{0}/*.xml".format(args.xmlpath));
+    return_code = 0
+
+    xml_file_list = []
+    for xml_file in args.xml_files:
+        if not os.path.isfile(xml_file):
+            print("warning: {0} file not found.".format(xml_file), file=sys.stderr)
+        else:
+            xml_file_list.append(xml_file)
+    
+    if not xml_file_list:
+        print("error: no files found.", file=sys.stderr)
+        sys.exit(1)
         
     # remove previous generated bin files
     subprocess.call("make --no-print-directory -C {0} clean".format(args.srcpath), shell=True, stdout=None, stderr=None)
@@ -136,7 +153,7 @@ def main():
     
             # xml file name
             bin_file_name = os.path.splitext(xml_file_name)[0]
-            
+
             if args.testsched:
                 rts_found = 0
                 limit = 0
@@ -149,17 +166,16 @@ def main():
                             tmp_file.write(bytes(cog_str, "UTF-8"))
                         rts_found = rts_found + 1
                     else:
-                        print("str {0} in {1} not schedulable.".format(rts_id, xml_file))
                         limit = limit + 1
+                    
                     rts_id = rts_id + 1
     
-                    if limit > args.limit:
-                        break             
+                    if args.limit and limit > args.limit:
+                        break
             else:
                 for x in range(args.start, args.start + args.count):
                     cpp_file = os.path.join(args.srcpath, "{0}_{1:05}.cpp".format(bin_file_name, x))
                     cog_str = "{0} -D RTS_TO_TEST={1} -D RTS_FILE={2} -d -o {3}\n".format(args.template, x, xml_file, cpp_file)
-                    #tmp_file.write(bytes(cog_str, "UTF-8"))
                     tmp_file.write(bytes(cog_str))
     
         # from the python docs: "Whether the name can be used to open the file a
@@ -184,15 +200,13 @@ def main():
                         "SLACK_K={0}".format(slack_calc[args.slackcalc]),
                         "SLACK_METHOD={0}".format(slack_methods[args.slackmethod]),
                         "TEST_PATH={0}".format(args.srcpath),
-                        "KERNEL_TEST={0}".format(int(args.test)),
+                        "KERNEL_TEST={0}".format(test_names[args.test]),
                         "FREERTOS_KERNEL_VERSION_NUMBER={0}".format(args.freertos),
                         "FREERTOS_KERNEL_VERSION_NUMBER_MAJOR={0}".format(int(args.freertos[1])) ]
         returncode = subprocess.call(" ".join(make_string), shell=True, stdout=None, stderr=None)
     
     if returncode != 0:
         print("Something went wrong!")
-    else:   
-        print("Done!")
 
 
 if __name__ == '__main__':
