@@ -30,10 +30,11 @@ One or more xml files with tasks groups, generated with the RTTSG tool (availabl
 
 Two python scripts are provided to generate the CPP files, and run the tests:
 
-* `generate_cpps.py`: get the specified number of task-sets from the xml files, and generate cpp files into the specificied directory and, optionaly, compile each source code file. Use the `--help` parameter to see all the available options. The most important options are:
+* `generate_cpps.py`: get the specified number of task-sets from the xml files, and generate cpp files into the specificied directory and, optionaly, compile each source code file. Use the `--help` option to see all the available parameters. The most important options are:
   * `--slack`: if present the generated programs will implement Slack Stealing.
   * `--slackcalc`: indicates if the slack stealing algorithm should be executed each time that a task instance finish (`ss`) or only at the system startup (`k`).
-  * `--slackmethod`: specify the Slack Stealing algorithm to implement. Currently you could choose between `fixed` (Urriza et. al.) and `davis` (Davis et. al.) slack calculation methods. 
+  * `--slackmethod`: specify the Slack Stealing algorithm to implement. Currently you could choose between `fixed` (Urriza et. al.) and `davis` (Davis et. al.) slack calculation methods.
+  * `--freertos`: which FreeRTOS version to use for building the binaries. 
 
 * `run_timing_tests.py`: perform the execution of the tests, copying each BIN file in the specified mbed board, reading back the results through the serial port and saving them in a file.
 
@@ -49,8 +50,10 @@ Follow the next steps to prepare the required files for running a test:
 
 4. Run the `generate_cpps.py` script to generate the source code and binary files. For example, to create binary and source code files for the first 10 real-time systems in each XML found in the `rts` directory:
 ```
-python generate_cpps.py --xmlpath ./rts --srcpath ./tests/Test1 --taskcnt 10 --releasecnt 10 --testsched --bins --slack 10
+python generate_cpps.py --srcpath ./tests/Test1 --taskcnt 10 --releasecnt 10 --testsched --slack 10 ./rts/*.xml
 ```
+
+The binary files could be recompiled executig `make` in the `Test1` directory. A file `Makefile.config` is created into the `Test1` directory with the options used. 
 
 ## Running the test
 
