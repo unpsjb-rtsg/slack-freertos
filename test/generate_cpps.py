@@ -3,7 +3,6 @@ import sys
 import glob
 import tempfile
 import subprocess
-import collections
 from argparse import ArgumentParser
 
 def test_rts(id, xmlfile):
@@ -112,10 +111,10 @@ def get_args():
 
 
 def main():
-    slack_calc = collections.OrderedDict({ 'ss': 0, 'k': 1 })
+    slack_calc = { 'ss': 0, 'k': 1 }
     slack_methods = { 'fixed': 0, 'davis': 1 }
-    test_names = { 'cycles-cs': 1, 'ceils': 2, 'cycles-ss': 3, 'loops': 4}
-    
+    test_names ={ 'cycles-cs': 1, 'ceils': 2, 'cycles-ss': 3, 'loops': 4}
+
     args = get_args()
     
     if not os.path.isdir(args.srcpath):
