@@ -325,8 +325,8 @@ static inline void prvTaskCalculateSlack_fixed1( TaskHandle_t xTask, const TickT
     TickType_t xDi = pxTask->xDeadline;
     if ( xTc > ( TickType_t ) 0U )
     {
-    	// xTask is in suspended state, and xItemValue has the instant in
-    	// which the task should be removed from the blocked list.
+    	// xTimeToWake has the instant in which the task should be removed
+    	// from the blocked list.
     	xXi = pxTask->xTimeToWake;
     	xDi = xXi + pxTask->xDeadline;
     }
@@ -456,10 +456,9 @@ static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickT
 	TickType_t xD = pxTask->xDeadline;
 	if ( xTc > ( TickType_t ) 0U )
 	{
-		// xTask is in suspended state, and xItemValue has the instant in
-		// which the task should be removed from the blocked list. In this
-		// method all times are relative to the current tick time, so xTc
-		// must be subtracted from.
+		// xTimeToWake has the instant in which the task should be removed from
+		// the blocked list. In this method all times are relative to the
+		//current tick time, so xTc must be subtracted from.
 		xD = pxTask->xTimeToWake - xTc + pxTask->xDeadline;
 	}
 
@@ -468,8 +467,7 @@ static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickT
 		TickType_t xWm = xW;
 		TickType_t xSum = ( TickType_t ) 0U; // summation
 
-		// from lower to higher priority task -- this differs from the
-		// original paper.
+		// from lower to higher priority task -- this differs from the method.
 		pxHigherPrioTaskListItem = pxTaskListItem;
 		do
 		{
@@ -479,10 +477,9 @@ static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickT
 			TickType_t xIj = ( TickType_t ) 0U;
 			if( xTc > xIj )
 			{
-				// pxHigherPrioTask has finished, and xItemValue has the
+				// pxHigherPrioTask has finished, and xItemToWake has the
 				// time when the task should be removed from the blocked
 				// list, which is the earliest possible next release.
-				// Also, both xWm and xListItem are unsigned integers.
 				xIj = pxHigherPrioTask->xTimeToWake - xTc;
 			}
 
@@ -522,11 +519,10 @@ static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickT
 					TickType_t xIj = ( TickType_t ) 0U;
 					if( xTc > xIj )
 					{
-						// pxHigherPrioTask has finished, and xItemValue
+						// pxHigherPrioTask has finished, and xTimeToWake
 						// has the time when the task should be removed
 						// from the blocked list, which is the earliest
-						// possible next release. Also, both xWm and
-						// xListItem are unsigned integers.
+						// possible next release.
 						xIj = pxHigherPrioTask->xTimeToWake - xTc;
 					}
 

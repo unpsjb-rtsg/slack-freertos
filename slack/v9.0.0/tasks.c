@@ -436,8 +436,16 @@ PRIVILEGED_DATA static volatile UBaseType_t uxSchedulerSuspended	= ( UBaseType_t
 
 #if ( configUSE_SLACK_STEALING == 1 )
 
+	/*
+	 * The system available slack. It's the minimum value of all the task's
+	 * slacks.
+	 */
 	PRIVILEGED_DATA static volatile BaseType_t xSlackSD = 0;
 
+	/*
+	 * This list contains references to all the ready tasks, ordered by their
+	 * absolute deadlines.
+	 */
 	PRIVILEGED_DATA static List_t xDeadlineTaskList;
 
 	/*
