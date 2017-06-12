@@ -5011,7 +5011,6 @@ const TickType_t xConstTickCount = xTickCount;
     static BaseType_t xTaskSlackResume( void )
     {
         BaseType_t xSwitchRequired = pdFALSE;
-        TCB_t *pxTCB = NULL;
 
         if( listLIST_IS_EMPTY( &xSsTaskBlockedList ) == pdFALSE )
         {
@@ -5019,7 +5018,7 @@ const TickType_t xConstTickCount = xTickCount;
 
             while( listGET_END_MARKER( &xSsTaskBlockedList ) != pxTaskListItem )
             {
-                pxTCB = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+                TCB_t * pxTCB = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
 
                 /* As we are in a critical section we can access the ready
                 lists even if the scheduler is suspended. */
@@ -5030,10 +5029,7 @@ const TickType_t xConstTickCount = xTickCount;
                 pxTaskListItem = listGET_NEXT( pxTaskListItem );
             }
 
-            if( pxTCB != NULL )
-            {
-                xSwitchRequired = pdTRUE;
-            }
+            xSwitchRequired = pdTRUE;
         }
 
         return xSwitchRequired;
@@ -5048,8 +5044,6 @@ const TickType_t xConstTickCount = xTickCount;
 	{
         BaseType_t xSwitchRequired = pdFALSE;
 
-	    TCB_t *pxTCB = NULL;
-
         if( listLIST_IS_EMPTY( &pxReadyTasksLists[ configMAX_PRIORITIES - 1 ] ) == pdFALSE )
         {
             ListItem_t const *pxTaskListEnd = listGET_END_MARKER( &pxReadyTasksLists[ configMAX_PRIORITIES - 1 ] );
@@ -5057,7 +5051,7 @@ const TickType_t xConstTickCount = xTickCount;
 
             while( pxTaskListEnd != pxTaskListItem )
             {
-                pxTCB = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+                TCB_t * pxTCB = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
 
                 /* Remove task from the ready/delayed list and place in the
                     suspended list. */
@@ -5085,10 +5079,7 @@ const TickType_t xConstTickCount = xTickCount;
                 /* Get next ready task. */
                 pxTaskListItem = listGET_NEXT( pxTaskListItem );
             }
-        }
 
-        if( pxTCB != NULL )
-        {
             xSwitchRequired = pdTRUE;
         }
 
