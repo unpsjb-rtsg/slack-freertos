@@ -39,6 +39,18 @@ List_t xDeadlineTaskList;
  */
 List_t xSsTaskList;
 
+/*
+ * This list stores tasks that have been blocked by insufficient available
+ * slack. They need to be stored in a separated list because we don't know
+ * in advance when there is enough available slack. The blocked (delayed)
+ * list of FreeRTOS stores real-time tasks that are blocked in waiting of
+ * a resource -- with a timeout or for an unspecified amount of time. That
+ * list could be used to store the slack-blocked tasks, identifying the tasks
+ * waiting for slack from the resource-blocked ones by means of the SsTCB.
+ * Instead, a separate list was used.
+ */
+List_t xSsTaskBlockedList;
+
 struct SsTCB
 {
 	SsTaskType_t xTaskType;

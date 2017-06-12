@@ -80,7 +80,9 @@ void vSlackSystemSetup( void )
 {
     vListInitialise( &xSsTaskList );
     vListInitialise( &xDeadlineTaskList );
+    vListInitialise( &xSsTaskBlockedList );
 }
+/*-----------------------------------------------------------*/
 
 void vSlackSchedulerSetup( void )
 {
@@ -118,6 +120,7 @@ void vSlackSchedulerSetup( void )
 
     vSlackUpdateAvailableSlack( &xSlackSD, &xSsTaskList );
 }
+/*-----------------------------------------------------------*/
 
 /**
  * RTA - Worst Case Response Time calculation.

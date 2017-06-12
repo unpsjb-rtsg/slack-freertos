@@ -431,26 +431,6 @@ PRIVILEGED_DATA static volatile UBaseType_t uxSchedulerSuspended	= ( UBaseType_t
 
 /*lint +e956 */
 
-
-/* ==========================================================================*/
-
-#if ( configUSE_SLACK_STEALING == 1 )
-
-	/*
-	 * This list stores tasks that have been blocked by insufficient available
-	 * slack. They need to be stored in a separated list because we don't know
-	 * in advance when there is enough available slack. The blocked (delayed)
-	 * list of FreeRTOS stores real-time tasks that are blocked in waiting of
-	 * a resource -- with a timeout or for an unspecified amount of time. If
-	 * this list were used to store the slack-blocked tasks, there will be no
-	 * way to separate it for the resource-blocked ones.
-	 */
-	PRIVILEGED_DATA static List_t xSsTaskBlockedList;
-
-#endif /*  configUSE_SLACK_STEALING */
-
-/* ==========================================================================*/
-
 /*-----------------------------------------------------------*/
 
 /* Callback function prototypes. --------------------------*/
@@ -3554,12 +3534,6 @@ UBaseType_t uxPriority;
 		vListInitialise( &xSuspendedTaskList );
 	}
 	#endif /* INCLUDE_vTaskSuspend */
-
-#if ( configUSE_SLACK_STEALING == 1 )
-{
-    vListInitialise( &xSsTaskBlockedList );
-}
-#endif /* configUSE_SLACK_STEALING */
 
 	/* Start with pxDelayedTaskList using list1 and the pxOverflowDelayedTaskList
 	using list2. */

@@ -155,6 +155,7 @@ void task_body( void* params )
     }
 }
 
+
 void vApplicationMallocFailedHook( void )
 {
 	taskDISABLE_INTERRUPTS();
