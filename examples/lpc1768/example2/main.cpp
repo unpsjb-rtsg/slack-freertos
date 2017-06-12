@@ -3,6 +3,7 @@
 #include "task.h"
 #include "slack.h"
 #include "utils.h"
+#include "common.h"
 
 #define TASK_CNT 4
 #define TASK_1_PERIOD 3000
@@ -33,8 +34,6 @@ void aperiodic_task_body( void* params );
 TaskHandle_t task_handles[ TASK_CNT ];
 
 Serial pc( USBTX, USBRX );
-
-// mbed LPC 1768 on-board LEDs.
 DigitalOut leds[] = { LED1, LED2, LED3, LED4 };
 
 int main()
@@ -152,86 +151,3 @@ void task_body( void* params )
 		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }
 }
-
-
-void vApplicationMallocFailedHook( void )
-{
-	taskDISABLE_INTERRUPTS();
-
-    pc.printf( "Malloc failed\r\n" );
-
-	for( ;; )
-	{
-        leds[ 2 ] = 1;
-        wait_ms(1000);
-        leds[ 2 ] = 0;
-        wait_ms(500);
-	}
-}
-
-void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
-{
-	( void ) pxTask;
-
-	taskDISABLE_INTERRUPTS();
-
-	pc.printf( "%s\tStack overflow\r\n", pcTaskName );
-
-	for( ;; )
-	{
-        leds[ 2 ] = 1;
-        wait_ms(500);
-        leds[ 2 ] = 0;
-        wait_ms(500);
-	}
-}
-
-#if ( configUSE_SLACK_STEALING == 1 )
-void vApplicationDebugAction( void *param )
-{
-    ( void ) param;
-
-	taskDISABLE_INTERRUPTS();
-
-	for( ;; )
-	{
-        leds[ 4 ] = 1;
-        wait_ms(1000);
-        leds[ 4 ] = 0;
-        wait_ms(1000);
-	}
-}
-
-void vApplicationNotSchedulable( void )
-{
-	taskDISABLE_INTERRUPTS();
-
-	pc.printf( "RTS not schedulable.\r\n" );
-
-	for( ;; )
-	{
-        leds[ 1 ] = 1;
-        wait_ms(1000);
-        leds[ 1 ] = 0;
-        wait_ms(1000);
-	}
-}
-
-void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount )
-{
-    ( void ) uxRelease;
-    ( void ) xTickCount;
-
-    taskDISABLE_INTERRUPTS();
-
-    pc.printf( "%s\tdeadline miss at %d\r\n", pcTaskName, xTickCount );
-
-    for( ;; )
-    {
-        leds[ 0 ] = 1;
-        wait_ms( 1000 );
-        leds[ 0 ] = 0;
-        wait_ms( 1000 );
-    }
-}
-#endif
