@@ -38,8 +38,6 @@ Serial pc( USBTX, USBRX );
 // mbed LPC 1768 on-board LEDs.
 DigitalOut leds[] = { LED1, LED2, LED3, LED4 };
 
-TickType_t xTaskPeriods[] = { TASK_1_PERIOD, TASK_2_PERIOD, TASK_3_PERIOD, TASK_4_PERIOD };
-
 int main()
 {
 	pc.baud(9600);
@@ -51,11 +49,13 @@ int main()
 	leds[2] = 0;
 	leds[3] = 0;
 
+	vSlackSystemSetup();
+
     // create periodic tasks
-    xTaskCreate( task_body, "T1", 256, ( TickType_t * ) 0, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
-    xTaskCreate( task_body, "T2", 256, ( TickType_t * ) 1, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
-    xTaskCreate( task_body, "T3", 256, ( TickType_t * ) 2, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
-    xTaskCreate( task_body, "T4", 256, ( TickType_t * ) 3, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
+    xTaskCreate( task_body, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
+    xTaskCreate( task_body, "T2", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
+    xTaskCreate( task_body, "T3", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
+    xTaskCreate( task_body, "T4", 256, NULL, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
     // additional parameters needed by the slack stealing framework
@@ -66,12 +66,14 @@ int main()
     vTaskSetParams( task_handles[ 3 ], TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 #endif
 #if( tskKERNEL_VERSION_MAJOR == 9 )
-    vSlackSetTaskParams( task_handles[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
-    vSlackSetTaskParams( task_handles[ 1 ], TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
-    vSlackSetTaskParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
-    vSlackSetTaskParams( task_handles[ 3 ], TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
+    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
+    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
+    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
+    vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 #endif
 #endif
+
+    vSlackSchedulerSetup();
 
     vTaskStartScheduler();
 
@@ -80,10 +82,6 @@ int main()
 
 void task_body( void* params )
 {
-	TickType_t xPreviousWakeTime = xTaskGetTickCount();
-
-	uint32_t xTaskId = ( uint32_t ) params;
-
 	SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
 
     int32_t slackArray[ 7 ];
@@ -97,9 +95,19 @@ void task_body( void* params )
 				slackArray[3], slackArray[4], slackArray[5], slackArray[6]);
 		xTaskResumeAll();
 
-		leds[ xTaskId ] = 1;
-		vUtilsEatCpu( 600 );
-		leds[ xTaskId ] = 0;
+		leds[ pxTaskSsTCB->xId - 1 ] = 1;
+
+#if ( configTASK_EXEC == 0 )
+		vUtilsEatCpu( pxTaskSsTCB->xWcet - 250 );
+#endif
+#if ( configTASK_EXEC == 1 )
+		while( pxTaskSsTCB->xCur <  pxTaskSsTCB->xWcet )
+		{
+			asm("nop");
+		}
+#endif
+
+		leds[ pxTaskSsTCB->xId - 1 ] = 0;
 
         vTaskSuspendAll();
 		vTasksGetSlacks( slackArray );
@@ -109,13 +117,15 @@ void task_body( void* params )
 				pxTaskSsTCB->xCur);
 		xTaskResumeAll();
 
-		vTaskDelayUntil( &xPreviousWakeTime, xTaskPeriods[ xTaskId ] );
+		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }
 }
 
 void vApplicationMallocFailedHook( void )
 {
 	taskDISABLE_INTERRUPTS();
+
+    pc.printf( "Malloc failed\r\n" );
 
 	for( ;; )
 	{
@@ -128,10 +138,11 @@ void vApplicationMallocFailedHook( void )
 
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
 {
-	( void ) pcTaskName;
 	( void ) pxTask;
 
 	taskDISABLE_INTERRUPTS();
+
+	pc.printf( "%s\tStack overflow\r\n", pcTaskName );
 
 	for( ;; )
 	{
@@ -162,6 +173,8 @@ void vApplicationNotSchedulable( void )
 {
 	taskDISABLE_INTERRUPTS();
 
+	pc.printf( "RTS not schedulable.\r\n" );
+
 	for( ;; )
 	{
         leds[ 1 ] = 1;
@@ -178,7 +191,7 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, Ti
 
     taskDISABLE_INTERRUPTS();
 
-    pc.printf( "%s\r\n", pcTaskName );
+    pc.printf( "%s\tdeadline miss at %d\r\n", pcTaskName, xTickCount );
 
     for( ;; )
     {
@@ -189,3 +202,4 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, Ti
     }
 }
 #endif
+

@@ -19,16 +19,105 @@ static inline void prvTaskCalculateSlack_fixed1( TaskHandle_t  xTask, const Tick
 static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList ) __attribute__((always_inline));
 #endif
 
-void vSlackSetTaskParams( TaskHandle_t xTask, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId )
+void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId )
 {
-	SsTCB_t *pxSsTCB = pvTaskGetThreadLocalStoragePointer( xTask, 0 );
+	UBaseType_t uxTaskPriority = uxTaskPriorityGet( xTask );
+	SsTCB_t * pxNewSsTCB = pvPortMalloc( sizeof( SsTCB_t ) );
 
-	pxSsTCB->xPeriod = xPeriod;
-	pxSsTCB->xDeadline = xDeadline;
-	pxSsTCB->xWcet = xWcet;
-	pxSsTCB->xA = xWcet;
-	pxSsTCB->xB = xPeriod;
-	pxSsTCB->xId = xId;
+	if( ( uxTaskPriority == tskIDLE_PRIORITY ) || ( uxTaskPriority == configMAX_PRIORITIES - 1 ) )
+	{
+		// error?
+	}
+
+	pxNewSsTCB->xTaskType = xTaskType;
+
+	pxNewSsTCB->xPeriod = xPeriod;
+	pxNewSsTCB->xDeadline = xDeadline;
+	pxNewSsTCB->xWcet = xWcet;
+	pxNewSsTCB->xA = xWcet;
+	pxNewSsTCB->xB = xPeriod;
+	pxNewSsTCB->xId = xId;
+
+	pxNewSsTCB->uxReleaseCount = 1U;
+	pxNewSsTCB->xPreviousWakeTime = ( TickType_t ) 0U;
+	pxNewSsTCB->xTimeToWake = ( TickType_t ) 0U;
+	pxNewSsTCB->xWcrt = 0U;
+	pxNewSsTCB->xEndTick = ( TickType_t ) 0U;
+	pxNewSsTCB->xSlack = 0U;
+#if ( configUSE_SLACK_METHOD == 0 )
+	pxNewSsTCB->xTtma = 0U;
+	pxNewSsTCB->xDi = 0U;
+#endif
+	pxNewSsTCB->xCur = ( TickType_t ) 0U;
+
+	if( xTaskType == PERIODIC_TASK )
+	{
+		vListInitialiseItem( &( pxNewSsTCB->xSsTaskListItem ) );
+		listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xSsTaskListItem ), ( TickType_t ) configMAX_PRIORITIES - ( TickType_t ) uxTaskPriority );
+		listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xSsTaskListItem ), xTask );
+		vListInsert( &xSsTaskList, &( ( pxNewSsTCB )->xSsTaskListItem ) );
+
+		vListInitialiseItem( &( pxNewSsTCB->xDeadlineTaskListItem ) );
+		listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xDeadlineTaskListItem ), xTask );
+		listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xDeadlineTaskListItem ), pxNewSsTCB->xDeadline );
+		/* The list item value of xDeadlineTaskListItem is updated when the
+			task is moved into the ready list. */
+	}
+
+	if( xTaskType == APERIODIC_TASK )
+	{
+		vListInitialiseItem( &( pxNewSsTCB->xSsTaskBlockedListItem ) );
+		listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xSsTaskBlockedListItem ), xTask );
+		listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xSsTaskBlockedListItem ), 0 );
+	}
+
+	vTaskSetThreadLocalStoragePointer( xTask, 0, ( void * ) pxNewSsTCB );
+}
+/*-----------------------------------------------------------*/
+
+void vSlackSystemSetup( void )
+{
+    vListInitialise( &xSsTaskList );
+    vListInitialise( &xDeadlineTaskList );
+    vListInitialise( &xSsTaskBlockedList );
+}
+/*-----------------------------------------------------------*/
+
+void vSlackSchedulerSetup( void )
+{
+	xSlackSD = 0;
+
+	/* Calculate worst case execution times of tasks. */
+    BaseType_t xSchedulable = xSlackCalculateTasksWcrt( &xSsTaskList );
+
+    if( xSchedulable == pdFALSE )
+    {
+        vApplicationNotSchedulable();
+    }
+
+    ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
+
+    /* Calculate slacks at xTickCount = 0 */
+    while( listGET_END_MARKER( &( xSsTaskList ) ) != pxTaskListItem )
+    {
+    	TaskHandle_t xTask = ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+    	SsTCB_t *pxTaskSs = getTaskSsTCB( xTask );
+
+    	vTaskCalculateSlack( xTask, (TickType_t) 0U, &xSsTaskList );
+    	pxTaskSs->xSlackK = pxTaskSs->xSlack;
+
+    	/* Deadline */
+    	UBaseType_t uxTaskPriority = uxTaskPriorityGet( xTask );
+    	if( uxTaskPriority != tskIDLE_PRIORITY )
+    	{
+    		listSET_LIST_ITEM_VALUE( &( ( pxTaskSs )->xDeadlineTaskListItem ), pxTaskSs->xDeadline );
+    		vListInsert( &xDeadlineTaskList, &( ( pxTaskSs )->xDeadlineTaskListItem ) );
+    	}
+
+    	pxTaskListItem = listGET_NEXT( pxTaskListItem );
+    }
+
+    vSlackUpdateAvailableSlack( &xSlackSD, &xSsTaskList );
 }
 /*-----------------------------------------------------------*/
 
