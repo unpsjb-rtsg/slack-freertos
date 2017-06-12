@@ -2,7 +2,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "slack.h"
-#include "utils.h"
 #include "common.h"
 
 #define TASK_CNT 4
@@ -14,8 +13,6 @@
 #define TASK_2_WCET 1000
 #define TASK_3_WCET 1000
 #define TASK_4_WCET 1000
-
-void task_body( void* params );
 
 TaskHandle_t task_handles[ TASK_CNT ];
 
@@ -36,10 +33,10 @@ int main()
 	vSlackSystemSetup();
 
     // create periodic tasks
-    xTaskCreate( task_body, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
-    xTaskCreate( task_body, "T2", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
-    xTaskCreate( task_body, "T3", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
-    xTaskCreate( task_body, "T4", 256, NULL, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
+    xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
+    xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
+    xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
+    xTaskCreate( periodicTaskBody, "T4", 256, NULL, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
     // additional parameters needed by the slack stealing framework
@@ -62,45 +59,4 @@ int main()
     vTaskStartScheduler();
 
     for(;;);
-}
-
-void task_body( void* params )
-{
-	SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
-
-    int32_t slackArray[ 7 ];
-
-	for(;;)
-    {
-		vTaskSuspendAll();
-		vTasksGetSlacks( slackArray );
-		pc.printf("%s\tS\t%d\t%d\t%d\t%d\t%d\t%d\n",
-				pcTaskGetTaskName(NULL), slackArray[0], slackArray[2],
-				slackArray[3], slackArray[4], slackArray[5], slackArray[6]);
-		xTaskResumeAll();
-
-		leds[ pxTaskSsTCB->xId - 1 ] = 1;
-
-#if ( configTASK_EXEC == 0 )
-		vUtilsEatCpu( pxTaskSsTCB->xWcet - 250 );
-#endif
-#if ( configTASK_EXEC == 1 )
-		while( pxTaskSsTCB->xCur <  pxTaskSsTCB->xWcet )
-		{
-			asm("nop");
-		}
-#endif
-
-		leds[ pxTaskSsTCB->xId - 1 ] = 0;
-
-        vTaskSuspendAll();
-		vTasksGetSlacks( slackArray );
-		pc.printf("%s\tE\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
-				pcTaskGetTaskName(NULL), slackArray[0], slackArray[2],
-				slackArray[3], slackArray[4], slackArray[5], slackArray[6],
-				pxTaskSsTCB->xCur);
-		xTaskResumeAll();
-
-		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
-    }
 }

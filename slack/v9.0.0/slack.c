@@ -19,6 +19,14 @@ static inline void prvTaskCalculateSlack_fixed1( TaskHandle_t  xTask, const Tick
 static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList ) __attribute__((always_inline));
 #endif
 
+volatile BaseType_t xSlackSD;
+
+List_t xDeadlineTaskList;
+
+List_t xSsTaskList;
+
+List_t xSsTaskBlockedList;
+
 void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId )
 {
 	UBaseType_t uxTaskPriority = uxTaskPriorityGet( xTask );

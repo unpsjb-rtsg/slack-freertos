@@ -24,20 +24,20 @@ typedef enum
  * The system available slack. It's the minimum value of all the task's
  * slacks.
  */
-volatile BaseType_t xSlackSD;
+extern volatile BaseType_t xSlackSD;
 
 /*
  * This list contains references to all the ready tasks, ordered by their
  * absolute deadlines.
  */
-List_t xDeadlineTaskList;
+extern List_t xDeadlineTaskList;
 
 /*
  * This list contains references to all the tasks that account for the
  * available slack of the system. Tasks at the idle priority level are not
  * accounted.
  */
-List_t xSsTaskList;
+extern List_t xSsTaskList;
 
 /*
  * This list stores tasks that have been blocked by insufficient available
@@ -49,7 +49,7 @@ List_t xSsTaskList;
  * waiting for slack from the resource-blocked ones by means of the SsTCB.
  * Instead, a separate list was used.
  */
-List_t xSsTaskBlockedList;
+extern List_t xSsTaskBlockedList;
 
 struct SsTCB
 {

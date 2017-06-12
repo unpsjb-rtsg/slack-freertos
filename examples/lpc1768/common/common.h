@@ -19,6 +19,9 @@ void vApplicationDebugAction( void *param );
 void vApplicationNotSchedulable( void );
 void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
 #endif
+
+void printSlacks( char s, int32_t * slackArray, TickType_t xCur );
+void periodicTaskBody( void* params );
 }
 
 #endif /* EXAMPLES_LPC1768_COMMON_COMMON_H_ */
