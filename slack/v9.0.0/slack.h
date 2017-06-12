@@ -13,8 +13,36 @@ extern "C" {
 
 #define getTaskSsTCB( x ) ( ( SsTCB_t * ) pvTaskGetThreadLocalStoragePointer( ( TaskHandle_t ) x, 0 ) )
 
+/* Task types. */
+typedef enum
+{
+	PERIODIC_TASK,
+	APERIODIC_TASK
+} SsTaskType_t;
+
+/*
+ * The system available slack. It's the minimum value of all the task's
+ * slacks.
+ */
+volatile BaseType_t xSlackSD;
+
+/*
+ * This list contains references to all the ready tasks, ordered by their
+ * absolute deadlines.
+ */
+List_t xDeadlineTaskList;
+
+/*
+ * This list contains references to all the tasks that account for the
+ * available slack of the system. Tasks at the idle priority level are not
+ * accounted.
+ */
+List_t xSsTaskList;
+
 struct SsTCB
 {
+	SsTaskType_t xTaskType;
+
 	/* Release count for this task. The release count is incremented each
 	time the task is inserted in a ready list, after it has been blocked by
 	an invocation to xTaskDelayUntil(). The flag uxDelayUntil is set to
@@ -56,10 +84,13 @@ struct SsTCB
 
 typedef struct SsTCB SsTCB_t;
 
+void systemSetup( void );
+void schedulerSetup( void );
+
 void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
 void vApplicationNotSchedulable( void );
 
-void vSlackSetTaskParams( TaskHandle_t xTask, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId );
+void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId );
 BaseType_t xSlackCalculateTasksWcrt( List_t * pxTasksList );
 
 void vSlackUpdateAvailableSlack( volatile BaseType_t * xSlackSD, const List_t * pxTasksList );

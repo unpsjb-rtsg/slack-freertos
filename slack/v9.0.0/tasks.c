@@ -437,25 +437,6 @@ PRIVILEGED_DATA static volatile UBaseType_t uxSchedulerSuspended	= ( UBaseType_t
 #if ( configUSE_SLACK_STEALING == 1 )
 
 	/*
-	 * The system available slack. It's the minimum value of all the task's
-	 * slacks.
-	 */
-	PRIVILEGED_DATA static volatile BaseType_t xSlackSD = 0;
-
-	/*
-	 * This list contains references to all the ready tasks, ordered by their
-	 * absolute deadlines.
-	 */
-	PRIVILEGED_DATA static List_t xDeadlineTaskList;
-
-	/*
-	 * This list contains references to all the tasks that account for the
-	 * available slack of the system. Tasks at the idle priority level are not
-	 * accounted.
-	 */
-	PRIVILEGED_DATA static List_t xSsTaskList;
-
-	/*
 	 * This list stores tasks that have been blocked by insufficient available
 	 * slack. They need to be stored in a separated list because we don't know
 	 * in advance when there is enough available slack. The blocked (delayed)
@@ -1012,51 +993,6 @@ UBaseType_t x;
 	}
 	#endif /* portUSING_MPU_WRAPPERS */
 
-#if ( configUSE_SLACK_STEALING == 1 )
-	SsTCB_t * pxNewSsTCB = pvPortMalloc( sizeof( SsTCB_t ) );
-
-	pxNewSsTCB->uxReleaseCount = 0U;
-	pxNewSsTCB->xTimeToWake = 0U;
-	pxNewSsTCB->xWcet = 0U;
-	pxNewSsTCB->xWcrt = 0U;
-	pxNewSsTCB->xPeriod = 0U;
-	pxNewSsTCB->xDeadline = 0U;
-	pxNewSsTCB->xA = pxNewSsTCB->xWcet;
-	pxNewSsTCB->xB = pxNewSsTCB->xPeriod;
-	pxNewSsTCB->xEndTick = ( TickType_t ) 0U;
-	pxNewSsTCB->xId = 0U;
-
-	if( pxNewTCB->uxPriority != tskIDLE_PRIORITY )
-	{
-		vListInitialiseItem( &( pxNewSsTCB->xSsTaskListItem ) );
-		listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xSsTaskListItem ), ( TickType_t ) configMAX_PRIORITIES - ( TickType_t ) uxPriority );
-		listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xSsTaskListItem ), pxNewTCB );
-
-		vListInitialiseItem( &( pxNewSsTCB->xSsTaskBlockedListItem ) );
-		listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xSsTaskBlockedListItem ), pxNewTCB );
-		listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xSsTaskBlockedListItem ), 0 );
-	}
-
-	if( pxNewTCB->uxPriority != tskIDLE_PRIORITY )
-	{
-		vListInitialiseItem( &( pxNewSsTCB->xDeadlineTaskListItem ) );
-		listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xDeadlineTaskListItem ), pxNewTCB );
-		listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xDeadlineTaskListItem ), pxNewSsTCB->xDeadline );
-		/* The list item value of xDeadlineTaskListItem is updated when the
-		task is moved into the ready list. */
-	}
-
-	pxNewSsTCB->xSlack = 0U;
-
-#if ( configUSE_SLACK_METHOD == 0 )
-	pxNewSsTCB->xTtma = 0U;
-	pxNewSsTCB->xDi = 0U;
-#endif
-
-	pxNewSsTCB->xCur = ( TickType_t ) 0U;
-	pxNewTCB->pvThreadLocalStoragePointers[ 0 ] = pxNewSsTCB;
-#endif /* configUSE_SLACK_STEALING */
-
 	if( ( void * ) pxCreatedTask != NULL )
 	{
 		/* Pass the handle out in an anonymous way.  The handle can be used to
@@ -1128,23 +1064,6 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB )
 		traceTASK_CREATE( pxNewTCB );
 
 		prvAddTaskToReadyList( pxNewTCB );
-
-#if ( configUSE_SLACK_STEALING == 1 )
-{
-	SsTCB_t *pxNewSsTCB = getSsTCB( pxNewTCB );
-
-	/* The new task is now in the ready list, so it is its first release. */
-	pxNewSsTCB->uxReleaseCount = 1UL;
-
-	if( pxNewTCB->uxPriority != tskIDLE_PRIORITY )
-	{
-		if( pxNewTCB->uxPriority < ( configMAX_PRIORITIES - 1 ) )
-		{
-			vListInsert( &xSsTaskList, &( ( pxNewSsTCB )->xSsTaskListItem ) );
-		}
-	}
-}
-#endif
 
 		portSETUP_TCB( pxNewTCB );
 	}
@@ -2066,18 +1985,6 @@ BaseType_t xReturn;
 	}
 	#endif /* configUSE_TIMERS */
 
-#if ( configUSE_SLACK_STEALING == 1 )
-{
-    /* Calculate worst case execution times of tasks. */
-    BaseType_t xSchedulable = xSlackCalculateTasksWcrt( &xSsTaskList );
-
-    if( xSchedulable == pdFALSE )
-    {
-        vApplicationNotSchedulable();
-    }
-}
-#endif /* configUSE_SLACK_STEALING */
-
 	if( xReturn == pdPASS )
 	{
 		/* Interrupts are turned off here, to ensure a tick does not occur
@@ -2103,33 +2010,6 @@ BaseType_t xReturn;
 		macro must be defined to configure the timer/counter used to generate
 		the run time counter time base. */
 		portCONFIGURE_TIMER_FOR_RUN_TIME_STATS();
-
-#if ( configUSE_SLACK_STEALING == 1)
-		{
-			ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
-
-			/* Calculate slacks at xTickCount = 0 */
-			while( listGET_END_MARKER( &( xSsTaskList ) ) != pxTaskListItem )
-			{
-				TCB_t *pxTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
-				SsTCB_t *pxTaskSs = getSsTCB( pxTask );
-
-				vTaskCalculateSlack( pxTask, xTickCount, &xSsTaskList );
-				pxTaskSs->xSlackK = pxTaskSs->xSlack;
-
-				/* Deadline */
-				if( pxTask->uxPriority != tskIDLE_PRIORITY )
-				{
-					listSET_LIST_ITEM_VALUE( &( ( pxTaskSs )->xDeadlineTaskListItem ), pxTaskSs->xDeadline );
-					vListInsert( &xDeadlineTaskList, &( ( pxTaskSs )->xDeadlineTaskListItem ) );
-				}
-
-				pxTaskListItem = listGET_NEXT( pxTaskListItem );
-			}
-
-			vSlackUpdateAvailableSlack( &xSlackSD, &xSsTaskList );
-		}
-#endif /* configUSE_SLACK_STEALING */
 
 		/* Setting up the timer tick is hardware specific and thus in the
 		portable interface. */
@@ -2955,7 +2835,10 @@ BaseType_t xSwitchRequired = pdFALSE;
 		SsTCB_t *pxCurrentSsTCB = getSsTCB( pxCurrentTCB );
 
 		// Increment task release tick count
-		pxCurrentSsTCB->xCur = pxCurrentSsTCB->xCur + ONE_TICK;
+		if ( pxCurrentSsTCB != NULL )
+		{
+		    pxCurrentSsTCB->xCur = pxCurrentSsTCB->xCur + ONE_TICK;
+		}
 
 		// Decrement real-time tasks slack counter by one tick
 		if( ( pxCurrentTCB->uxPriority == tskIDLE_PRIORITY ) || ( pxCurrentTCB->uxPriority == ( configMAX_PRIORITIES - 1) ) )
@@ -3674,9 +3557,7 @@ UBaseType_t uxPriority;
 
 #if ( configUSE_SLACK_STEALING == 1 )
 {
-    vListInitialise( &xSsTaskList );
     vListInitialise( &xSsTaskBlockedList );
-	vListInitialise( &xDeadlineTaskList );
 }
 #endif /* configUSE_SLACK_STEALING */
 
@@ -5204,30 +5085,28 @@ const TickType_t xConstTickCount = xTickCount;
             {
                 pxTCB = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
 
-                {
-                    /* Remove task from the ready/delayed list and place in the
+                /* Remove task from the ready/delayed list and place in the
                     suspended list. */
-                    if( uxListRemove( &( pxTCB->xStateListItem ) ) == ( UBaseType_t ) 0 )
-                    {
-                        taskRESET_READY_PRIORITY( pxTCB->uxPriority );
-                    }
-                    else
-                    {
-                        mtCOVERAGE_TEST_MARKER();
-                    }
-
-                    /* Is the task waiting on an event also? */
-                    if( listLIST_ITEM_CONTAINER( &( pxTCB->xEventListItem ) ) != NULL )
-                    {
-                        ( void ) uxListRemove( &( pxTCB->xEventListItem ) );
-                    }
-                    else
-                    {
-                        mtCOVERAGE_TEST_MARKER();
-                    }
-
-                    vListInsertEnd( &xSsTaskBlockedList, &( getSsTCB( pxTCB )->xSsTaskBlockedListItem ) );
+                if( uxListRemove( &( pxTCB->xStateListItem ) ) == ( UBaseType_t ) 0 )
+                {
+                	taskRESET_READY_PRIORITY( pxTCB->uxPriority );
                 }
+                else
+                {
+                	mtCOVERAGE_TEST_MARKER();
+                }
+
+                /* Is the task waiting on an event also? */
+                if( listLIST_ITEM_CONTAINER( &( pxTCB->xEventListItem ) ) != NULL )
+                {
+                	( void ) uxListRemove( &( pxTCB->xEventListItem ) );
+                }
+                else
+                {
+                	mtCOVERAGE_TEST_MARKER();
+                }
+
+                vListInsertEnd( &xSsTaskBlockedList, &( getSsTCB( pxTCB )->xSsTaskBlockedListItem ) );
 
                 /* Get next ready task. */
                 pxTaskListItem = listGET_NEXT( pxTaskListItem );
