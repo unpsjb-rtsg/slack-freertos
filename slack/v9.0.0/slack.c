@@ -76,13 +76,13 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType, cons
 }
 /*-----------------------------------------------------------*/
 
-void systemSetup( void )
+void vSlackSystemSetup( void )
 {
     vListInitialise( &xSsTaskList );
     vListInitialise( &xDeadlineTaskList );
 }
 
-void schedulerSetup( void )
+void vSlackSchedulerSetup( void )
 {
 	xSlackSD = 0;
 

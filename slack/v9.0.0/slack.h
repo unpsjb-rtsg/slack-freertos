@@ -84,11 +84,11 @@ struct SsTCB
 
 typedef struct SsTCB SsTCB_t;
 
-void systemSetup( void );
-void schedulerSetup( void );
-
 void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
 void vApplicationNotSchedulable( void );
+
+void vSlackSystemSetup( void );
+void vSlackSchedulerSetup( void );
 
 void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId );
 BaseType_t xSlackCalculateTasksWcrt( List_t * pxTasksList );

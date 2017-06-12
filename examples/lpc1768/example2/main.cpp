@@ -48,7 +48,7 @@ int main()
 	leds[2] = 0;
 	leds[3] = 0;
 
-	systemSetup();
+	vSlackSystemSetup();
 
     // create periodic tasks
     xTaskCreate( task_body, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
@@ -76,7 +76,7 @@ int main()
     vSlackSetTaskParams( xApTaskHandle, APERIODIC_TASK, 0, 0, 0, 5 );
 #endif
 
-    schedulerSetup();
+    vSlackSchedulerSetup();
 
     vTaskStartScheduler();
 
