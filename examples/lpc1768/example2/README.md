@@ -28,4 +28,4 @@ T1  E   7764    130     1129    2129    1130    130     893
 ...
 ```
 
-Note that the `pc.printf()` functions has a considerable overhead.
+Note that the `pc.printf()` function has a considerable overhead.
