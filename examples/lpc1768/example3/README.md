@@ -3,9 +3,9 @@ Example project that uses a *Rate Monotonic* scheduler with *Slack Stealing*. Th
 
 The example is similar to the example2, but uses the Tracealizer library to generate a detailed trace of the system execution.
 
-For default the example uses the *Snapshot Mode*, which keeps the trace in a buffer, allowing for saving a snapshots at any point by saving the RAM buffer. 
+By default the example uses the *Snapshot Mode*, which keeps the trace in a buffer, allowing for saving a snapshot at any point by saving this buffer.
 
-To manually save a RAM dump using `pyocd-gdbserver` and `arm-none-eabi-gdb` debugger:
+For example, you could manually save a RAM dump starting `pyocd-gdbserver` with the LPC1768 board connected, and then executing the following commands using the `arm-none-eabi-gdb` debugger:
 
 ```bash
 $ arm-none-eabi-gdb
@@ -19,4 +19,4 @@ $ arm-none-eabi-gdb
 $ 
 ```
 
-Then you can inspect the trace using the *Tracealyzer for FreeRTOS* application.
+The trace can be inspected opening the `example3.dump` file with the *Tracealyzer for FreeRTOS* application.
