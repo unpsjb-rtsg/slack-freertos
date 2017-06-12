@@ -24,7 +24,8 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType, cons
 	UBaseType_t uxTaskPriority = uxTaskPriorityGet( xTask );
 	SsTCB_t * pxNewSsTCB = pvPortMalloc( sizeof( SsTCB_t ) );
 
-	if( uxTaskPriority == tskIDLE_PRIORITY ) {
+	if( ( uxTaskPriority == tskIDLE_PRIORITY ) || ( uxTaskPriority == configMAX_PRIORITIES - 1 ) )
+	{
 		// error?
 	}
 
@@ -42,6 +43,12 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType, cons
 	pxNewSsTCB->xTimeToWake = ( TickType_t ) 0U;
 	pxNewSsTCB->xWcrt = 0U;
 	pxNewSsTCB->xEndTick = ( TickType_t ) 0U;
+	pxNewSsTCB->xSlack = 0U;
+#if ( configUSE_SLACK_METHOD == 0 )
+	pxNewSsTCB->xTtma = 0U;
+	pxNewSsTCB->xDi = 0U;
+#endif
+	pxNewSsTCB->xCur = ( TickType_t ) 0U;
 
 	if( xTaskType == PERIODIC_TASK )
 	{
@@ -63,15 +70,6 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType, cons
 		listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xSsTaskBlockedListItem ), xTask );
 		listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xSsTaskBlockedListItem ), 0 );
 	}
-
-	pxNewSsTCB->xSlack = 0U;
-
-#if ( configUSE_SLACK_METHOD == 0 )
-	pxNewSsTCB->xTtma = 0U;
-	pxNewSsTCB->xDi = 0U;
-#endif
-
-	pxNewSsTCB->xCur = ( TickType_t ) 0U;
 
 	vTaskSetThreadLocalStoragePointer( xTask, 0, ( void * ) pxNewSsTCB );
 }
