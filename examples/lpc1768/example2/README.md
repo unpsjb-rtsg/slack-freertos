@@ -4,7 +4,7 @@ Example project that uses a *Rate Monotonic* scheduler with *Slack Stealing*. Th
 Each task print the following data into the serial port: 
 * Its name, followed by a S if the task is Starting, or an E if it is ending.
 * The current tick count.
-* The slack counters for all the tasks, followed by the system available slack.
+* The system available slack, followed by the slack counters for all the tasks.
 * The current task executed time, measured in ticks.
 
 This is a example output:
