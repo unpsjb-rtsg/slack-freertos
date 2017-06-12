@@ -82,8 +82,6 @@ int main()
 
 void task_body( void* params )
 {
-	TickType_t xPreviousWakeTime = ( TickType_t) 0U;
-
 	SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
 
     int32_t slackArray[ 7 ];
@@ -119,7 +117,7 @@ void task_body( void* params )
 				pxTaskSsTCB->xCur);
 		xTaskResumeAll();
 
-		vTaskDelayUntil( &xPreviousWakeTime, pxTaskSsTCB->xPeriod );
+		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }
 }
 

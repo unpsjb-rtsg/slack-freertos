@@ -63,6 +63,7 @@ struct SsTCB
 	UBaseType_t uxReleaseCount;
 	UBaseType_t uxDelayUntil;
 
+	TickType_t xPreviousWakeTime;
 	TickType_t xTimeToWake;         /* Tick time at which the task wants to wake. */
 
 	TickType_t xWcrt;				/* Worst case response time. */
