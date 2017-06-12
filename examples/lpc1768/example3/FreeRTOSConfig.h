@@ -141,6 +141,7 @@ to exclude the API function. */
 #define INCLUDE_vTaskDelayUntil			1
 #define INCLUDE_vTaskDelay				1
 #define INCLUDE_pcTaskGetTaskName       1
+#define INCLUDE_xTaskGetCurrentTaskHandle 1
 
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS
@@ -179,4 +180,7 @@ standard names. */
 
 #endif /* FREERTOS_CONFIG_H */
 
-#include "trcKernelPort.h"
+/* Integrates the Tracealyzer recorder with FreeRTOS */
+#if ( configUSE_TRACE_FACILITY == 1 )
+#include "trcRecorder.h"
+#endif

@@ -31,21 +31,32 @@ ifeq ($(TEST), 1)
 endif
 
 ifeq ($(TZ), 1)
-  OBJECTS += ../Tracealizer/trcBase.o
-  OBJECTS += ../Tracealizer/trcHardwarePort.o
-  OBJECTS += ../Tracealizer/trcKernel.o
-  OBJECTS += ../Tracealizer/trcKernelPortFreeRTOS.o
-  OBJECTS += ../Tracealizer/trcUser.o
-  
   MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768
   MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM
   MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP
   MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X
   MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X/TARGET_MBED_LPC1768
+  INCLUDE_PATHS += $(MBED_INCLUDE_PATHS)
   
-  INCLUDE_PATHS += -I../Tracealizer/Include
-  INCLUDE_PATHS += -I../Tracealizer/ConfigurationTemplate
-  INCLUDE_PATHS +=$(MBED_INCLUDE_PATHS)  
+  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcBase.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcHardwarePort.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernel.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernelPortFreeRTOS.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcUser.o
+  
+    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
+    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate    
+  endif
+  
+  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.1.3)
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernelPort.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcSnapshotRecorder.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcStreamingRecorder.o
+    
+    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
+    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
+  endif  
 endif
 
 ############################################################################### 

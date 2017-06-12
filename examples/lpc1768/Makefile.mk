@@ -39,7 +39,14 @@ LIBRARIES = -lmbed -lfreertos
 LINKER_SCRIPT = ./LPC1768.ld
 
 ifeq ($(TZ), 1)
-  INCLUDE_PATHS += -I../../libs/Tracealizer/Include -I../../libs/Tracealizer/ConfigurationTemplate
+  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
+    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
+    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
+  endif
+  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.1.3)
+    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
+    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
+  endif
 endif
 
 CPU = -mcpu=cortex-m3 -mthumb

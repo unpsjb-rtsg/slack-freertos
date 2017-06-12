@@ -37,20 +37,20 @@ else
 TZ = 0
 endif
 
-export AS CC CPP LD OBJCOPY SIZE FREERTOS_KERNEL_VERSION_NUMBER MAKEDIR RM DEBUG
+export AS CC CPP LD OBJCOPY SIZE FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_VERSION_NUMBER MAKEDIR RM DEBUG
 
-$(TARGET):	
-	@echo "== Building $(TARGET) == "
-	+@echo "Build FreeRTOS library..."
+$(TARGET):
+	+@echo "-- Building $(TARGET)"
+	+@echo "-- Build FreeRTOS library"
 	@$(MAKE) $(MAKE_FLAGS) -C libs/FreeRTOS/ -f Makefile.mk APP_DIR=../../examples/lpc1768/$(TARGET)/ USE_SLACK=1 TZ=$(TZ)
-	+@echo "Build $(TARGET) program..."
+	+@echo "-- Build $(TARGET) program"
 	@$(MAKE) $(MAKE_FLAGS) -C examples/lpc1768/ -f Makefile.mk TARGET=$(TARGET) TZ=$(TZ)
 
 $(TARGET)_clean:
-	@echo "== Cleaning $(TARGET) ... =="
+	+@echo "-- Cleaning $(TARGET)"
 	@$(MAKE) $(MAKE_FLAGS) -C libs/FreeRTOS/ -f Makefile.mk clean USE_SLACK=1 TZ=$(TZ)
 	@$(MAKE) $(MAKE_FLAGS) -C examples/lpc1768/ -f Makefile.mk clean TARGET=$(TARGET) TZ=$(TZ)
 
 all: $(TARGET)
-	
+
 clean: $(TARGET)_clean

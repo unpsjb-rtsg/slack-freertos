@@ -15,20 +15,6 @@
 #define TASK_3_WCET 1000
 #define TASK_4_WCET 1000
 
-/* The extern "C" is required to avoid name mangling between C and C++ code. */
-extern "C"
-{
-void vApplicationMallocFailedHook( void );
-void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
-
-#if( configUSE_SLACK_STEALING == 1 )
-void vApplicationDebugAction( void *param );
-void vApplicationNotSchedulable( void );
-void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
-#endif
-}
-
-void task_body( void* params );
 void aperiodic_task_body( void* params );
 
 TaskHandle_t task_handles[ TASK_CNT ];
