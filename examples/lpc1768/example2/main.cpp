@@ -37,8 +37,6 @@ Serial pc( USBTX, USBRX );
 // mbed LPC 1768 on-board LEDs.
 DigitalOut leds[] = { LED1, LED2, LED3, LED4 };
 
-TickType_t xTaskPeriods[] = { TASK_1_PERIOD, TASK_2_PERIOD, TASK_3_PERIOD, TASK_4_PERIOD };
-
 int main()
 {
 	pc.baud(9600);
@@ -110,9 +108,7 @@ void aperiodic_task_body( void* params )
 
 void task_body( void* params )
 {
-	TickType_t xPreviousWakeTime = xTaskGetTickCount();
-
-	uint32_t xTaskId = ( uint32_t ) params;
+	TickType_t xPreviousWakeTime = ( TickType_t ) 0;
 
 	SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
 
@@ -127,9 +123,19 @@ void task_body( void* params )
 				slackArray[3], slackArray[4], slackArray[5], slackArray[6]);
 		xTaskResumeAll();
 
-		leds[ xTaskId ] = 1;
-		vUtilsEatCpu( 500 );
-		leds[ xTaskId ] = 0;
+		leds[ pxTaskSsTCB->xId - 1] = 1;
+
+#if ( configTASK_EXEC == 0 )
+		vUtilsEatCpu( pxTaskSsTCB->xWcet - 250 );
+#endif
+#if ( configTASK_EXEC == 1 )
+		while( pxTaskSsTCB->xCur <  pxTaskSsTCB->xWcet )
+		{
+			asm("nop");
+		}
+#endif
+
+		leds[ pxTaskSsTCB->xId - 1] = 0;
 
 		vTaskSuspendAll();
 		vTasksGetSlacks( slackArray );
@@ -139,13 +145,15 @@ void task_body( void* params )
 				pxTaskSsTCB->xCur);
 		xTaskResumeAll();
 
-		vTaskDelayUntil( &xPreviousWakeTime, xTaskPeriods[ xTaskId ] );
+		vTaskDelayUntil( &xPreviousWakeTime, pxTaskSsTCB->xPeriod );
     }
 }
 
 void vApplicationMallocFailedHook( void )
 {
 	taskDISABLE_INTERRUPTS();
+
+    pc.printf( "Malloc failed\r\n" );
 
 	for( ;; )
 	{
@@ -158,10 +166,11 @@ void vApplicationMallocFailedHook( void )
 
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
 {
-	( void ) pcTaskName;
 	( void ) pxTask;
 
 	taskDISABLE_INTERRUPTS();
+
+	pc.printf( "%s\tStack overflow\r\n", pcTaskName );
 
 	for( ;; )
 	{
@@ -192,6 +201,8 @@ void vApplicationNotSchedulable( void )
 {
 	taskDISABLE_INTERRUPTS();
 
+	pc.printf( "RTS not schedulable.\r\n" );
+
 	for( ;; )
 	{
         leds[ 1 ] = 1;
@@ -208,7 +219,7 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, Ti
 
     taskDISABLE_INTERRUPTS();
 
-    pc.printf( "%s has missed it deadline.\r\n", pcTaskName );
+    pc.printf( "%s\tdeadline miss at %d\r\n", pcTaskName, xTickCount );
 
     for( ;; )
     {
