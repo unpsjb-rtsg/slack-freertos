@@ -73,7 +73,7 @@ clean:
 	@rm -f $(BUILD_DIR)/$(EXAMPLE).bin $(BUILD_DIR)/$(EXAMPLE).elf $(OBJECTS) $(DEPS)
 
 install:
-	 cp $(EXAMPLE).bin /cygdrive/g/
+	 cp $(BUILD_DIR)/$(EXAMPLE).bin /cygdrive/g/
 
 .s.o:
 	$(AS) $(CPU) -o $@ $<
@@ -87,11 +87,11 @@ install:
 	@$(CPP) $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu++98 $(INCLUDE_PATHS) -o $@ $<	
 
 $(BUILD_DIR)/$(EXAMPLE).elf: $(OBJECTS) $(SYS_OBJECTS)
-	+@echo "LD $@"
+	+@echo "Linking: $@"
 	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS)
 
 $(BUILD_DIR)/$(EXAMPLE).bin: $(BUILD_DIR)/$(EXAMPLE).elf
-	+@echo "OBJCOPY $@"
+	+@echo "Binary: $@"
 	@$(OBJCOPY) -O binary $< $@
 	
 size: $(BUILD_DIR)/$(EXAMPLE).elf

@@ -30,7 +30,11 @@ int main()
 	leds[2] = 0;
 	leds[3] = 0;
 
-	vSlackSystemSetup();
+    #if( tskKERNEL_VERSION_MAJOR == 9 )
+	{
+		vSlackSystemSetup();
+	}
+    #endif
 
     // create periodic tasks
     xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
@@ -54,7 +58,11 @@ int main()
 #endif
 #endif
 
-    vSlackSchedulerSetup();
+    #if( tskKERNEL_VERSION_MAJOR == 9 )
+    {
+    	vSlackSchedulerSetup();
+    }
+    #endif
 
     vTaskStartScheduler();
 
