@@ -68,7 +68,7 @@ int main()
     vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
     vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 
-    // Create the aperiodic task.
+    // Create the aperiodic tasks.
     TaskHandle_t xApTaskHandle1, xApTaskHandle2;
     xTaskCreate( aperiodic_task_body, "TA1", 256, NULL, configMAX_PRIORITIES - 1, &xApTaskHandle1 );
     xTaskCreate( aperiodic_task_body, "TA2", 256, NULL, configMAX_PRIORITIES - 2, &xApTaskHandle2 );
