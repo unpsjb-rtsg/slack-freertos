@@ -46,10 +46,10 @@ int main()
 #endif
 
     // Create the periodic tasks.
-    xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
-    xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
-    xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
-    xTaskCreate( periodicTaskBody, "T4", 256, NULL, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
+    xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 0 ] );  // max priority
+    xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 1 ] );
+    xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 5, &task_handles[ 2 ] );
+    xTaskCreate( periodicTaskBody, "T4", 256, NULL, configMAX_PRIORITIES - 6, &task_handles[ 3 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
     // Additional parameters needed by the slack stealing framework.
@@ -69,9 +69,11 @@ int main()
     vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 
     // Create the aperiodic task.
-    TaskHandle_t xApTaskHandle;
-    xTaskCreate( aperiodic_task_body, "TA", 256, NULL, configMAX_PRIORITIES - 1, &xApTaskHandle );
-    vSlackSetTaskParams( xApTaskHandle, APERIODIC_TASK, 0, 0, 0, 5 );
+    TaskHandle_t xApTaskHandle1, xApTaskHandle2;
+    xTaskCreate( aperiodic_task_body, "TA1", 256, NULL, configMAX_PRIORITIES - 1, &xApTaskHandle1 );
+    xTaskCreate( aperiodic_task_body, "TA2", 256, NULL, configMAX_PRIORITIES - 2, &xApTaskHandle2 );
+    vSlackSetTaskParams( xApTaskHandle1, APERIODIC_TASK, 0, 0, 0, 5 );
+    vSlackSetTaskParams( xApTaskHandle2, APERIODIC_TASK, 0, 0, 0, 5 );
 #endif
 #endif
 
@@ -111,7 +113,7 @@ void aperiodic_task_body( void* params )
 
 		printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
 
-		vUtilsEatCpu( 2000 );
+		vUtilsEatCpu( 100 + ( rand() % 2000 ) );
 
 		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
 
