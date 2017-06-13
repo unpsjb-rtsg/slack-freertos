@@ -18,7 +18,15 @@ void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
 
 void periodicTaskBody( void* params )
 {
-	SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
+	SsTCB_t *pxTaskSsTCB;
+
+#if( tskKERNEL_VERSION_MAJOR == 8 )
+	pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
+#endif
+#if( tskKERNEL_VERSION_MAJOR == 9 )
+	pxTaskSsTCB = getTaskSsTCB( NULL );
+#endif
+
 
     int32_t slackArray[ 7 ];
 

@@ -174,49 +174,12 @@ typedef struct tskTaskControlBlock
 	#endif
 
     #if ( configUSE_SLACK_STEALING == 1 )
-		/* Release count for this task. The release count is incremented each
-		time the task is inserted in a ready list, after it has been blocked by
-		an invocation to xTaskDelayUntil(). The flag uxDelayUntil is set to
-		TRUE when xTaskDelayUntil() puts the task in the delayed list, and is set
-		to FALSE when the task is unblocked and moved to the ready list. */
-		UBaseType_t uxReleaseCount;
-		UBaseType_t uxDelayUntil;
-
-		TickType_t  xWcrt;				/* Worst case response time. */
-		TickType_t  xWcet;				/* Worst case execution time. */
-		TickType_t  xPeriod;			/* Task period. */
-		TickType_t  xDeadline;			/* Task relative deadline. */
-        TickType_t 	xA;					/* RTA3 */
-        TickType_t 	xB;					/* RTA3 */
-        ListItem_t  xSsTaskListItem;    /* Item for the xSsTaskList list */
-        ListItem_t  xSsTaskBlockedListItem;
-        
-        ListItem_t 	xDeadlineTaskListItem;  /* Used to reference the task from the xDeadlineTaskList */
-
-		TickType_t	xCur; 					/* Accumulated execution time of the current instance of this task, measured in OS ticks. */
-
-        BaseType_t  xSlack;             /* Task slack */
-        BaseType_t	xSlackK;			/* Task slack value at the critical instant. */
-
-    #if ( configUSE_SLACK_METHOD == 0 )
-        /* Used by Fast Slack Stealing method. */
-        TickType_t  xTtma;              /* Maximally delayed completion time */
-        TickType_t  xDi;                /* The absolute deadline of the next release */
+		SsTCB_t ss;
     #endif
 
-        /* Stores the tick at which the task release ended. This a dirty
-        way to know if we must decrement the available slack of the task
-        at xTaskIncrementTick(). */
-        TickType_t  xEndTick;
-        
-        BaseType_t xId;
-    
-	#endif /* configUSE_SLACK_STEALING */
-    
     #if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TEST == 1 )
-    BaseType_t xId;
+	    BaseType_t xId;
     #endif
-    
 } tskTCB;
 
 /* The old tskTCB name is maintained above then typedefed to the new TCB_t name
@@ -797,13 +760,13 @@ TCB_t * pxNewTCB;
 			{
 				/* The new task is now in the ready list, so it is its first
 				release. */
-				pxNewTCB->uxReleaseCount = 1UL;
+				( pxNewTCB->ss ).uxReleaseCount = 1UL;
 
 				if( uxPriority != tskIDLE_PRIORITY )
 				{
                     if( uxPriority < ( configMAX_PRIORITIES - 1 ) )
                     {
-                        vListInsert( &xSsTaskList, &( ( pxNewTCB )->xSsTaskListItem ) );
+                        vListInsert( &xSsTaskList, &( ( pxNewTCB->ss ).xSsTaskListItem ) );
                     }
 				}
 			}
@@ -938,6 +901,10 @@ TCB_t * pxNewTCB;
 		configASSERT( ( xTimeIncrement > 0U ) );
 		configASSERT( uxSchedulerSuspended == 0 );
 
+        #if ( configUSE_SLACK_STEALING == 1 )
+		SsTCB_t * pxSsTCB = &( pxCurrentTCB->ss );
+        #endif
+
 		vTaskSuspendAll();
 		{
 			/* Minor optimisation.  The tick count cannot change in this
@@ -945,7 +912,7 @@ TCB_t * pxNewTCB;
 			const TickType_t xConstTickCount = xTickCount;
             
             #if ( configUSE_SLACK_STEALING == 1 )
-            pxCurrentTCB->xEndTick = xConstTickCount;
+            pxSsTCB->xEndTick = xConstTickCount;
             #endif
 
 			/* Generate the tick time at which the task wants to wake. */
@@ -989,9 +956,9 @@ TCB_t * pxNewTCB;
 			{
                 /* Remove the current release deadline and insert the
                 deadline for the next release of pxCurrentTCB. */
-                ListItem_t *pxDeadlineTaskListItem = &( pxCurrentTCB->xDeadlineTaskListItem );
+                ListItem_t *pxDeadlineTaskListItem = &( pxSsTCB->xDeadlineTaskListItem );
                 uxListRemove( pxDeadlineTaskListItem );
-                listSET_LIST_ITEM_VALUE( pxDeadlineTaskListItem, xTimeToWake + pxCurrentTCB->xDeadline );
+                listSET_LIST_ITEM_VALUE( pxDeadlineTaskListItem, xTimeToWake + pxSsTCB->xDeadline );
                 vListInsert( &xDeadlineTaskList, pxDeadlineTaskListItem );
 			}
 			#endif /* configUSE_SLACK_STEALING */
@@ -1027,11 +994,11 @@ TCB_t * pxNewTCB;
                 #if ( configUSE_SLACK_K == 0 )
 				prvTaskCalculateSlack( pxCurrentTCB, xConstTickCount + ( TickType_t ) 1U );
                 #else
-                pxCurrentTCB->xSlack = pxCurrentTCB->xSlackK;
+				pxSsTCB->xSlack = pxSsTCB->xSlackK;
                 #endif
-                if( pxCurrentTCB->xWcet > pxCurrentTCB->xCur )
+                if( pxSsTCB->xWcet > pxSsTCB->xCur )
                 {
-                    vSlackGainSlack( pxCurrentTCB, pxCurrentTCB->xWcet - pxCurrentTCB->xCur );
+                    vSlackGainSlack( pxCurrentTCB, pxSsTCB->xWcet - pxSsTCB->xCur );
                 }
                 vSlackUpdateAvailableSlack();
 			}
@@ -1041,15 +1008,15 @@ TCB_t * pxNewTCB;
                 /* Update the flag to indicate that it was blocked by an invocation
                 of vTaskDelayUntil(). The release count will be updated when the
                 task is unblocked in xTaskIncrementTick(). */
-                pxCurrentTCB->uxDelayUntil = ( UBaseType_t ) pdTRUE;
+            	pxSsTCB->uxDelayUntil = ( UBaseType_t ) pdTRUE;
             }
             else
             {
                 /* The task was not blocked, because the wake time is in the past.
                 Update the flag and increment the release count. The function will
                 return to the task. */
-                pxCurrentTCB->uxDelayUntil = ( UBaseType_t ) pdFALSE;
-                pxCurrentTCB->uxReleaseCount = pxCurrentTCB->uxReleaseCount + 1UL;
+            	pxSsTCB->uxDelayUntil = ( UBaseType_t ) pdFALSE;
+            	pxSsTCB->uxReleaseCount = pxSsTCB->uxReleaseCount + 1UL;
             }
 
 			#endif /* configUSE_SLACK_STEALING */
@@ -1062,7 +1029,7 @@ TCB_t * pxNewTCB;
         prvTaskRecSlack();
         #endif
         /* Reset the accumulated execution time. */
-        pxCurrentTCB->xCur = ( TickType_t ) 0U;
+        pxSsTCB->xCur = ( TickType_t ) 0U;
         #endif /* configUSE_SLACK_STEALING */
 
 		/* Force a reschedule if xTaskResumeAll has not already done so, we may
@@ -1742,7 +1709,7 @@ BaseType_t xReturn;
         		TCB_t *pxTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
 
                 prvTaskCalculateSlack( pxTask, xTickCount );
-        		pxTask->xSlackK = pxTask->xSlack;
+        		( pxTask->ss ).xSlackK = ( pxTask->ss ).xSlack;
 
         		pxTaskListItem = listGET_NEXT( pxTaskListItem );
         	}
@@ -2194,13 +2161,15 @@ BaseType_t xSwitchRequired = pdFALSE;
 
                         #if ( configUSE_SLACK_STEALING == 1 )
 						{
+                            SsTCB_t * pxSsTCB = &( pxTCB->ss );
+
 							/* The unblocked task is in the appropriate ready
 							list. Increment the release counter only if the
 							task was blocked by vTaskDelayUntil(). */
-							if( pxTCB->uxDelayUntil == ( UBaseType_t ) pdTRUE )
+							if( pxSsTCB->uxDelayUntil == ( UBaseType_t ) pdTRUE )
 							{
-								pxTCB->uxReleaseCount = pxTCB->uxReleaseCount + 1UL;
-								pxTCB->uxDelayUntil = ( UBaseType_t ) pdFALSE;
+								pxSsTCB->uxReleaseCount = pxSsTCB->uxReleaseCount + 1UL;
+								pxSsTCB->uxDelayUntil = ( UBaseType_t ) pdFALSE;
 							}
 						}
                         #endif
@@ -2272,10 +2241,12 @@ BaseType_t xSwitchRequired = pdFALSE;
                 if( xTickCount >= xTaskReleaseDeadline )
                 {
                     TCB_t *pxTask = listGET_LIST_ITEM_OWNER( pxDeadlineListItem );
+                    SsTCB_t * pxSsTCB = &( pxTask->ss );
+
                     /* The current release of task pxTCB has missed its
                     deadline. Invoke the application missed-deadline
                     hook function. */
-                    vApplicationDeadlineMissedHook( pxTask->pcTaskName, pxTask->uxReleaseCount, xTickCount );
+                    vApplicationDeadlineMissedHook( pxTask->pcTaskName, pxSsTCB->uxReleaseCount, xTickCount );
                 }
                 else
                 {
@@ -2320,9 +2291,11 @@ BaseType_t xSwitchRequired = pdFALSE;
     #if ( configUSE_SLACK_STEALING == 1 )
     //if( uxPendedTicks == ( UBaseType_t ) 0U )
     if( uxSchedulerSuspended == ( UBaseType_t ) pdFALSE )
-    {         
-        // Increment task release tick count
-        pxCurrentTCB->xCur = pxCurrentTCB->xCur + ONE_TICK;
+    {
+        SsTCB_t * pxSsTCB = &( pxCurrentTCB->ss );
+
+    	// Increment task release tick count
+        pxSsTCB->xCur = pxSsTCB->xCur + ONE_TICK;
         
         // Decrement real-time tasks slack counter by one tick
         if( ( pxCurrentTCB->uxPriority == tskIDLE_PRIORITY ) || ( pxCurrentTCB->uxPriority == ( configMAX_PRIORITIES - 1) ) )
@@ -3127,45 +3100,46 @@ UBaseType_t x;
 	#endif
 
 	#if ( configUSE_SLACK_STEALING == 1 )
+	SsTCB_t * pxSsTCB = &( pxTCB->ss );//pvPortMalloc( sizeof( SsTCB_t ) );
 
-	pxTCB->xWcet = 0U;
-	pxTCB->xWcrt = 0U;
-	pxTCB->xPeriod = 0U;
-	pxTCB->xDeadline = 0U;
-	pxTCB->xA = pxTCB->xWcet;
-	pxTCB->xB = pxTCB->xPeriod;
-    pxTCB->xEndTick = ( TickType_t ) 0U;
-    pxTCB->xId = 0U;
+	pxSsTCB->xWcet = 0U;
+	pxSsTCB->xWcrt = 0U;
+	pxSsTCB->xPeriod = 0U;
+	pxSsTCB->xDeadline = 0U;
+	pxSsTCB->xA = pxSsTCB->xWcet;
+	pxSsTCB->xB = pxSsTCB->xPeriod;
+    pxSsTCB->xEndTick = ( TickType_t ) 0U;
+    pxSsTCB->xId = 0U;
 
 	if( pxTCB->uxPriority != tskIDLE_PRIORITY )
 	{
-		vListInitialiseItem( &( pxTCB->xSsTaskListItem ) );
-		listSET_LIST_ITEM_VALUE( &( pxTCB->xSsTaskListItem ), ( TickType_t ) configMAX_PRIORITIES - ( TickType_t ) uxPriority );
-		listSET_LIST_ITEM_OWNER( &( pxTCB->xSsTaskListItem ), pxTCB );
+		vListInitialiseItem( &( pxSsTCB->xSsTaskListItem ) );
+		listSET_LIST_ITEM_VALUE( &( pxSsTCB->xSsTaskListItem ), ( TickType_t ) configMAX_PRIORITIES - ( TickType_t ) uxPriority );
+		listSET_LIST_ITEM_OWNER( &( pxSsTCB->xSsTaskListItem ), pxTCB );
 
-        vListInitialiseItem( &( pxTCB->xSsTaskBlockedListItem ) );
-		listSET_LIST_ITEM_OWNER( &( pxTCB->xSsTaskBlockedListItem ), pxTCB );
-		listSET_LIST_ITEM_VALUE( &( pxTCB->xSsTaskBlockedListItem ), 0 );
+        vListInitialiseItem( &( pxSsTCB->xSsTaskBlockedListItem ) );
+		listSET_LIST_ITEM_OWNER( &( pxSsTCB->xSsTaskBlockedListItem ), pxTCB );
+		listSET_LIST_ITEM_VALUE( &( pxSsTCB->xSsTaskBlockedListItem ), 0 );
 	}
 
     if( pxTCB->uxPriority != tskIDLE_PRIORITY )
     {
-        vListInitialiseItem( &( pxTCB->xDeadlineTaskListItem ) );
-        listSET_LIST_ITEM_OWNER( &( pxTCB->xDeadlineTaskListItem ), pxTCB );
-        listSET_LIST_ITEM_VALUE( &( pxTCB->xDeadlineTaskListItem ), pxTCB->xDeadline );
+        vListInitialiseItem( &( pxSsTCB->xDeadlineTaskListItem ) );
+        listSET_LIST_ITEM_OWNER( &( pxSsTCB->xDeadlineTaskListItem ), pxTCB );
+        listSET_LIST_ITEM_VALUE( &( pxSsTCB->xDeadlineTaskListItem ), pxSsTCB->xDeadline );
         /* The list item value of xDeadlineTaskListItem is initialized in vTaskSetParams(). */
     }
 
     {
-        pxTCB->xSlack = 0U;
+        pxSsTCB->xSlack = 0U;
 
         #if ( configUSE_SLACK_METHOD == 0 )
-        pxTCB->xTtma = 0U;
-        pxTCB->xDi = 0U;
+        pxSsTCB->xTtma = 0U;
+        pxSsTCB->xDi = 0U;
         #endif
     }
 
-    pxTCB->xCur = ( TickType_t ) 0U;
+    pxSsTCB->xCur = ( TickType_t ) 0U;
 
     #endif /* configUSE_SLACK_STEALING */
 }
@@ -4008,11 +3982,29 @@ TickType_t uxReturn;
 		{
 			pxTCB = pxCurrentTCB;
 		}
-        pxTCB->xId = xId;
+
+        SsTCB_t * pxSsTCB = pxTCB->ss;
+        pxSsTCB->xId = xId;
     }
 #endif
 
 #if ( configUSE_SLACK_STEALING == 1 )
+
+    SsTCB_t * pxTaskGetTaskSsTCB( TaskHandle_t xTask )
+    {
+    	TCB_t *pxTCB;
+
+    	if( xTask != NULL )
+    	{
+    		pxTCB = ( TCB_t * ) xTask;
+    	}
+    	else
+    	{
+    		pxTCB = pxCurrentTCB;
+    	}
+
+    	return &( pxTCB->ss );
+    }
 
 	void vTaskSetParams( TaskHandle_t xTask, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId )
 	{
@@ -4027,18 +4019,20 @@ TickType_t uxReturn;
 			pxTCB = pxCurrentTCB;
 		}
 
-		pxTCB->xPeriod = xPeriod;
-		pxTCB->xDeadline = xDeadline;
-		pxTCB->xWcet = xWcet;
-		pxTCB->xA = xWcet;
-		pxTCB->xB = xPeriod;
-        pxTCB->xId = xId;
+        SsTCB_t * pxSsTCB = &( pxTCB->ss );
+
+		pxSsTCB->xPeriod = xPeriod;
+		pxSsTCB->xDeadline = xDeadline;
+		pxSsTCB->xWcet = xWcet;
+		pxSsTCB->xA = xWcet;
+		pxSsTCB->xB = xPeriod;
+        pxSsTCB->xId = xId;
 
         /* Deadline */
 		if( pxTCB->uxPriority != tskIDLE_PRIORITY )
 		{
-			listSET_LIST_ITEM_VALUE( &( ( pxTCB )->xDeadlineTaskListItem ), pxTCB->xDeadline );
-			vListInsert( &xDeadlineTaskList, &( ( pxTCB )->xDeadlineTaskListItem ) );
+			listSET_LIST_ITEM_VALUE( &( ( pxSsTCB )->xDeadlineTaskListItem ), pxSsTCB->xDeadline );
+			vListInsert( &xDeadlineTaskList, &( ( pxSsTCB )->xDeadlineTaskListItem ) );
 		}
 	}
 	/*-----------------------------------------------------------*/
@@ -4054,13 +4048,14 @@ TickType_t uxReturn;
         ListItem_t const *pxTaskListEndItem = listGET_END_MARKER( &( xSsTaskList ) );
 
 		TCB_t *pxTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+        SsTCB_t * pxSsTask = &( pxTask->ss );
 
 		/* First task WCRT. */
-		TickType_t xT = pxTask->xWcet;
-	    pxTask->xWcrt = xT;
+		TickType_t xT = pxSsTask->xWcet;
+	    pxSsTask->xWcrt = xT;
 
 	    /* Check first task deadline. */
-	    if( pxTask->xWcrt > pxTask->xPeriod )
+	    if( pxSsTask->xWcrt > pxSsTask->xPeriod )
 	    {
 	        return pdFALSE;
 	    }
@@ -4072,10 +4067,11 @@ TickType_t uxReturn;
 	    while( pxTaskListEndItem != pxTaskListItem )
 		{
 	    	pxTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+	        pxSsTask = &( pxTask->ss );
 
-			xT = xT + pxTask->xWcet;
+			xT = xT + pxSsTask->xWcet;
 
-			while( xT <= pxTask->xDeadline )
+			while( xT <= pxSsTask->xDeadline )
 			{
 				xW = 0;
 
@@ -4084,14 +4080,15 @@ TickType_t uxReturn;
 				do
 				{
 					TCB_t * pxHigherPrioTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
+					SsTCB_t * pxHigherPrioTaskSs = &( pxHigherPrioTask->ss );
 
-					xW = xW + ( U_CEIL( xT, pxHigherPrioTask->xPeriod ) * pxHigherPrioTask->xWcet );
+					xW = xW + ( U_CEIL( xT, pxHigherPrioTaskSs->xPeriod ) * pxHigherPrioTaskSs->xWcet );
 
 					pxHigherPrioTaskListItem = listGET_NEXT( pxHigherPrioTaskListItem );
 				}
 				while( pxHigherPrioTaskListItem != pxTaskListItem );
 
-				xW = xW + pxTask->xWcet;
+				xW = xW + pxSsTask->xWcet;
 
 				if( xT == xW )
 				{
@@ -4103,12 +4100,12 @@ TickType_t uxReturn;
 				}
 			}
 
-			if( xT > pxTask->xDeadline )
+			if( xT > pxSsTask->xDeadline )
 			{
 				return pdFALSE;
 			}
 
-			pxTask->xWcrt = xT;
+			pxSsTask->xWcrt = xT;
 
 			pxTaskListItem = listGET_NEXT( pxTaskListItem );
 		}
@@ -4119,8 +4116,9 @@ TickType_t uxReturn;
 
     static inline TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t xTc )
     {
-        ListItem_t *pxTaskListItem = &( ( TCB_t * ) xTask )->xSsTaskListItem;
+        ListItem_t *pxTaskListItem = &( ( ( TCB_t * ) xTask )->ss ).xSsTaskListItem;
         TCB_t *pxTask = NULL;
+        SsTCB_t * pxSsTask = NULL;
         
         TickType_t xW = ( TickType_t ) 0U;	// Workload
         TickType_t xA = ( TickType_t ) 0U;
@@ -4135,10 +4133,11 @@ TickType_t uxReturn;
             xLoopCost = xLoopCost + 1;
             #endif
 
-            pxTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );            
+            pxTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+            pxSsTask = &( pxTask->ss );
 
             // The number of instances of pxHigherPrioTask in [0, xT)
-            xA = U_FLOOR( xTc, pxTask->xPeriod );
+            xA = U_FLOOR( xTc, pxSsTask->xPeriod );
             
             #if ( configKERNEL_TEST == 2 )
             xCeilFloorCost = xCeilFloorCost + 1;
@@ -4146,25 +4145,25 @@ TickType_t uxReturn;
 
             if( xTc > ( TickType_t ) 0U )
             {
-                if( pxTask->xWcet == pxTask->xCur )
+                if( pxSsTask->xWcet == pxSsTask->xCur )
                 {
-                    if( xA >= pxTask->uxReleaseCount )
+                    if( xA >= pxSsTask->uxReleaseCount )
                     {
                         xC = ( TickType_t ) 0U;
                     }
                     else
                     {
-                        xC = pxTask->xWcet;
+                        xC = pxSsTask->xWcet;
                     }
                 }
                 else
                 {
-                    xC = pxTask->xWcet;
+                    xC = pxSsTask->xWcet;
                 }
             }
 
             // Accumulated workload
-            xW = xW + ( xA * pxTask->xWcet ) + xC;
+            xW = xW + ( xA * pxSsTask->xWcet ) + xC;
 
             pxTaskListItem = pxTaskListItem->pxPrevious;
         }
@@ -4176,7 +4175,7 @@ TickType_t uxReturn;
     #if ( configUSE_SLACK_METHOD == 0 )
     static inline BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask, const TickType_t xTc, const TickType_t xT, const TickType_t xWc )
     {
-        ListItem_t *pxTaskListItem = &( ( TCB_t * ) xTask )->xSsTaskListItem;
+        ListItem_t *pxTaskListItem = &( ( ( TCB_t * ) xTask )->ss ).xSsTaskListItem;
         TickType_t xW = 0;
 
         ListItem_t const * pxSsTaskListEndMarker = listGET_END_MARKER( &( xSsTaskList ) );
@@ -4189,8 +4188,10 @@ TickType_t uxReturn;
             #endif
 
         	TCB_t * pxTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+        	SsTCB_t * pxSsTask = &( pxTask->ss );
+
         	// accumulated workload of higher priority tasks in [0, xT)
-        	xW = xW + ( U_CEIL( xT, pxTask->xPeriod ) * pxTask->xWcet );
+        	xW = xW + ( U_CEIL( xT, pxSsTask->xPeriod ) * pxSsTask->xWcet );
             
             #if ( configKERNEL_TEST == 2 )
                 xCeilFloorCost = xCeilFloorCost + 1;
@@ -4210,13 +4211,13 @@ TickType_t uxReturn;
         const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( &( xSsTaskList ) );
         ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( &( xSsTaskList ) );
 
-        xSlackSD = ( ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->xSlack;
+        xSlackSD = ( ( ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->ss ).xSlack;
 
         while( pxAppTasksListEndMarker != pxAppTasksListItem )
         {
-            if( ( ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->xSlack < xSlackSD )
+            if( ( ( ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->ss ).xSlack < xSlackSD )
             {
-                xSlackSD = ( ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->xSlack;
+                xSlackSD = ( ( ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->ss ).xSlack;
             }
 
             pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
@@ -4227,11 +4228,11 @@ TickType_t uxReturn;
     static inline void vSlackGainSlack( TaskHandle_t xTask, const TickType_t xTicks )
     {
         const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( &( xSsTaskList ) );        
-        ListItem_t * pxAppTasksListItem = listGET_NEXT( &( ( TCB_t * ) xTask )->xSsTaskListItem );
+        ListItem_t * pxAppTasksListItem = listGET_NEXT( &( ( ( TCB_t * ) xTask )->ss ).xSsTaskListItem );
 
         while( pxAppTasksListItem != pxAppTasksListEndMarker )
         {
-            ( ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->xSlack += ( BaseType_t ) xTicks;
+            ( ( ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->ss ).xSlack += ( BaseType_t ) xTicks;
             pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
         }
     }
@@ -4245,12 +4246,13 @@ TickType_t uxReturn;
         while( pxAppTasksListEndMarker != pxAppTasksListItem )
         {
             TCB_t * xTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
+            SsTCB_t * pxSsTask = &( xTask->ss );
 
-            if( xTask->xSlack > 0 )
+            if( pxSsTask->xSlack > 0 )
             {
-                if( xTask->xEndTick < ( xTickCount - ( TickType_t ) 1U ) )
+                if( pxSsTask->xEndTick < ( xTickCount - ( TickType_t ) 1U ) )
                 {
-                    xTask->xSlack = xTask->xSlack - ( BaseType_t ) xTicks;
+                    pxSsTask->xSlack = pxSsTask->xSlack - ( BaseType_t ) xTicks;
                 }
             }
 
@@ -4261,18 +4263,19 @@ TickType_t uxReturn;
 
     static inline void vSlackDecrementTasksSlack( TaskHandle_t pxTask, const TickType_t xTicks )
     {        
-        const ListItem_t * pxAppTasksListEndMarker = &( ( TCB_t * ) pxTask )->xSsTaskListItem;
+        const ListItem_t * pxAppTasksListEndMarker = &( ( ( TCB_t * ) pxTask )->ss ).xSsTaskListItem;
         ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( &( xSsTaskList ) );
 
         while( pxAppTasksListEndMarker != pxAppTasksListItem )
         {
             TCB_t * xTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
+            SsTCB_t * pxSsTask = &( xTask->ss );
 
-            if( xTask->xSlack > 0 )
+            if( pxSsTask->xSlack > 0 )
             {
-                if( xTask->xEndTick < ( xTickCount - ( TickType_t ) 1U ) )
+                if( pxSsTask->xEndTick < ( xTickCount - ( TickType_t ) 1U ) )
                 {
-                   xTask->xSlack = xTask->xSlack - ( BaseType_t ) xTicks; 
+                   pxSsTask->xSlack = pxSsTask->xSlack - ( BaseType_t ) xTicks;
                 }                
             }
 
@@ -4320,28 +4323,29 @@ TickType_t uxReturn;
     static inline void prvTaskCalculateSlack_fixed1( TaskHandle_t xTask, const TickType_t xTc )
     {
         TCB_t *pxTask = ( TCB_t * ) xTask;
+        SsTCB_t * pxSsTask = &( pxTask->ss );
         
-        ListItem_t *pxTaskListItem = &( pxTask->xSsTaskListItem );                    	// this task list item
+        ListItem_t *pxTaskListItem = &( pxSsTask->xSsTaskListItem );                    	// this task list item
         ListItem_t *pxHigherPrioTaskListItem = ( ( pxTaskListItem )->pxPrevious );
         ListItem_t const *pxTaskListEndItem = listGET_END_MARKER( &( xSsTaskList ) );   // end marker
        
         TickType_t xXi = ( TickType_t ) 0U;
-        TickType_t xDi = pxTask->xDeadline;
+        TickType_t xDi = pxSsTask->xDeadline;
         if ( xTc > ( TickType_t ) 0U )
         {
         	// xTask is in suspended state, and xItemValue has the instant in
         	// which the task should be removed from the blocked list.
         	xXi = listGET_LIST_ITEM_VALUE( & ( pxTask->xGenericListItem ) );
-        	xDi = xXi + pxTask->xDeadline;
+        	xDi = xXi + pxSsTask->xDeadline;
         }
 
-        pxTask->xDi = xDi;
+        pxSsTask->xDi = xDi;
 
         // if xTask is the highest priority task
         if( pxTaskListEndItem == pxHigherPrioTaskListItem )
         {
-            pxTask->xSlack = xDi - xTc - pxTask->xWcet;
-            pxTask->xTtma = xDi;
+            pxSsTask->xSlack = xDi - xTc - pxSsTask->xWcet;
+            pxSsTask->xTtma = xDi;
             return;
         }
 
@@ -4350,24 +4354,25 @@ TickType_t uxReturn;
 
         // TCB of the higher priority task.
         TCB_t *pxHigherPrioTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
+        SsTCB_t *pxHigherPrioTaskSs = &( pxHigherPrioTask->ss );
 
         // Corollary 2 (follows theorem 5)
-        if ( ( pxHigherPrioTask->xDi + pxHigherPrioTask->xWcet >= xDi ) && ( xDi >= pxHigherPrioTask->xTtma ) )
+        if ( ( pxHigherPrioTaskSs->xDi + pxHigherPrioTaskSs->xWcet >= xDi ) && ( xDi >= pxHigherPrioTaskSs->xTtma ) )
         {
-            pxTask->xSlack = pxHigherPrioTask->xSlack - pxTask->xWcet;
-            pxTask->xTtma = pxHigherPrioTask->xTtma;
+            pxSsTask->xSlack = pxHigherPrioTaskSs->xSlack - pxSsTask->xWcet;
+            pxSsTask->xTtma = pxHigherPrioTaskSs->xTtma;
             return;
         }
 
         // Theorem 3
-        TickType_t xIntervalo = xXi + pxTask->xDeadline - pxTask->xWcrt + pxTask->xWcet;
+        TickType_t xIntervalo = xXi + pxSsTask->xDeadline - pxSsTask->xWcrt + pxSsTask->xWcet;
 
         // Corollary 1 (follows theorem 4)
-        if ( ( pxHigherPrioTask->xDi + pxHigherPrioTask->xWcet >= xIntervalo ) && ( pxHigherPrioTask->xDi + pxHigherPrioTask->xWcet <= xDi ) )
+        if ( ( pxHigherPrioTaskSs->xDi + pxHigherPrioTaskSs->xWcet >= xIntervalo ) && ( pxHigherPrioTaskSs->xDi + pxHigherPrioTaskSs->xWcet <= xDi ) )
         {
-            xIntervalo = pxHigherPrioTask->xDi + pxHigherPrioTask->xWcet;
-            xKmax = pxHigherPrioTask->xSlack - pxTask->xWcet;
-            xTmax = pxHigherPrioTask->xTtma;
+            xIntervalo = pxHigherPrioTaskSs->xDi + pxHigherPrioTaskSs->xWcet;
+            xKmax = pxHigherPrioTaskSs->xSlack - pxSsTask->xWcet;
+            xTmax = pxHigherPrioTaskSs->xTtma;
         }
 
         TickType_t xWc = xSlackGetWorkLoad( pxTask, xTc );
@@ -4401,8 +4406,9 @@ TickType_t uxReturn;
             #endif            
 
             pxHigherPrioTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
+            pxHigherPrioTaskSs = &( pxHigherPrioTask->ss );
 
-            xii = U_CEIL( xIntervalo, pxHigherPrioTask->xPeriod ) * pxHigherPrioTask->xPeriod;
+            xii = U_CEIL( xIntervalo, pxHigherPrioTaskSs->xPeriod ) * pxHigherPrioTaskSs->xPeriod;
             
             #if ( configKERNEL_TEST == 2 )
             xCeilFloorCost = xCeilFloorCost + 1;
@@ -4426,7 +4432,7 @@ TickType_t uxReturn;
                     xTmax = xii;
                 }
 
-                xii = xii + pxHigherPrioTask->xPeriod;
+                xii = xii + pxHigherPrioTaskSs->xPeriod;
             }
 
             // Get the next higher priority task
@@ -4434,8 +4440,8 @@ TickType_t uxReturn;
         }
         while ( pxTaskListEndItem != pxHigherPrioTaskListItem );
 
-        pxTask->xSlack = xKmax;
-        pxTask->xTtma = xTmax;
+        pxSsTask->xSlack = xKmax;
+        pxSsTask->xTtma = xTmax;
     }
 #endif /* configUSE_SLACK_METHOD == 0 */
     /*-----------------------------------------------------------*/
@@ -4445,23 +4451,26 @@ TickType_t uxReturn;
     static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickType_t xTc )
 	{
 		TCB_t *pxTask = ( TCB_t * ) xTask;
-		TCB_t *pxHigherPrioTask = NULL;
+		SsTCB_t *pxSsTask = pxTask->ss;
 
-		ListItem_t *pxTaskListItem = &( ( TCB_t * ) pxTask )->xSsTaskListItem;			// this task list item
+		TCB_t *pxHigherPrioTask = NULL;
+		SsTCB_t *pxHigherPrioTaskSs = NULL;
+
+		ListItem_t *pxTaskListItem = &( ( TCB_t * ) pxSsTask )->xSsTaskListItem;			// this task list item
 		ListItem_t *pxHigherPrioTaskListItem = ( ( pxTaskListItem )->pxPrevious );
         ListItem_t const *pxTaskListEndItem = listGET_END_MARKER( &( xSsTaskList ) );	// end marker
 
 		TickType_t xS = ( TickType_t ) 0U; // amount of slack which may be stolen
 		TickType_t xW = ( TickType_t ) 0U; // busy period
 
-		TickType_t xD = pxTask->xDeadline;
+		TickType_t xD = pxSsTask->xDeadline;
 		if ( xTc > ( TickType_t ) 0U )
 		{
 			// xTask is in suspended state, and xItemValue has the instant in
 			// which the task should be removed from the blocked list. In this
 			// method all times are relative to the current tick time, so xTc
 			// must be subtracted from.
-			xD = listGET_LIST_ITEM_VALUE( & ( pxTask->xGenericListItem ) ) - xTc + pxTask->xDeadline;
+			xD = listGET_LIST_ITEM_VALUE( & ( pxTask->xGenericListItem ) ) - xTc + pxSsTask->xDeadline;
 		}
 
 		while( xW <= xD )
@@ -4475,6 +4484,7 @@ TickType_t uxReturn;
 			do
 			{
 				pxHigherPrioTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
+				pxHigherPrioTaskSs = pxHigherPrioTask->ss;
 
 				TickType_t xIj = ( TickType_t ) 0U;
 				if( xTc > xIj )
@@ -4492,7 +4502,7 @@ TickType_t uxReturn;
 					xWX = xWm - xIj;
 				}
 
-				xSum = xSum + ( U_CEIL( xWX, pxHigherPrioTask->xPeriod ) * pxHigherPrioTask->xWcet );
+				xSum = xSum + ( U_CEIL( xWX, pxHigherPrioTaskSs->xPeriod ) * pxHigherPrioTaskSs->xWcet );
 
 				pxHigherPrioTaskListItem = ( ( pxHigherPrioTaskListItem )->pxPrevious );
 			}
@@ -4517,6 +4527,7 @@ TickType_t uxReturn;
 					do
 					{
 						pxHigherPrioTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
+						pxHigherPrioTaskSs = pxHigherPrioTask->ss;
 
 						TickType_t xIj = ( TickType_t ) 0U;
 						if( xTc > xIj )
@@ -4534,7 +4545,7 @@ TickType_t uxReturn;
 						{
 							xWX = xWm - xIj;
 						}
-						xV_t = U_CEIL( xWX, pxHigherPrioTask->xPeriod ) * pxHigherPrioTask->xPeriod;
+						xV_t = U_CEIL( xWX, pxHigherPrioTaskSs->xPeriod ) * pxHigherPrioTaskSs->xPeriod;
 						xV_t = xV_t + xIj - xWm;
 
 						if( xV_t < xV )
@@ -4559,7 +4570,7 @@ TickType_t uxReturn;
 			}
 		}
 
-		pxTask->xSlack = xS - ONE_TICK;
+		pxSsTask->xSlack = xS - ONE_TICK;
 	}
 #endif /* configUSE_SLACK_METHOD == 1 */
 	/*-----------------------------------------------------------*/
@@ -4571,7 +4582,9 @@ TickType_t uxReturn;
     static BaseType_t xTaskSlackResume()
     {
         BaseType_t xSwitchRequired = pdFALSE;
+
         TCB_t *pxTCB = NULL;
+        SsTCB_t *pxSsTCB = NULL;
 
         if( listLIST_IS_EMPTY( &xSsTaskBlockedList ) == pdFALSE )
         {
@@ -4581,11 +4594,12 @@ TickType_t uxReturn;
             while( pxTaskListEnd != pxTaskListItem )
             {
                 pxTCB = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+                pxSsTCB = &( pxTCB->ss );
 
                 {
                     /* As we are in a critical section we can access the ready
                     lists even if the scheduler is suspended. */
-                    ( void ) uxListRemove(  &( pxTCB->xSsTaskBlockedListItem ) );
+                    ( void ) uxListRemove(  &( pxSsTCB->xSsTaskBlockedListItem ) );
                     prvAddTaskToReadyList( pxTCB );
                 }
 
@@ -4612,6 +4626,7 @@ TickType_t uxReturn;
         BaseType_t xSwitchRequired = pdFALSE;
         
 	    TCB_t *pxTCB = NULL;
+	    SsTCB_t * pxSsTCB = NULL;
 
         if( listLIST_IS_EMPTY( &pxReadyTasksLists[ configMAX_PRIORITIES - 1 ] ) == pdFALSE )
         {
@@ -4621,6 +4636,7 @@ TickType_t uxReturn;
             while( pxTaskListEnd != pxTaskListItem )
             {
                 pxTCB = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+                pxSsTCB = &( pxTCB->ss );
  
                 {
                     /* Remove task from the ready/delayed list and place in the
@@ -4644,7 +4660,7 @@ TickType_t uxReturn;
                         mtCOVERAGE_TEST_MARKER();
                     }
 
-                    vListInsertEnd( &xSsTaskBlockedList, &( pxTCB->xSsTaskBlockedListItem ) );
+                    vListInsertEnd( &xSsTaskBlockedList, &( pxSsTCB->xSsTaskBlockedListItem ) );
                 }
  
                 /* Get next ready task. */
@@ -4665,7 +4681,7 @@ TickType_t uxReturn;
     void vTasksGetSlacks( int32_t *pxArray )
     {
         pxArray[ 0 ] = xTickCount;
-        pxArray[ 1 ] = pxCurrentTCB->xCur;
+        pxArray[ 1 ] = ( pxCurrentTCB->ss ).xCur;
         pxArray[ 2 ] = xSlackSD;        
 
         ListItem_t const *pxTaskListEndItem = listGET_END_MARKER( &( xSsTaskList ) );
@@ -4676,8 +4692,9 @@ TickType_t uxReturn;
         while( pxTaskListEndItem != pxTaskListItem )
         {
         	TCB_t *pxTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+        	SsTCB_t *pxSsTask = &( pxTask->ss );
             
-            pxArray[ xI ] = pxTask->xSlack;
+            pxArray[ xI ] = pxSsTask->xSlack;
 
             xI = xI + 1;
         	pxTaskListItem = listGET_NEXT( pxTaskListItem );
@@ -4689,8 +4706,8 @@ TickType_t uxReturn;
     void prvTaskRecSlack()
     {
         (*xResults)[xRecSlackIdx][ 0 ] = xTickCount;
-        (*xResults)[xRecSlackIdx][ 1 ] = pxCurrentTCB->xId;
-        (*xResults)[xRecSlackIdx][ 2 ] = pxCurrentTCB->xCur;
+        (*xResults)[xRecSlackIdx][ 1 ] = ( pxCurrentTCB->ss ).xId;
+        (*xResults)[xRecSlackIdx][ 2 ] = ( pxCurrentTCB->ss ).xCur;
 
         ListItem_t const *pxTaskListEndItem = listGET_END_MARKER( &( xSsTaskList ) );
         ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
@@ -4700,8 +4717,9 @@ TickType_t uxReturn;
         while( pxTaskListEndItem != pxTaskListItem )
         {
         	TCB_t *pxTask = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+        	SsTCB_t *pxSsTask = pxTask->ss;
             
-            (*xResults)[xRecSlackIdx][ xI ] = pxTask->xSlack;
+            (*xResults)[xRecSlackIdx][ xI ] = pxSsTask->xSlack;
 
             xI = xI + 1;
         	pxTaskListItem = listGET_NEXT( pxTaskListItem );
@@ -4716,10 +4734,10 @@ TickType_t uxReturn;
     /* Slack method cost measured in ceil/floor operations */
     void vTaskGetTraceInfo()
     {
-        if ( ( *cs_costs )[ pxCurrentTCB->xId ][ 0 ] < RELEASE_COUNT )
+        if ( ( *cs_costs )[ ( pxCurrentTCB->ss ).xId ][ 0 ] < RELEASE_COUNT )
         {   
-            ( *cs_costs )[ pxCurrentTCB->xId ][ (*cs_costs)[pxCurrentTCB->xId][0] + 1 ] = xCeilFloorCost;
-            ( *cs_costs )[ pxCurrentTCB->xId ][ 0 ] += 1U;
+            ( *cs_costs )[ ( pxCurrentTCB->ss ).xId ][ (*cs_costs)[ ( pxCurrentTCB->ss ).xId ][0] + 1 ] = xCeilFloorCost;
+            ( *cs_costs )[ ( pxCurrentTCB->ss ).xId ][ 0 ] += 1U;
         }
     }
 #endif
@@ -4729,10 +4747,10 @@ TickType_t uxReturn;
     /* Measures the cost of prvTaskCalculateSlack() in cpu cycles */
     void vTaskGetTraceInfo( const uint32_t cycles )
     {
-        if ( ( *cs_costs )[ pxCurrentTCB->xId ][ 0 ] < RELEASE_COUNT )
+        if ( ( *cs_costs )[ ( pxCurrentTCB->ss ).xId ][ 0 ] < RELEASE_COUNT )
         {   
-            ( *cs_costs )[ pxCurrentTCB->xId ][ (*cs_costs)[pxCurrentTCB->xId][0] + 1 ] = cycles;
-            ( *cs_costs )[ pxCurrentTCB->xId ][ 0 ] += 1U;
+            ( *cs_costs )[ ( pxCurrentTCB->ss ).xId ][ (*cs_costs)[ ( pxCurrentTCB->ss ).xId ][0] + 1 ] = cycles;
+            ( *cs_costs )[ ( pxCurrentTCB->ss ).xId ][ 0 ] += 1U;
         }
     }
 #endif
@@ -4742,10 +4760,10 @@ TickType_t uxReturn;
     /* Slack method cost measured in ceil/floor operations */
     void vTaskGetTraceInfo()
     {
-        if ( ( *cs_costs )[ pxCurrentTCB->xId ][ 0 ] < RELEASE_COUNT )
+        if ( ( *cs_costs )[ ( pxCurrentTCB->ss ).xId ][ 0 ] < RELEASE_COUNT )
         {   
-            ( *cs_costs )[ pxCurrentTCB->xId ][ (*cs_costs)[pxCurrentTCB->xId][0] + 1 ] = xLoopCost;
-            ( *cs_costs )[ pxCurrentTCB->xId ][ 0 ] += 1U;
+            ( *cs_costs )[ ( pxCurrentTCB->ss ).xId ][ (*cs_costs)[ ( pxCurrentTCB->ss ).xId ][0] + 1 ] = xLoopCost;
+            ( *cs_costs )[ ( pxCurrentTCB->ss ).xId ][ 0 ] += 1U;
         }
     }
 #endif
@@ -4756,20 +4774,22 @@ TickType_t uxReturn;
 #if ( configKERNEL_TEST == 1 )
     void vTaskGetTraceInfo( xType *pxArray, uint32_t time, uint32_t r )
     {
-        if ( (*pxArray)[pxCurrentTCB->xId][0] < RELEASE_COUNT )
+    	SsTCB_t * pxSsTCB = pxCurrentTCB->ss;
+
+        if ( (*pxArray)[pxSsTCB->xId][0] < RELEASE_COUNT )
         {
             if( r == 0 )
             {
-                (*pxArray)[pxCurrentTCB->xId][1] = 1;
-                (*pxArray)[pxCurrentTCB->xId][ (*pxArray)[pxCurrentTCB->xId][0] + 2 ] = time;
+                (*pxArray)[pxSsTCB->xId][1] = 1;
+                (*pxArray)[pxSsTCB->xId][ (*pxArray)[pxSsTCB->xId][0] + 2 ] = time;
             }
             else
             {
-                if( (*pxArray)[pxCurrentTCB->xId][1] == 1 )
+                if( (*pxArray)[pxSsTCB->xId][1] == 1 )
                 {
-                    (*pxArray)[pxCurrentTCB->xId][ (*pxArray)[pxCurrentTCB->xId][0] + 2] = time - (*pxArray)[pxCurrentTCB->xId][ (*pxArray)[pxCurrentTCB->xId][0] + 2];
-                    (*pxArray)[pxCurrentTCB->xId][1] = 0;
-                    (*pxArray)[pxCurrentTCB->xId][0] += 1U;
+                    (*pxArray)[pxSsTCB->xId][ (*pxArray)[pxSsTCB->xId][0] + 2] = time - (*pxArray)[pxSsTCB->xId][ (*pxArray)[pxSsTCB->xId][0] + 2];
+                    (*pxArray)[pxSsTCB->xId][1] = 0;
+                    (*pxArray)[pxSsTCB->xId][0] += 1U;
                 }
             }
         }

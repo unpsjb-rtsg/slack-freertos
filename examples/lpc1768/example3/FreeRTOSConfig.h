@@ -182,5 +182,10 @@ standard names. */
 
 /* Integrates the Tracealyzer recorder with FreeRTOS */
 #if ( configUSE_TRACE_FACILITY == 1 )
+#ifdef TRACEALYZER_v3_0_2
+#include "trcKernelPort.h"
+#endif
+#ifdef TRACEALYZER_v3_1_3
 #include "trcRecorder.h"
+#endif
 #endif

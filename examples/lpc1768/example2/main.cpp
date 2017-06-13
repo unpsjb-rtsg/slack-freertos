@@ -33,13 +33,19 @@ int main()
 	leds[2] = 0;
 	leds[3] = 0;
 
+#if( tskKERNEL_VERSION_MAJOR == 9 )
 	vSlackSystemSetup();
+#endif
 
     // create periodic tasks
     xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
     xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
     xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
     xTaskCreate( periodicTaskBody, "T4", 256, NULL, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
+
+    /* Aperiodic task */
+    TaskHandle_t xApTaskHandle;
+    xTaskCreate ( aperiodic_task_body, "TA", 256, NULL, configMAX_PRIORITIES - 1, &xApTaskHandle );
 
 #if( configUSE_SLACK_STEALING == 1 )
     // additional parameters needed by the slack stealing framework
@@ -54,14 +60,15 @@ int main()
     vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
     vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
     vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
-#endif
+
     /* Aperiodic task */
-    TaskHandle_t xApTaskHandle;
-    xTaskCreate ( aperiodic_task_body, "TA", 256, NULL, configMAX_PRIORITIES - 1, &xApTaskHandle );
     vSlackSetTaskParams( xApTaskHandle, APERIODIC_TASK, 0, 0, 0, 5 );
 #endif
+#endif
 
+#if( tskKERNEL_VERSION_MAJOR == 9 )
     vSlackSchedulerSetup();
+#endif
 
     vTaskStartScheduler();
 
@@ -72,7 +79,14 @@ void aperiodic_task_body( void* params )
 {
 	int32_t slackArray[ 7 ];
 
-	SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
+    SsTCB_t *pxTaskSsTCB;
+
+#if( tskKERNEL_VERSION_MAJOR == 8 )
+	pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
+#endif
+#if( tskKERNEL_VERSION_MAJOR == 9 )
+	pxTaskSsTCB = getTaskSsTCB( NULL );
+#endif
 
 	for(;;)
 	{
