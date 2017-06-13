@@ -46,7 +46,9 @@ ifeq ($(TZ), 1)
     OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcUser.o
   
     INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
-    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate    
+    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
+    
+    CC_SYMBOLS += -DTRACEALYZER_v3_0_2    
   endif
   
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.1.3)
@@ -56,6 +58,8 @@ ifeq ($(TZ), 1)
     
     INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
     INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
+    
+    CC_SYMBOLS += -DTRACEALYZER_v3_1_3
   endif  
 endif
 
@@ -67,7 +71,7 @@ CPU = -mcpu=cortex-m3 -mthumb
 # removed -fno-common
 CC_FLAGS = $(CPU) -c -fmessage-length=0 -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -Wall 
 CC_FLAGS += -MMD -MP
-CC_SYMBOLS = -D__REDLIB__ -D__CODE_RED -DTARGET_LPC1768 -DTARGET_M3 -DTARGET_NXP -DTARGET_LPC176X -DTARGET_MBED_LPC1768 -DTOOLCHAIN_GCC_ARM -DTOOLCHAIN_GCC -D__CORTEX_M3 -DARM_MATH_CM3
+CC_SYMBOLS += -D__REDLIB__ -D__CODE_RED -DTARGET_LPC1768 -DTARGET_M3 -DTARGET_NXP -DTARGET_LPC176X -DTARGET_MBED_LPC1768 -DTOOLCHAIN_GCC_ARM -DTOOLCHAIN_GCC -D__CORTEX_M3 -DARM_MATH_CM3
 
 # Required for the test (see test directory)
 ifeq ($(TEST), 1)

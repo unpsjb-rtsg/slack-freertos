@@ -25,7 +25,12 @@ DigitalOut leds[] = { LED1, LED2, LED3, LED4 };
 int main()
 {
 	// Initializes the trace recorder, but does not start the tracing.
+#ifdef TRACEALYZER_v3_0_2
+	vTraceInitTraceData();
+#endif
+#ifdef TRACEALYZER_v3_1_3
 	vTraceEnable( TRC_INIT );
+#endif
 
 	pc.baud(9600);
     pc.printf("Example 3\n");
@@ -36,7 +41,9 @@ int main()
 	leds[2] = 0;
 	leds[3] = 0;
 
+#if( tskKERNEL_VERSION_MAJOR == 9 )
 	vSlackSystemSetup();
+#endif
 
     // Create the periodic tasks.
     xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
@@ -68,10 +75,17 @@ int main()
 #endif
 #endif
 
+#if( tskKERNEL_VERSION_MAJOR == 9 )
     vSlackSchedulerSetup();
+#endif
 
     // Starts the tracing.
+#ifdef TRACEALYZER_v3_0_2
+    uiTraceStart();
+#endif
+#ifdef TRACEALYZER_v3_1_3
     vTraceEnable( TRC_START );
+#endif
 
     vTaskStartScheduler();
 
@@ -82,7 +96,14 @@ void aperiodic_task_body( void* params )
 {
 	int32_t slackArray[ 7 ];
 
-	SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
+	SsTCB_t *pxTaskSsTCB;
+
+#if( tskKERNEL_VERSION_MAJOR == 8 )
+	pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
+#endif
+#if( tskKERNEL_VERSION_MAJOR == 9 )
+	pxTaskSsTCB = getTaskSsTCB( NULL );
+#endif
 
 	for(;;)
 	{
