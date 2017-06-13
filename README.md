@@ -1,4 +1,4 @@
-# Slack Stealing for FreeRTOS.
+# Slack Stealing for FreeRTOS
 Slack Stealing framework for FreeRTOS.
 
 ## Overview
