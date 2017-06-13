@@ -2842,7 +2842,7 @@ BaseType_t xSwitchRequired = pdFALSE;
 			}
 
 			// Decrement real-time tasks slack counter by one tick
-			if( ( pxCurrentTCB->uxPriority == tskIDLE_PRIORITY ) || ( pxCurrentTCB->uxPriority == ( configMAX_PRIORITIES - 1) ) )
+			if( ( pxCurrentTCB->uxPriority == tskIDLE_PRIORITY ) || ( pxCurrentTCB->uxPriority >= ( ( UBaseType_t ) ( configMAX_PRIORITIES - configMAX_SLACK_PRIO ) ) ) )
 			{
 				vSlackDecrementAllTasksSlack( ONE_TICK, xTickCount, &xSsTaskList );
 			}
@@ -2856,11 +2856,17 @@ BaseType_t xSwitchRequired = pdFALSE;
 
 			if( xSlackSD == 0 )
 			{
-				/* Block tasks if there is not enough available slack. */
-				if( listLIST_IS_EMPTY( &pxReadyTasksLists[ configMAX_PRIORITIES - 1 ] ) == pdFALSE )
-				{
-					xSwitchRequired = xTaskSlackSuspend();
-				}
+				UBaseType_t x;
+
+		        for( x = 1; x <= configMAX_SLACK_PRIO; x++ )
+		        {
+		        	/* Block tasks if there is not enough available slack. */
+		        	if( listLIST_IS_EMPTY( &pxReadyTasksLists[ configMAX_PRIORITIES - x ] ) == pdFALSE )
+		        	{
+		        		xSwitchRequired = xTaskSlackSuspend();
+		        		break;
+		        	}
+		        }
 			}
 		}
 	}
@@ -5066,43 +5072,48 @@ const TickType_t xConstTickCount = xTickCount;
 	{
         BaseType_t xSwitchRequired = pdFALSE;
 
-        if( listLIST_IS_EMPTY( &pxReadyTasksLists[ configMAX_PRIORITIES - 1 ] ) == pdFALSE )
+        UBaseType_t x;
+
+        for( x = 1; x <= configMAX_SLACK_PRIO; x++ )
         {
-            ListItem_t const *pxTaskListEnd = listGET_END_MARKER( &pxReadyTasksLists[ configMAX_PRIORITIES - 1 ] );
-            ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &pxReadyTasksLists[ configMAX_PRIORITIES - 1 ] );
+        	if( listLIST_IS_EMPTY( &pxReadyTasksLists[ configMAX_PRIORITIES - x ] ) == pdFALSE )
+        	{
+        		ListItem_t const *pxTaskListEnd = listGET_END_MARKER( &pxReadyTasksLists[ configMAX_PRIORITIES - x ] );
+        		ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &pxReadyTasksLists[ configMAX_PRIORITIES - x ] );
 
-            while( pxTaskListEnd != pxTaskListItem )
-            {
-                TCB_t * pxTCB = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+        		while( pxTaskListEnd != pxTaskListItem )
+        		{
+        			TCB_t * pxTCB = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
 
-                /* Remove task from the ready/delayed list and place in the
+        			/* Remove task from the ready/delayed list and place in the
                     suspended list. */
-                if( uxListRemove( &( pxTCB->xStateListItem ) ) == ( UBaseType_t ) 0 )
-                {
-                	taskRESET_READY_PRIORITY( pxTCB->uxPriority );
-                }
-                else
-                {
-                	mtCOVERAGE_TEST_MARKER();
-                }
+        			if( uxListRemove( &( pxTCB->xStateListItem ) ) == ( UBaseType_t ) 0 )
+        			{
+        				taskRESET_READY_PRIORITY( pxTCB->uxPriority );
+        			}
+        			else
+        			{
+        				mtCOVERAGE_TEST_MARKER();
+        			}
 
-                /* Is the task waiting on an event also? */
-                if( listLIST_ITEM_CONTAINER( &( pxTCB->xEventListItem ) ) != NULL )
-                {
-                	( void ) uxListRemove( &( pxTCB->xEventListItem ) );
-                }
-                else
-                {
-                	mtCOVERAGE_TEST_MARKER();
-                }
+        			/* Is the task waiting on an event also? */
+        			if( listLIST_ITEM_CONTAINER( &( pxTCB->xEventListItem ) ) != NULL )
+        			{
+        				( void ) uxListRemove( &( pxTCB->xEventListItem ) );
+        			}
+        			else
+        			{
+        				mtCOVERAGE_TEST_MARKER();
+        			}
 
-                vListInsertEnd( &xSsTaskBlockedList, &( getSsTCB( pxTCB )->xSsTaskBlockedListItem ) );
+        			vListInsertEnd( &xSsTaskBlockedList, &( getSsTCB( pxTCB )->xSsTaskBlockedListItem ) );
 
-                /* Get next ready task. */
-                pxTaskListItem = listGET_NEXT( pxTaskListItem );
-            }
+        			/* Get next ready task. */
+        			pxTaskListItem = listGET_NEXT( pxTaskListItem );
+        		}
 
-            xSwitchRequired = pdTRUE;
+        		xSwitchRequired = pdTRUE;
+        	}
         }
 
         return xSwitchRequired;
