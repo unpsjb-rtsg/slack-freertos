@@ -115,6 +115,6 @@ void aperiodic_task_body( void* params )
 
 		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
 
-		vTaskDelay( rand() % 4000 );
+		vTaskDelay( rand() % 8000 );
 	}
 }
