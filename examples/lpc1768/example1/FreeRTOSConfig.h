@@ -95,7 +95,7 @@ extern uint32_t SystemCoreClock;
 #define configMINIMAL_STACK_SIZE		( ( unsigned short ) 130 )
 #define configTOTAL_HEAP_SIZE			( ( size_t ) ( 16 * 1024 ) )
 #define configMAX_TASK_NAME_LEN			( 10 )
-#define configUSE_TRACE_FACILITY		0
+#define configUSE_TRACE_FACILITY		1
 #define configUSE_16_BIT_TICKS			0
 #define configIDLE_SHOULD_YIELD			1
 #define configUSE_MUTEXES				0
@@ -129,6 +129,13 @@ extern uint32_t SystemCoreClock;
 #define configUSE_SLACK_METHOD          0 /* Slack method to use */
 #define configUSE_SLACK_K               0 /* Only calculate slack at the scheduler start */
 #define configMAX_SLACK_PRIO            1 /* priority levels that are used for slack. */
+
+/*
+ * How the task simulate the execution time.
+ * 0 = execute asm nops
+ * 1 = exact tick count
+ */
+#define configTASK_EXEC                 0
 /* ========================================================================= */
 
 /* Set the following definitions to 1 to include the API function, or zero

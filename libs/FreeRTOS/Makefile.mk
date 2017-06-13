@@ -31,21 +31,36 @@ ifeq ($(TEST), 1)
 endif
 
 ifeq ($(TZ), 1)
-  OBJECTS += ../Tracealizer/trcBase.o
-  OBJECTS += ../Tracealizer/trcHardwarePort.o
-  OBJECTS += ../Tracealizer/trcKernel.o
-  OBJECTS += ../Tracealizer/trcKernelPortFreeRTOS.o
-  OBJECTS += ../Tracealizer/trcUser.o
-  
   MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768
   MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM
   MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP
   MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X
   MBED_INCLUDE_PATHS += -I../../libs/mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X/TARGET_MBED_LPC1768
+  INCLUDE_PATHS += $(MBED_INCLUDE_PATHS)
   
-  INCLUDE_PATHS += -I../Tracealizer/Include
-  INCLUDE_PATHS += -I../Tracealizer/ConfigurationTemplate
-  INCLUDE_PATHS +=$(MBED_INCLUDE_PATHS)  
+  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcBase.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcHardwarePort.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernel.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernelPortFreeRTOS.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcUser.o
+  
+    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
+    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
+    
+    CC_SYMBOLS += -DTRACEALYZER_v3_0_2    
+  endif
+  
+  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.1.3)
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernelPort.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcSnapshotRecorder.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcStreamingRecorder.o
+    
+    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
+    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
+    
+    CC_SYMBOLS += -DTRACEALYZER_v3_1_3
+  endif  
 endif
 
 ############################################################################### 
@@ -56,7 +71,7 @@ CPU = -mcpu=cortex-m3 -mthumb
 # removed -fno-common
 CC_FLAGS = $(CPU) -c -fmessage-length=0 -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -Wall 
 CC_FLAGS += -MMD -MP
-CC_SYMBOLS = -D__REDLIB__ -D__CODE_RED -DTARGET_LPC1768 -DTARGET_M3 -DTARGET_NXP -DTARGET_LPC176X -DTARGET_MBED_LPC1768 -DTOOLCHAIN_GCC_ARM -DTOOLCHAIN_GCC -D__CORTEX_M3 -DARM_MATH_CM3
+CC_SYMBOLS += -D__REDLIB__ -D__CODE_RED -DTARGET_LPC1768 -DTARGET_M3 -DTARGET_NXP -DTARGET_LPC176X -DTARGET_MBED_LPC1768 -DTOOLCHAIN_GCC_ARM -DTOOLCHAIN_GCC -D__CORTEX_M3 -DARM_MATH_CM3
 
 # Required for the test (see test directory)
 ifeq ($(TEST), 1)

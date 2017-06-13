@@ -19,16 +19,113 @@ static inline void prvTaskCalculateSlack_fixed1( TaskHandle_t  xTask, const Tick
 static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList ) __attribute__((always_inline));
 #endif
 
-void vSlackSetTaskParams( TaskHandle_t xTask, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId )
-{
-	SsTCB_t *pxSsTCB = pvTaskGetThreadLocalStoragePointer( xTask, 0 );
+volatile BaseType_t xSlackSD;
 
-	pxSsTCB->xPeriod = xPeriod;
-	pxSsTCB->xDeadline = xDeadline;
-	pxSsTCB->xWcet = xWcet;
-	pxSsTCB->xA = xWcet;
-	pxSsTCB->xB = xPeriod;
-	pxSsTCB->xId = xId;
+List_t xDeadlineTaskList;
+
+List_t xSsTaskList;
+
+List_t xSsTaskBlockedList;
+
+void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId )
+{
+	UBaseType_t uxTaskPriority = uxTaskPriorityGet( xTask );
+	SsTCB_t * pxNewSsTCB = pvPortMalloc( sizeof( SsTCB_t ) );
+
+	if( ( uxTaskPriority == tskIDLE_PRIORITY ) || ( uxTaskPriority == configMAX_PRIORITIES - 1 ) )
+	{
+		// error?
+	}
+
+	pxNewSsTCB->xTaskType = xTaskType;
+
+	pxNewSsTCB->xPeriod = xPeriod;
+	pxNewSsTCB->xDeadline = xDeadline;
+	pxNewSsTCB->xWcet = xWcet;
+	pxNewSsTCB->xA = xWcet;
+	pxNewSsTCB->xB = xPeriod;
+	pxNewSsTCB->xId = xId;
+
+	pxNewSsTCB->uxReleaseCount = 1U;
+	pxNewSsTCB->xPreviousWakeTime = ( TickType_t ) 0U;
+	pxNewSsTCB->xTimeToWake = ( TickType_t ) 0U;
+	pxNewSsTCB->xWcrt = 0U;
+	pxNewSsTCB->xEndTick = ( TickType_t ) 0U;
+	pxNewSsTCB->xSlack = 0U;
+#if ( configUSE_SLACK_METHOD == 0 )
+	pxNewSsTCB->xTtma = 0U;
+	pxNewSsTCB->xDi = 0U;
+#endif
+	pxNewSsTCB->xCur = ( TickType_t ) 0U;
+
+	if( xTaskType == PERIODIC_TASK )
+	{
+		vListInitialiseItem( &( pxNewSsTCB->xSsTaskListItem ) );
+		listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xSsTaskListItem ), ( TickType_t ) configMAX_PRIORITIES - ( TickType_t ) uxTaskPriority );
+		listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xSsTaskListItem ), xTask );
+		vListInsert( &xSsTaskList, &( ( pxNewSsTCB )->xSsTaskListItem ) );
+
+		vListInitialiseItem( &( pxNewSsTCB->xDeadlineTaskListItem ) );
+		listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xDeadlineTaskListItem ), xTask );
+		listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xDeadlineTaskListItem ), pxNewSsTCB->xDeadline );
+		/* The list item value of xDeadlineTaskListItem is updated when the
+			task is moved into the ready list. */
+	}
+
+	if( xTaskType == APERIODIC_TASK )
+	{
+		vListInitialiseItem( &( pxNewSsTCB->xSsTaskBlockedListItem ) );
+		listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xSsTaskBlockedListItem ), xTask );
+		listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xSsTaskBlockedListItem ), 0 );
+	}
+
+	vTaskSetThreadLocalStoragePointer( xTask, 0, ( void * ) pxNewSsTCB );
+}
+/*-----------------------------------------------------------*/
+
+void vSlackSystemSetup( void )
+{
+    vListInitialise( &xSsTaskList );
+    vListInitialise( &xDeadlineTaskList );
+    vListInitialise( &xSsTaskBlockedList );
+}
+/*-----------------------------------------------------------*/
+
+void vSlackSchedulerSetup( void )
+{
+	xSlackSD = 0;
+
+	/* Calculate worst case execution times of tasks. */
+    BaseType_t xSchedulable = xSlackCalculateTasksWcrt( &xSsTaskList );
+
+    if( xSchedulable == pdFALSE )
+    {
+        vApplicationNotSchedulable();
+    }
+
+    ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
+
+    /* Calculate slacks at xTickCount = 0 */
+    while( listGET_END_MARKER( &( xSsTaskList ) ) != pxTaskListItem )
+    {
+    	TaskHandle_t xTask = ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+    	SsTCB_t *pxTaskSs = getTaskSsTCB( xTask );
+
+    	vTaskCalculateSlack( xTask, (TickType_t) 0U, &xSsTaskList );
+    	pxTaskSs->xSlackK = pxTaskSs->xSlack;
+
+    	/* Deadline */
+    	UBaseType_t uxTaskPriority = uxTaskPriorityGet( xTask );
+    	if( uxTaskPriority != tskIDLE_PRIORITY )
+    	{
+    		listSET_LIST_ITEM_VALUE( &( ( pxTaskSs )->xDeadlineTaskListItem ), pxTaskSs->xDeadline );
+    		vListInsert( &xDeadlineTaskList, &( ( pxTaskSs )->xDeadlineTaskListItem ) );
+    	}
+
+    	pxTaskListItem = listGET_NEXT( pxTaskListItem );
+    }
+
+    vSlackUpdateAvailableSlack( &xSlackSD, &xSsTaskList );
 }
 /*-----------------------------------------------------------*/
 
@@ -325,8 +422,8 @@ static inline void prvTaskCalculateSlack_fixed1( TaskHandle_t xTask, const TickT
     TickType_t xDi = pxTask->xDeadline;
     if ( xTc > ( TickType_t ) 0U )
     {
-    	// xTask is in suspended state, and xItemValue has the instant in
-    	// which the task should be removed from the blocked list.
+    	// xTimeToWake has the instant in which the task should be removed
+    	// from the blocked list.
     	xXi = pxTask->xTimeToWake;
     	xDi = xXi + pxTask->xDeadline;
     }
@@ -456,10 +553,9 @@ static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickT
 	TickType_t xD = pxTask->xDeadline;
 	if ( xTc > ( TickType_t ) 0U )
 	{
-		// xTask is in suspended state, and xItemValue has the instant in
-		// which the task should be removed from the blocked list. In this
-		// method all times are relative to the current tick time, so xTc
-		// must be subtracted from.
+		// xTimeToWake has the instant in which the task should be removed from
+		// the blocked list. In this method all times are relative to the
+		//current tick time, so xTc must be subtracted from.
 		xD = pxTask->xTimeToWake - xTc + pxTask->xDeadline;
 	}
 
@@ -468,8 +564,7 @@ static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickT
 		TickType_t xWm = xW;
 		TickType_t xSum = ( TickType_t ) 0U; // summation
 
-		// from lower to higher priority task -- this differs from the
-		// original paper.
+		// from lower to higher priority task -- this differs from the method.
 		pxHigherPrioTaskListItem = pxTaskListItem;
 		do
 		{
@@ -479,10 +574,9 @@ static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickT
 			TickType_t xIj = ( TickType_t ) 0U;
 			if( xTc > xIj )
 			{
-				// pxHigherPrioTask has finished, and xItemValue has the
+				// pxHigherPrioTask has finished, and xItemToWake has the
 				// time when the task should be removed from the blocked
 				// list, which is the earliest possible next release.
-				// Also, both xWm and xListItem are unsigned integers.
 				xIj = pxHigherPrioTask->xTimeToWake - xTc;
 			}
 
@@ -522,11 +616,10 @@ static inline void prvTaskCalculateSlack_davis1( TaskHandle_t xTask, const TickT
 					TickType_t xIj = ( TickType_t ) 0U;
 					if( xTc > xIj )
 					{
-						// pxHigherPrioTask has finished, and xItemValue
+						// pxHigherPrioTask has finished, and xTimeToWake
 						// has the time when the task should be removed
 						// from the blocked list, which is the earliest
-						// possible next release. Also, both xWm and
-						// xListItem are unsigned integers.
+						// possible next release.
 						xIj = pxHigherPrioTask->xTimeToWake - xTc;
 					}
 
