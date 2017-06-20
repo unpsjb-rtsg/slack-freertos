@@ -61,7 +61,12 @@ extern "C" {
  * required at least for the ARM Cortex-M port, that uses the ARM CMSIS API.
  * Try that in case of build problems. Otherwise, remove the #error line below.
  *****************************************************************************/
+#ifdef TARGET_LPC1768
 #include "LPC17xx.h"
+#endif
+#ifdef TARGET_EDU_CIAA_NXP
+#include "chip.h"
+#endif
 
 /*******************************************************************************
  * Configuration Macro: TRC_CFG_HARDWARE_PORT
