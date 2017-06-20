@@ -1,5 +1,5 @@
 #
-# Modify example to build in Makefile.mine. 
+# Modify example to build in Makefile.mine
 #
 -include Makefile.mine
 
@@ -25,32 +25,50 @@ OBJCOPY = $(GCC_BIN)arm-none-eabi-objcopy
 SIZE    = $(GCC_BIN)arm-none-eabi-size
 
 MAKE_DIR = $(PWD)
-FREERTOS_DIR := $(MAKE_DIR)/libs/FreeRTOS 
-EXAMPLES_DIR := $(MAKE_DIR)/examples
-INCLUDE_DIR := $(MAKE_DIR)/include
+FREERTOS_DIR = $(MAKE_DIR)/libs/FreeRTOS 
+EXAMPLES_DIR = $(MAKE_DIR)/examples
+INCLUDE_DIR = $(MAKE_DIR)/include
 
 MAKE_FLAGS += --no-print-directory
 
-ifeq ($(TARGET), example3)
-TZ = 1
-else
-TZ = 0
-endif
+export AS CC CPP LD OBJCOPY SIZE FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_VERSION_NUMBER MAKEDIR RM DEBUG TARGET
 
-export AS CC CPP LD OBJCOPY SIZE FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_VERSION_NUMBER MAKEDIR RM DEBUG
+$(APP_NAME):
+	+@echo "-- Target: $(TARGET)"
+	+@echo "-- Building $(APP_NAME)"
+	@$(MAKE) $(MAKE_FLAGS) -C examples/$(TARGET)/ -f Makefile.mk APP_NAME=$(APP_NAME)
 
-$(TARGET):
-	+@echo "-- Building $(TARGET)"
-	+@echo "-- Build FreeRTOS library"
-	@$(MAKE) $(MAKE_FLAGS) -C libs/FreeRTOS/ -f Makefile.mk APP_DIR=../../examples/lpc1768/$(TARGET)/ USE_SLACK=1 TZ=$(TZ)
-	+@echo "-- Build $(TARGET) program"
-	@$(MAKE) $(MAKE_FLAGS) -C examples/lpc1768/ -f Makefile.mk TARGET=$(TARGET) TZ=$(TZ)
+$(APP_NAME)_clean:
+	+@echo "-- Cleaning $(APP_NAME)"	
+	@$(MAKE) $(MAKE_FLAGS) -C examples/$(TARGET)/ -f Makefile.mk clean APP_NAME=$(APP_NAME)
 
-$(TARGET)_clean:
-	+@echo "-- Cleaning $(TARGET)"
-	@$(MAKE) $(MAKE_FLAGS) -C libs/FreeRTOS/ -f Makefile.mk clean USE_SLACK=1 TZ=$(TZ)
-	@$(MAKE) $(MAKE_FLAGS) -C examples/lpc1768/ -f Makefile.mk clean TARGET=$(TARGET) TZ=$(TZ)
+all: $(APP_NAME)
 
-all: $(TARGET)
+clean: $(APP_NAME)_clean
 
-clean: $(TARGET)_clean
+###
+# CIAA
+#
+OOCD=C:\\Users\\fep\\Documents\\bin\\openocd-0.10.0\\bin\\openocd
+
+openocd:
+	$(Q)$(OOCD) -f board/edu-ciaa-nxp/ciaa-nxp.cfg
+
+debug: $(APP_NAME)
+	$(Q)$(GDB) $< -ex "target remote :3333" -ex "mon reset halt" -ex "load" -ex "continue"
+
+run: $(APP_NAME)
+	$(Q)$(GDB) $< -batch -ex "target remote :3333" -ex "mon reset halt" -ex "load" -ex "mon reset run" -ex "quit"
+
+download: $(APP_NAME)
+	$(Q)$(OOCD) -f board/edu-ciaa-nxp/ciaa-nxp.cfg \
+		-c "init" \
+		-c "halt 0" \
+		-c "flash write_image erase unlock build/$(APP_NAME).bin 0x1A000000 bin" \
+		-c "reset run" \
+		-c "shutdown"
+
+erase:
+	$(Q)$(OOCD) -f ciaa-nxp.cfg \
+		-c "init" -c "halt 0" -c "flash erase_sector 0 0 last" -c "shutdown"
+
