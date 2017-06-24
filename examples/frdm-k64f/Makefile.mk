@@ -3,6 +3,8 @@
 
 BUILD_DIR = ../../build
 
+USE_SLACK ?= 1
+
 EXAMPLE = $(APP_NAME)
 
 OBJECTS += ./$(EXAMPLE)/main.o 
@@ -49,7 +51,8 @@ ifeq ($(APP_NAME), example3)
   endif
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.1.3)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
+    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config    
+    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/include    
     CC_SYMBOLS += -DTRACEALYZER_v3_1_3
   endif
 else
@@ -71,6 +74,9 @@ CC_SYMBOLS += -D__MBED__=1 -DDEVICE_I2CSLAVE=1 -D__FPU_PRESENT=1 -DTARGET_Freesc
 LD_FLAGS += -Wl,--gc-sections -Wl,--wrap,main -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=softfp 
 LD_SYS_LIBS += -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
+CC_FLAGS += -DUSE_SLACK=$(USE_SLACK)
+CPPC_FLAGS += -DUSE_SLACK=$(USE_SLACK)
+
 ifeq ($(DEBUG), 1)
   CC_FLAGS += -DDEBUG -g
   CPPC_FLAGS += -DDEBUG -g
@@ -84,7 +90,7 @@ export CPU MBED_INCLUDE_PATHS
 all: $(BUILD_DIR)/$(EXAMPLE).bin size
 
 clean:
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean APP_DIR=$(EXAMPLE) USE_SLACK=1 TZ=$(TZ)
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean APP_DIR=$(EXAMPLE) USE_SLACK=$(USE_SLACK) TZ=$(TZ)
 	+@echo "Cleaning $(TARGET) files..."
 	@rm -f $(BUILD_DIR)/$(EXAMPLE).bin $(BUILD_DIR)/$(EXAMPLE).elf $(OBJECTS) $(DEPS)
 
@@ -93,7 +99,7 @@ clean:
 	@$(CPP) $(CPPC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
 
 $(BUILD_DIR)/$(EXAMPLE).elf: $(OBJECTS) $(SYS_OBJECTS)
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(EXAMPLE) USE_SLACK=1 TZ=$(TZ)
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(EXAMPLE) USE_SLACK=$(USE_SLACK) TZ=$(TZ)
 	+@echo "Linking: $@"
 	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS)
 

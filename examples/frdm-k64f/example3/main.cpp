@@ -35,7 +35,12 @@ int main()
 	vTraceInitTraceData();
 #endif
 #ifdef TRACEALYZER_v3_1_3
+#if TRC_CFG_RECORDER_MODE == TRC_RECORDER_MODE_SNAPSHOT
 	vTraceEnable( TRC_INIT );
+#endif
+#if TRC_CFG_RECORDER_MODE == TRC_RECORDER_MODE_STREAMING
+	vTraceEnable( TRC_START );
+#endif
 #endif
 
 	pc.baud(9600);
@@ -47,15 +52,17 @@ int main()
 	leds[2] = 1;
 	leds[3] = 1;
 
+#if( configUSE_SLACK_STEALING == 1 )
 #if( tskKERNEL_VERSION_MAJOR == 9 )
 	vSlackSystemSetup();
 #endif
+#endif
 
     // Create the periodic tasks.
-    xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 0 ] );  // max priority
-    xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 1 ] );
-    xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 5, &task_handles[ 2 ] );
-    xTaskCreate( periodicTaskBody, "T4", 256, NULL, configMAX_PRIORITIES - 6, &task_handles[ 3 ] );
+    xTaskCreate( periodicTaskBody, "T1", 256, (void *) TASK_1_PERIOD, configMAX_PRIORITIES - 3, &task_handles[ 0 ] );  // max priority
+    xTaskCreate( periodicTaskBody, "T2", 256, (void *) TASK_2_PERIOD, configMAX_PRIORITIES - 4, &task_handles[ 1 ] );
+    xTaskCreate( periodicTaskBody, "T3", 256, (void *) TASK_3_PERIOD, configMAX_PRIORITIES - 5, &task_handles[ 2 ] );
+    xTaskCreate( periodicTaskBody, "T4", 256, (void *) TASK_4_PERIOD, configMAX_PRIORITIES - 6, &task_handles[ 3 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
     // Additional parameters needed by the slack stealing framework.
@@ -83,8 +90,10 @@ int main()
 #endif
 #endif
 
+#if( configUSE_SLACK_STEALING == 1 )
 #if( tskKERNEL_VERSION_MAJOR == 9 )
     vSlackSchedulerSetup();
+#endif
 #endif
 
     // Starts the tracing.
@@ -92,7 +101,9 @@ int main()
     uiTraceStart();
 #endif
 #ifdef TRACEALYZER_v3_1_3
+#if TRC_CFG_RECORDER_MODE == TRC_RECORDER_MODE_SNAPSHOT
     vTraceEnable( TRC_START );
+#endif
 #endif
 
     vTaskStartScheduler();
@@ -100,6 +111,7 @@ int main()
     for(;;);
 }
 
+#if( configUSE_SLACK_STEALING == 1 )
 void aperiodic_task_body( void* params )
 {
 	int32_t slackArray[ 7 ];
@@ -126,3 +138,4 @@ void aperiodic_task_body( void* params )
 		vTaskDelay( rand() % 8000 );
 	}
 }
+#endif

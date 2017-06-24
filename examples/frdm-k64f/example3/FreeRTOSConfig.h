@@ -125,7 +125,7 @@ extern uint32_t SystemCoreClock;
  * 0 = Fixed
  * 1 = Davis
  */
-#define configUSE_SLACK_STEALING 		1 /* 1: Use slack stealing methods, 0: No slack. */
+#define configUSE_SLACK_STEALING 		USE_SLACK /* 1: Use slack stealing methods, 0: No slack. */
 #define configUSE_SLACK_METHOD          0 /* Slack method to use */
 #define configUSE_SLACK_K               0 /* Only calculate slack at the scheduler start */
 #define configMAX_SLACK_PRIO            2 /* priority levels that are used for slack. */
@@ -196,5 +196,3 @@ standard names. */
 #include "trcRecorder.h"
 #endif
 #endif
-#include "trcRecorder.h"
-

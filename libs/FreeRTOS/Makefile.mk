@@ -83,6 +83,12 @@ ifeq ($(TZ), 1)
     INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
     INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
     
+    ifeq ($(TARGET), frdm-k64f)
+      OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/SEGGER_RTT_Printf.o
+      OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/SEGGER_RTT.o
+      INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/include
+    endif
+    
     CC_SYMBOLS += -DTRACEALYZER_v3_1_3
   endif  
 endif
@@ -117,6 +123,8 @@ ifeq ($(TEST), 1)
 endif
 
 AR_FLAGS = -r
+
+CC_SYMBOLS += -DUSE_SLACK=$(USE_SLACK)
 
 ifeq ($(DEBUG), 1)
   CC_FLAGS += -g

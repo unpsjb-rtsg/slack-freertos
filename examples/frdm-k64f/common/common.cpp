@@ -4,6 +4,7 @@
 #include "task.h"
 #include "slack.h"
 
+#if( configUSE_SLACK_STEALING == 1 )
 void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
 {
 	vTaskSuspendAll();
@@ -15,7 +16,9 @@ void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
 			xCur);
 	xTaskResumeAll();
 }
+#endif
 
+#if( configUSE_SLACK_STEALING == 1 )
 void periodicTaskBody( void* params )
 {
 	SsTCB_t *pxTaskSsTCB;
@@ -52,6 +55,19 @@ void periodicTaskBody( void* params )
 		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }
 }
+#else
+void periodicTaskBody( void* params )
+{
+    TickType_t xPreviousWakeTime = 0;
+    TickType_t xPeriod = ( TickType_t ) params;
+
+    for(;;)
+    {
+        vUtilsEatCpu( 500 );
+        vTaskDelayUntil( &xPreviousWakeTime, xPeriod );
+    }
+}
+#endif
 
 void vApplicationMallocFailedHook( void )
 {
