@@ -6,14 +6,14 @@
 #include "common.h"
 
 #define TASK_CNT 4
-#define TASK_1_PERIOD 3000
-#define TASK_2_PERIOD 4000
-#define TASK_3_PERIOD 6000
-#define TASK_4_PERIOD 12000
 #define TASK_1_WCET 1000
 #define TASK_2_WCET 1000
 #define TASK_3_WCET 1000
 #define TASK_4_WCET 1000
+#define TASK_1_PERIOD 3000
+#define TASK_2_PERIOD 4000
+#define TASK_3_PERIOD 6000
+#define TASK_4_PERIOD 12000
 
 void aperiodic_task_body( void* params );
 

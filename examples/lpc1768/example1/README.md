@@ -1,5 +1,5 @@
 # Slack Stealing example 1
-Example project that uses a *Rate Monotonic* scheduler, with *Slack Stealing*.
+This example project implements a *Rate Monotonic* scheduling policy, with *Slack Stealing*.
 
 Each task print the following data into the serial port: 
 * Its name, followed by a S if the task is Starting, or an E if it is ending.

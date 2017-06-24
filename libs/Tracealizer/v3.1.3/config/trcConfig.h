@@ -64,6 +64,9 @@ extern "C" {
 #ifdef TARGET_LPC1768
 #include "LPC17xx.h"
 #endif
+#ifdef TARGET_K64F
+#include "MK64F12.h"
+#endif
 #ifdef TARGET_EDU_CIAA_NXP
 #include "chip.h"
 #endif

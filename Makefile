@@ -36,6 +36,7 @@ export AS CC CPP LD OBJCOPY SIZE FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_VERS
 $(APP_NAME):
 	+@echo "-- Target: $(TARGET)"
 	+@echo "-- Building $(APP_NAME)"
+	+@echo "-- DEBUG: $(DEBUG)"
 	@$(MAKE) $(MAKE_FLAGS) -C examples/$(TARGET)/ -f Makefile.mk APP_NAME=$(APP_NAME)
 
 $(APP_NAME)_clean:

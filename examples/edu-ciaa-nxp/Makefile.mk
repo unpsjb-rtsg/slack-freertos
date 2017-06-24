@@ -84,7 +84,7 @@ LDFLAGS += $(foreach l, $(LIBS), -l$(l))
 MAKE_FLAGS += --no-print-directory
 
 ifeq ($(DEBUG), 1)
-  CC_FLAGS += -DDEBUG -O0
+  CC_FLAGS += -DDEBUG -g
 else
   CC_FLAGS += -DNDEBUG -Os
 endif
