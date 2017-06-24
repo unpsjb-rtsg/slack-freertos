@@ -36,9 +36,10 @@
 # Makefile objects
 *.d
 
-# Eclipse project files
+# Eclipse project files and directories
 .project
 .cproject
+.settings
 language.settings.xml
 *.launch
 

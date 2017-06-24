@@ -128,7 +128,14 @@ extern uint32_t SystemCoreClock;
 #define configUSE_SLACK_STEALING 		1 /* 1: Use slack stealing methods, 0: No slack. */
 #define configUSE_SLACK_METHOD          0 /* Slack method to use */
 #define configUSE_SLACK_K               0 /* Only calculate slack at the scheduler start */
-#define configMAX_SLACK_PRIO            1 /* priority levels that are used for slack. */
+#define configMAX_SLACK_PRIO            2 /* priority levels that are used for slack. */
+
+/*
+ * How the task simulate the execution time.
+ * 0 = execute asm nops
+ * 1 = exact tick count
+ */
+#define configTASK_EXEC                 0
 /* ========================================================================= */
 
 /* Set the following definitions to 1 to include the API function, or zero
