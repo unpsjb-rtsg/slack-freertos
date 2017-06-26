@@ -25,6 +25,7 @@ endif
 #
 # Paths to the required headers.
 #
+INCLUDE_PATHS += -I../../examples/$(TARGET)/
 INCLUDE_PATHS += -I../../examples/$(TARGET)/$(APP_NAME)
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/include

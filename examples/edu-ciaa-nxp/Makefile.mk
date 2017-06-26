@@ -30,6 +30,7 @@ FREERTOS_INCLUDE_PATH += -I../../libs/FreeRTOS/$(FREERTOS_KERNEL_VERSION_NUMBER)
 SAPI_INCLUDE_PATH += -I../../libs/sapi_bm/inc
 
 # applicaton
+INCLUDE_PATHS += -I.
 INCLUDE_PATHS += -I./$(APP_NAME)
 INCLUDE_PATHS += -I./utils
 INCLUDE_PATHS += -I./common

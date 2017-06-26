@@ -32,6 +32,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "slack.h"
 #include "utils.h"
 #include "sapi.h"         /* <= sAPI header */
 #include "common.h"
@@ -129,12 +130,11 @@ __WEAK__ void vApplicationNotSchedulable( void )
 	}
 }
 
-__WEAK__  void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount )
+__WEAK__ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB, TickType_t xTickCount )
 {
-    ( void ) uxRelease;
-    ( void ) xTickCount;
-
     taskDISABLE_INTERRUPTS();
+
+    TickType_t xCur = xSsTCB->xCur;
 
     /* Buffer */
     static char uartBuff[10];

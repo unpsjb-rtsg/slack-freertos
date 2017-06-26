@@ -134,10 +134,9 @@ void vApplicationNotSchedulable( void )
 	}
 }
 
-void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount )
+void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB, TickType_t xTickCount )
 {
-    ( void ) uxRelease;
-    ( void ) xTickCount;
+    ( void ) xSsTCB;
 
     taskDISABLE_INTERRUPTS();
 

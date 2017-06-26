@@ -4,22 +4,36 @@
 #include "slack.h"
 #include "common.h"
 
+/*****************************************************************************
+ * Private types/enumerations/variables
+ ****************************************************************************/
 #define TASK_CNT 4
-#define TASK_1_PERIOD 3000
-#define TASK_2_PERIOD 4000
-#define TASK_3_PERIOD 6000
-#define TASK_4_PERIOD 12000
 #define TASK_1_WCET 1000
 #define TASK_2_WCET 1000
 #define TASK_3_WCET 1000
 #define TASK_4_WCET 1000
+#define TASK_1_PERIOD 3000
+#define TASK_2_PERIOD 4000
+#define TASK_3_PERIOD 6000
+#define TASK_4_PERIOD 12000
 
-TaskHandle_t task_handles[ TASK_CNT ];
+static TaskHandle_t task_handles[ TASK_CNT ];
 
+/*****************************************************************************
+ * Public types/enumerations/variables
+ ****************************************************************************/
 Serial pc( USBTX, USBRX );
 DigitalOut leds[] = { LED1, LED2, LED3, LED4 };
 
-int main()
+/*****************************************************************************
+ * Private functions
+ ****************************************************************************/
+
+/*****************************************************************************
+ * Public functions
+ ****************************************************************************/
+
+int main(void)
 {
 	pc.baud(9600);
     pc.printf("Example 1\n");

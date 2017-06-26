@@ -78,7 +78,7 @@ int main(void)
 {
 	prvSetupHardware();
 
-    uartWriteString( UART_USB, "Example 1\r\n" );
+    uartWriteString( UART_USB, "Example 2\r\n" );
 
     #if( tskKERNEL_VERSION_MAJOR == 9 )
     {
@@ -141,6 +141,8 @@ static void aperiodic_task_body( void* params )
 #if( tskKERNEL_VERSION_MAJOR == 9 )
 	pxTaskSsTCB = getTaskSsTCB( NULL );
 #endif
+
+	vTaskDelay( rand() % ATASK_MAX_DELAY );
 
 	for(;;)
 	{

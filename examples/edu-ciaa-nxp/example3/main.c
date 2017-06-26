@@ -28,6 +28,9 @@
  * copyright, permission, and disclaimer notice must appear in all copies of
  * this code.
  */
+/*****************************************************************************
+ * Includes
+ ****************************************************************************/
 #include "FreeRTOS.h"
 #include "task.h"
 #include "slack.h"
@@ -35,14 +38,14 @@
 #include "common.h"
 #include "stdlib.h" // for rand()
 
+/*****************************************************************************
+ * Macros and definitions
+ ****************************************************************************/
 /* The linker does not include this code in liblpc.a because nothing in it
  * references it... */
 #define CRP_NO_CRP          0xFFFFFFFF
 __attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP ;
 
-/*****************************************************************************
- * Private types/enumerations/variables
- ****************************************************************************/
 #define TASK_CNT 3
 #define TASK_1_WCET 1000
 #define TASK_2_WCET 1000
@@ -54,22 +57,76 @@ __attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP 
 #define ATASK_WCET 2000
 #define ATASK_MAX_DELAY 4000
 
+/*****************************************************************************
+ * Private data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Public data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private functions declaration
+ ****************************************************************************/
+static void aperiodic_task_body( void* params );
+
+/*****************************************************************************
+ * Private data
+ ****************************************************************************/
 static TaskHandle_t task_handles[ TASK_CNT ];
 
 /*****************************************************************************
- * Public types/enumerations/variables
+ * Public data
  ****************************************************************************/
 gpioMap_t leds[] = { LED1, LED2, LED3 };
 
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
-static void aperiodic_task_body( void* params );
+/**
+ * Aperiodic task.
+ * @param params
+ */
+static void aperiodic_task_body( void* params )
+{
+    ( void ) params;
+
+    int32_t slackArray[ 6 ];
+
+    SsTCB_t *pxTaskSsTCB;
+
+#if( tskKERNEL_VERSION_MAJOR == 8 )
+    pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
+#endif
+#if( tskKERNEL_VERSION_MAJOR == 9 )
+    pxTaskSsTCB = getTaskSsTCB( NULL );
+#endif
+
+    vTaskDelay( rand() % ATASK_MAX_DELAY );
+
+    for(;;)
+    {
+        gpioWrite( LEDR, ON );
+
+        pxTaskSsTCB->xCur = ( TickType_t ) 0;
+
+        printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+
+        vUtilsEatCpu( ATASK_WCET );
+
+        printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+
+        gpioWrite( LEDR, OFF );
+
+        vTaskDelay( rand() % ATASK_MAX_DELAY );
+    }
+}
 
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
-
 /**
  * @brief	main routine for FreeRTOS blinky example
  * @return	Nothing, function should not exit
@@ -86,7 +143,7 @@ int main(void)
 	vTraceEnable( TRC_INIT );
 #endif
 
-    uartWriteString( UART_USB, "Example 1\r\n" );
+    uartWriteString( UART_USB, "Example 3\r\n" );
 
     #if( tskKERNEL_VERSION_MAJOR == 9 )
     {
@@ -139,37 +196,4 @@ int main(void)
 
 	/* Should never arrive here */
 	for(;;);
-}
-
-/**
- * Aperiodic task.
- * @param params
- */
-static void aperiodic_task_body( void* params )
-{
-    ( void ) params;
-
-	int32_t slackArray[ 6 ];
-
-    SsTCB_t *pxTaskSsTCB;
-
-#if( tskKERNEL_VERSION_MAJOR == 8 )
-	pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
-#endif
-#if( tskKERNEL_VERSION_MAJOR == 9 )
-	pxTaskSsTCB = getTaskSsTCB( NULL );
-#endif
-
-	for(;;)
-	{
-		pxTaskSsTCB->xCur = ( TickType_t ) 0;
-
-		printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
-
-		vUtilsEatCpu( ATASK_WCET );
-
-		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
-
-		vTaskDelay( rand() % ATASK_MAX_DELAY );
-	}
 }

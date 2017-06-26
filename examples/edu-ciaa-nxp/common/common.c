@@ -106,23 +106,23 @@ void periodicTaskBody( void* params )
 
 	for(;;)
     {
+	    gpioWrite( leds[ pxTaskSsTCB->xId - 1], ON);
+
 		printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
 
-		gpioWrite( leds[ pxTaskSsTCB->xId - 1], ON);
-
 #if ( configTASK_EXEC == 0 )
-		vUtilsEatCpu( pxTaskSsTCB->xWcet - 250 );
+		vUtilsEatCpu( pxTaskSsTCB->xWcet - 300 );
 #endif
 #if ( configTASK_EXEC == 1 )
-		while( pxTaskSsTCB->xCur <  pxTaskSsTCB->xWcet )
+		while( pxTaskSsTCB->xCur <  ( pxTaskSsTCB->xWcet - 200 ) )
 		{
 			asm("nop");
 		}
 #endif
 
-		gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
-
 		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+
+		gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
 
 		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }
