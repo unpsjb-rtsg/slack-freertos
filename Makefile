@@ -28,7 +28,6 @@ SIZE    = $(GCC_BIN)arm-none-eabi-size
 MAKE_DIR = $(PWD)
 FREERTOS_DIR = $(MAKE_DIR)/libs/FreeRTOS 
 EXAMPLES_DIR = $(MAKE_DIR)/examples
-INCLUDE_DIR = $(MAKE_DIR)/include
 
 ###############################################################################
 #
@@ -51,7 +50,7 @@ COMMON_FLAGS += -MMD -MP
 ifeq ($(DEBUG), 1)
   COMMON_FLAGS += -DDEBUG
   COMMON_FLAGS += -Og
-  COMMON_FLAGS += -ggdb3         # Extra debugging information, for example: including macro definitions.
+  COMMON_FLAGS += -ggdb3
 else
   COMMON_FLAGS += -DNDEBUG -Os  
 endif
@@ -70,7 +69,7 @@ MAKE_FLAGS += --no-print-directory
 #
 # Export variables to be used by others Makefile.mk files.
 #
-export AS CC CPP LD OBJCOPY SIZE FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_VERSION_NUMBER MAKEDIR RM DEBUG TARGET COMMON_FLAGS C_COMMON_FLAGS CPP_COMMON_FLAGS EXAMPLE
+export AS CC CPP LD OBJCOPY SIZE FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_VERSION_NUMBER MAKEDIR TARGET COMMON_FLAGS C_COMMON_FLAGS CPP_COMMON_FLAGS EXAMPLE
 
 ###############################################################################
 #
@@ -83,7 +82,7 @@ $(APP_NAME):
 	@$(MAKE) $(MAKE_FLAGS) -C examples/$(TARGET)/ -f Makefile.mk APP_NAME=$(APP_NAME)
 
 $(APP_NAME)_clean:
-	+@echo "-- Cleaning $(APP_NAME)"	
+	+@echo "-- Cleaning $(APP_NAME)"
 	@$(MAKE) $(MAKE_FLAGS) -C examples/$(TARGET)/ -f Makefile.mk clean APP_NAME=$(APP_NAME)
 
 all: $(APP_NAME)
@@ -109,7 +108,7 @@ download: $(APP_NAME)
 	$(Q)$(OOCD) -f board/edu-ciaa-nxp/ciaa-nxp.cfg \
 		-c "init" \
 		-c "halt 0" \
-		-c "flash write_image erase unlock build/$(APP_NAME).bin 0x1A000000 bin" \
+		-c "flash write_image erase unlock build/$(EXAMPLE).bin 0x1A000000 bin" \
 		-c "reset run" \
 		-c "shutdown"
 
