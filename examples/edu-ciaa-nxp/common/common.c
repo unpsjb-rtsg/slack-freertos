@@ -9,7 +9,8 @@
  * Written by Lukás Chmela
  * Released under GPLv3.
  */
-char* itoa(int value, char* result, int base) {
+char* itoa(int value, char* result, int base)
+{
    // check that the base if valid
    if (base < 2 || base > 36) { *result = '\0'; return result; }
 
@@ -57,7 +58,7 @@ void prvSetupHardware(void)
 void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
 {
 	/* Buffer */
-	static uint8_t uartBuff[10];
+	static char uartBuff[10];
 
 	vTaskSuspendAll();
 	vTasksGetSlacks( slackArray );
