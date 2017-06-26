@@ -29,7 +29,6 @@
  * this code.
  */
 
-//#include "board.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "slack.h"
@@ -54,11 +53,10 @@ __attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP 
 
 static TaskHandle_t task_handles[ TASK_CNT ];
 
-gpioMap_t leds[] = { LED1, LED2, LED3 };
-
 /*****************************************************************************
  * Public types/enumerations/variables
  ****************************************************************************/
+gpioMap_t leds[] = { LED1, LED2, LED3 };
 
 /*****************************************************************************
  * Private functions

@@ -28,7 +28,6 @@
  * copyright, permission, and disclaimer notice must appear in all copies of
  * this code.
  */
-
 #include "FreeRTOS.h"
 #include "task.h"
 #include "slack.h"
@@ -52,18 +51,19 @@ __attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP 
 #define TASK_2_PERIOD 4000
 #define TASK_3_PERIOD 6000
 
-static TaskHandle_t task_handles[ TASK_CNT ];
+#define ATASK_WCET 2000
+#define ATASK_MAX_DELAY 4000
 
-gpioMap_t leds[] = { LED1, LED2, LED3 };
+static TaskHandle_t task_handles[ TASK_CNT ];
 
 /*****************************************************************************
  * Public types/enumerations/variables
  ****************************************************************************/
+gpioMap_t leds[] = { LED1, LED2, LED3 };
 
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
-
 static void aperiodic_task_body( void* params );
 
 /*****************************************************************************
@@ -141,6 +141,10 @@ int main(void)
 	for(;;);
 }
 
+/**
+ * Aperiodic task.
+ * @param params
+ */
 static void aperiodic_task_body( void* params )
 {
     ( void ) params;
@@ -162,10 +166,10 @@ static void aperiodic_task_body( void* params )
 
 		printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
 
-		vUtilsEatCpu( 2000 );
+		vUtilsEatCpu( ATASK_WCET );
 
 		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
 
-		vTaskDelay( rand() % 4000 );
+		vTaskDelay( rand() % ATASK_MAX_DELAY );
 	}
 }
