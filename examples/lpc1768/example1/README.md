@@ -1,14 +1,13 @@
-# Slack Stealing example 1
-This example project implements a *Rate Monotonic* scheduling policy, with *Slack Stealing*.
+# Example 1
+This example project implements a *Rate Monotonic Scheduling* (RMS) policy, and performs an online slack calculation.
 
 Each task print the following data into the serial port: 
-* Its name, followed by a S if the task is Starting, or an E if it is ending.
+* Its assigned name, followed by a `S` character if the task is Starting, or an `E` if it is ending.
 * The current tick count.
 * The system available slack, followed by the slack counters for all the tasks.
 * The current task executed time, measured in ticks.
 
 This is a example output:
-
 ```
 Example 1
 T1  S   0       1000    2000    1000    1000    2000    0
