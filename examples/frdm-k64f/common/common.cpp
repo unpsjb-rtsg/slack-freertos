@@ -21,6 +21,8 @@ void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
 #if( configUSE_SLACK_STEALING == 1 )
 void periodicTaskBody( void* params )
 {
+    ( void ) params;
+
 	SsTCB_t *pxTaskSsTCB;
 
 #if( tskKERNEL_VERSION_MAJOR == 8 )
