@@ -3,66 +3,68 @@
 
 BUILD_DIR = ../../build
 
-EXAMPLE = $(APP_NAME)
-
-OBJECTS += ./$(EXAMPLE)/main.o 
+###############################################################################
+#
+# Source code.
+#
+OBJECTS += ./$(APP_NAME)/main.o 
 OBJECTS += ./utils/utils.o
 OBJECTS += ./common/common.o
 
+###############################################################################
+#
+# Other object files required.
+#
 SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/board.o
 SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/cmsis_nvic.o
 SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/retarget.o
 SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/startup_LPC17xx.o
 SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/system_LPC17xx.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/analogin_api.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/analogout_api.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/can_api.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/cmsis_nvic.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/ethernet_api.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/gpio_api.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/gpio_irq_api.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/i2c_api.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/mbed_board.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/mbed_retarget.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/pinmap.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/port_api.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/pwmout_api.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/rtc_api.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/serial_api.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/sleep.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/spi_api.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/startup_LPC17xx.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/system_LPC17xx.o
-#SYS_OBJECTS += ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/us_ticker.o
 
+###############################################################################
+#
+# Paths to the required headers.
+#
+# mbed
 MBED_INCLUDE_PATHS += -I../../board/lpc1768
-#MBED_INCLUDE_PATHS += -I../../board/lpc1768/drivers
-#MBED_INCLUDE_PATHS += -I../../board/lpc1768/hal
-#MBED_INCLUDE_PATHS += -I../../board/lpc1768/platform
-
 MBED_INCLUDE_PATHS += -I../../board/lpc1768/TARGET_LPC1768
 MBED_INCLUDE_PATHS += -I../../board/lpc1768/TARGET_LPC1768/TARGET_NXP
 MBED_INCLUDE_PATHS += -I../../board/lpc1768/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X/
 MBED_INCLUDE_PATHS += -I../../board/lpc1768/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X/device
 MBED_INCLUDE_PATHS += -I../../board/lpc1768/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X/TARGET_MBED_LPC1768
 
+# freertos
 FREERTOS_INCLUDE_PATHS += -I../../libs/FreeRTOS/$(FREERTOS_KERNEL_VERSION_NUMBER)/include
 FREERTOS_INCLUDE_PATHS += -I../../libs/FreeRTOS/$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM3
 
-INCLUDE_PATHS += -I./$(EXAMPLE)
+# application
+INCLUDE_PATHS += -I.
+INCLUDE_PATHS += -I./$(APP_NAME)
 INCLUDE_PATHS += -I./utils/ 
 INCLUDE_PATHS += -I./common/
 INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += $(FREERTOS_INCLUDE_PATHS) 
 INCLUDE_PATHS += $(MBED_INCLUDE_PATHS) 
 
+###############################################################################
+#
+# Paths to the required libraries (*.a files).
+#
 FREERTOS_LIBRARY_PATH = ../../libs/FreeRTOS
 LIBRARY_PATHS += -L../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM 
 LIBRARY_PATHS += -L$(FREERTOS_LIBRARY_PATH)
 LIBRARIES = -lmbed -lfreertos
 
+###############################################################################
+#
+# Linker script used to build the binary.
+#
 LINKER_SCRIPT = ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/LPC1768.ld
 
+###############################################################################
+#
+# Tracealyzer sources, include paths and symbols
+#
 ifeq ($(APP_NAME), example3)
   TZ = 1
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
@@ -79,11 +81,13 @@ else
   TZ = 0
 endif
 
+###############################################################################
+#
+# Flags and symbols required by the compiler.
+#
 CPU = -mcpu=cortex-m3 -mthumb
 
 CC_FLAGS += $(CPU)
-CC_FLAGS += -c -g -fno-common -fmessage-length=0 -Wall -fno-exceptions -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-rtti
-CC_FLAGS += -MMD -MP
 
 CC_SYMBOLS += -DTARGET_LPC1768
 CC_SYMBOLS += -DTARGET_M3
@@ -94,42 +98,40 @@ CC_SYMBOLS += -DTOOLCHAIN_GCC_ARM
 CC_SYMBOLS += -DTOOLCHAIN_GCC
 CC_SYMBOLS += -D__CORTEX_M3
 CC_SYMBOLS += -DARM_MATH_CM3
-CC_SYMBOLS += -DMBED_BUILD_TIMESTAMP=1414254042.69
 CC_SYMBOLS += -D__MBED__=1 
 CC_SYMBOLS += -DBATCH_TEST=$(BATCH_TEST) 
 CC_SYMBOLS += -DMAX_PRIO=$(MAX_PRIO)
 
-LD_FLAGS = -mcpu=cortex-m3 -mthumb -Wl,--gc-sections -u _printf_float -u _scanf_float
+###############################################################################
+#
+# Flags and symbols required by the linker.
+#
+LD_FLAGS = $(CPU) -Wl,--gc-sections -u _printf_float -u _scanf_float
 LD_SYS_LIBS = -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
-
-ifeq ($(DEBUG), 1)
-  CC_FLAGS += -DDEBUG -g
-else
-  CC_FLAGS += -DNDEBUG -Os
-endif
 
 export CPU CC_SYMBOLS MBED_INCLUDE_PATHS
 
+###############################################################################
+#
+# Rules used to build the example.
+#
 all: $(BUILD_DIR)/$(EXAMPLE).bin size
 
 clean:
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean APP_DIR=$(EXAMPLE) USE_SLACK=1 TZ=$(TZ)
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ)
 	+@echo "Cleaning $(TARGET) files..."
 	@rm -f $(BUILD_DIR)/$(EXAMPLE).bin $(BUILD_DIR)/$(EXAMPLE).elf $(OBJECTS) $(DEPS)
 
-install:
-	 cp $(BUILD_DIR)/$(EXAMPLE).bin F:\$(EXAMPLE)
-
 .c.o:
 	+@echo "Compile: $<"
-	@$(CC)  $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu99   $(INCLUDE_PATHS) -o $@ $<	
+	@$(CC)  $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
 
 .cpp.o:
 	+@echo "Compile: $<"
-	@$(CPP) $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu++98 $(INCLUDE_PATHS) -o $@ $<	
+	@$(CPP) $(COMMON_FLAGS) $(CPP_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
 
 $(BUILD_DIR)/$(EXAMPLE).elf: $(OBJECTS) $(SYS_OBJECTS)
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(EXAMPLE) USE_SLACK=1 TZ=$(TZ)
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ)
 	+@echo "Linking: $@"
 	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS)
 

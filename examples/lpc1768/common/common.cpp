@@ -18,6 +18,8 @@ void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
 
 void periodicTaskBody( void* params )
 {
+    ( void ) params;
+
 	SsTCB_t *pxTaskSsTCB;
 
 #if( tskKERNEL_VERSION_MAJOR == 8 )
@@ -54,6 +56,7 @@ void periodicTaskBody( void* params )
     }
 }
 
+#if ( configUSE_MALLOC_FAILED_HOOK == 1 )
 void vApplicationMallocFailedHook( void )
 {
 	taskDISABLE_INTERRUPTS();
@@ -68,7 +71,9 @@ void vApplicationMallocFailedHook( void )
         wait_ms(500);
 	}
 }
+#endif
 
+#if ( configCHECK_FOR_STACK_OVERFLOW > 0 )
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
 {
 	( void ) pxTask;
@@ -85,6 +90,7 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
         wait_ms(500);
 	}
 }
+#endif
 
 #if ( configUSE_SLACK_STEALING == 1 )
 void vApplicationDebugAction( void *param )
@@ -117,10 +123,9 @@ void vApplicationNotSchedulable( void )
 	}
 }
 
-void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount )
+void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB, TickType_t xTickCount )
 {
-    ( void ) uxRelease;
-    ( void ) xTickCount;
+    ( void ) xSsTCB;
 
     taskDISABLE_INTERRUPTS();
 

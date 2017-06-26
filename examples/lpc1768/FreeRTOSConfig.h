@@ -67,7 +67,6 @@
     1 tab == 4 spaces!
 */
 
-
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
@@ -114,30 +113,6 @@ extern uint32_t SystemCoreClock;
 /* Software timer definitions. */
 #define configUSE_TIMERS				0
 
-/* ========================================================================= */
-#define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
-#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
-
-#define INCLUDE_xTaskGetIdleTaskHandle  1 /* Required for identify the IDLE task in slacks methods and deadline check */
-
-/*
- * Slack methods available:
- * 0 = Fixed
- * 1 = Davis
- */
-#define configUSE_SLACK_STEALING 		1 /* 1: Use slack stealing methods, 0: No slack. */
-#define configUSE_SLACK_METHOD          0 /* Slack method to use */
-#define configUSE_SLACK_K               0 /* Only calculate slack at the scheduler start */
-#define configMAX_SLACK_PRIO            1 /* priority levels that are used for slack. */
-
-/*
- * How the task simulate the execution time.
- * 0 = execute asm nops
- * 1 = exact tick count
- */
-#define configTASK_EXEC                 0
-/* ========================================================================= */
-
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
 #define INCLUDE_vTaskPrioritySet		1
@@ -148,6 +123,7 @@ to exclude the API function. */
 #define INCLUDE_vTaskDelayUntil			1
 #define INCLUDE_vTaskDelay				1
 #define INCLUDE_pcTaskGetTaskName       1
+#define INCLUDE_xTaskGetCurrentTaskHandle 1
 
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS
@@ -185,3 +161,16 @@ standard names. */
 #define xPortSysTickHandler SysTick_Handler
 
 #endif /* FREERTOS_CONFIG_H */
+
+/* Integrates the Tracealyzer recorder with FreeRTOS */
+#if ( configUSE_TRACE_FACILITY == 1 )
+#ifdef TRACEALYZER_v3_0_2
+#include "trcKernelPort.h"
+#endif
+#ifdef TRACEALYZER_v3_1_3
+#include "trcRecorder.h"
+#endif
+#endif
+
+/* Slack Stealing configuration. */
+#include "slackConfig.h"

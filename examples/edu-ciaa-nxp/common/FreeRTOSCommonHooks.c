@@ -28,13 +28,14 @@
  * copyright, permission, and disclaimer notice must appear in all copies of
  * this code.
  */
-
 #include "FreeRTOSCommonHooks.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "slack.h"
 #include "utils.h"
 #include "sapi.h"         /* <= sAPI header */
+#include "common.h"
 
 /*****************************************************************************
  * Private types/enumerations/variables
@@ -129,15 +130,20 @@ __WEAK__ void vApplicationNotSchedulable( void )
 	}
 }
 
-__WEAK__  void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount )
+__WEAK__ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB, TickType_t xTickCount )
 {
-    ( void ) uxRelease;
-    ( void ) xTickCount;
-
     taskDISABLE_INTERRUPTS();
 
+    TickType_t xCur = xSsTCB->xCur;
+
+    /* Buffer */
+    static char uartBuff[10];
+
 	uartWriteString( UART_USB, pcTaskName );
-	uartWriteString( UART_USB, "\tdeadline miss\r\n");
+	uartWriteString( UART_USB, "\tdeadline miss at ");
+	itoa( xTickCount, uartBuff, 10 );
+	uartWriteString( UART_USB, uartBuff );
+	uartWriteString( UART_USB, "\n\r");
 
     //pc.printf( "%s\tdeadline miss at %d\r\n", pcTaskName, xTickCount );
 

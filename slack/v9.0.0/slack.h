@@ -77,7 +77,7 @@ struct SsTCB
 	ListItem_t xSsTaskBlockedListItem;
 	ListItem_t xDeadlineTaskListItem;  /* Used to reference the task from the xDeadlineTaskList */
 
-	TickType_t xCur; 				/* Accumulated execution time measured in ticks. */
+	volatile TickType_t xCur;   	/* Accumulated execution time measured in ticks. */
 
 	BaseType_t xSlack;              /* Task slack */
 	BaseType_t xSlackK;			    /* Task slack value at the critical instant. */
@@ -97,7 +97,7 @@ struct SsTCB
 
 typedef struct SsTCB SsTCB_t;
 
-void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
+void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB, TickType_t xTickCount );
 void vApplicationNotSchedulable( void );
 
 void vSlackSystemSetup( void );

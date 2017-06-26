@@ -1,46 +1,46 @@
 # LPCopen library Makefile
 
-GCC_BIN ?= $(GCC_BIN_PATH)
-
 PROJECT = liblpc
 
-############################################################################### 
-AR = $(GCC_BIN)arm-none-eabi-ar
-CC = $(GCC_BIN)arm-none-eabi-gcc
-
-MODULES += lpc_chip_43xx
-MODULES += lpc_board_ciaa_edu_4337
-
-DEFINES += CORE_M4
-DEFINES += __USE_LPCOPEN
-
-SRC += $(foreach m, $(MODULES), $(wildcard $(m)/src/*.c))
-
+###############################################################################
+#
+# LPCOpen library source code.
+#
+SRC += $(wildcard ./lpc_chip_43xx/src/*.c)
+SRC += $(wildcard ./lpc_board_ciaa_edu_4337/src/*.c)
 OBJECTS = $(SRC:.c=.o)
-DEPS = $(SRC:.c=.d)
 
-INCLUDE_PATHS += $(foreach m, $(MODULES), -I$(m)/inc)
+###############################################################################
+#
+# Paths to the required headers.
+#
+INCLUDE_PATHS += -I./lpc_chip_43xx/inc
 INCLUDE_PATHS += -I./lpc_chip_43xx/inc/usbd/
+INCLUDE_PATHS += -I./lpc_board_ciaa_edu_4337/inc
 
-CC_FLAGS += $(CFLAGS)
-CC_FLAGS += -c -fmessage-length=0 -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin
-CC_FLAGS += -MMD
-
+###############################################################################
+#
+# Flags and symbols required by the linker.
+#
 AR_FLAGS = -r
 
+###############################################################################
+#
+# Rules used to build the LPCOpen library.
+#
 all: $(PROJECT).a
 
 clean:
 	+@echo "Cleaning LPCopen object files..."
-	@rm -f $(PROJECT).bin $(PROJECT).a $(OBJECTS) $(DEPS)
+	@rm -f $(PROJECT).a $(OBJECTS) $(DEPS)
 
 .c.o:
 	+@echo "Compile: $<"
-	@$(CC) $(CC_FLAGS) $(INCLUDE_PATHS) -o $@ $<
+	@$(CC) $(CPU) $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
 
 $(PROJECT).a: $(OBJECTS)
 	+@echo "Linking: $@"
 	@$(AR) $(AR_FLAGS) $@ $^ -c
 
-DEPS = $(OBJECTS:.o=.d) $(SYS_OBJECTS:.o=.d)
+DEPS = $(OBJECTS:.o=.d)
 -include $(DEPS)

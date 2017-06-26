@@ -12,16 +12,9 @@ extern "C"
 // FreeRTOS callback/hook functions
 void vApplicationMallocFailedHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
-
-// Slack Stealing
-#if( configUSE_SLACK_STEALING == 1 )
-void vApplicationDebugAction( void *param );
-void vApplicationNotSchedulable( void );
-void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
-#endif
+}
 
 void printSlacks( char s, int32_t * slackArray, TickType_t xCur );
 void periodicTaskBody( void* params );
-}
 
 #endif /* EXAMPLES_LPC1768_COMMON_COMMON_H_ */

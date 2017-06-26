@@ -4,11 +4,13 @@ GCC_BIN ?= $(GCC_BIN_PATH)
 
 PROJECT = libfreertos
 
+###############################################################################
 #
-# Objects
+# FreeRTOS source code.
 #
 OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/queue.o 
-OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/list.o 
+OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/list.o
+OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/timers.o
 OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/MemMang/heap_1.o 
 ifeq ($(TARGET), lpc1768)
   OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM3/port.o
@@ -20,9 +22,11 @@ ifeq ($(TARGET), frdm-k64f)
   OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM4F/port.o
 endif
 
+###############################################################################
 #
-# Includes
+# Paths to the required headers.
 #
+INCLUDE_PATHS += -I../../examples/$(TARGET)/
 INCLUDE_PATHS += -I../../examples/$(TARGET)/$(APP_NAME)
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/include
@@ -37,8 +41,9 @@ ifeq ($(TARGET), frdm-k64f)
   INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM4F
 endif
 
+###############################################################################
 #
-# slack
+# Slack Stealing framewrok source code and headers.
 #
 ifeq ($(USE_SLACK), 1)
   OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
@@ -50,6 +55,7 @@ else
   OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
 endif
 
+###############################################################################
 #
 # Required for tests (see test directory)
 #
@@ -57,8 +63,19 @@ ifeq ($(TEST), 1)
   ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v9.0.0)
      OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.o
   endif
+
+  CC_SYMBOLS += -DTASK_COUNT_PARAM=$(TASK_COUNT_PARAM)
+  CC_SYMBOLS += -DRELEASE_COUNT_PARAM=$(RELEASE_COUNT_PARAM)
+  CC_SYMBOLS += -DSLACK=$(SLACK) 
+  CC_SYMBOLS += -DSLACK_K=$(SLACK_K)
+  CC_SYMBOLS += -DSLACK_METHOD=$(SLACK_METHOD)
+  CC_SYMBOLS += -DFREERTOS_VERSION=$(FREERTOS_VERSION)
 endif
 
+###############################################################################
+#
+# Tracealyzer sources, include paths and symbols.
+#
 ifeq ($(TZ), 1)
   INCLUDE_PATHS += $(MBED_INCLUDE_PATHS)
   
@@ -90,50 +107,31 @@ ifeq ($(TZ), 1)
     endif
     
     CC_SYMBOLS += -DTRACEALYZER_v3_1_3
-  endif  
+  endif
+  
+  ifeq ($(TARGET), lpc1768)
+    CC_SYMBOLS += -DTARGET_LPC1768
+  endif
+  ifeq ($(TARGET), frdm-k64f)
+    CC_SYMBOLS += -DTARGET_K64F
+  endif
+  ifeq ($(TARGET), edu-ciaa-nxp)
+    #CC_FLAGS = $(CFLAGS)
+  endif    
 endif
 
-############################################################################### 
-AR = $(GCC_BIN)arm-none-eabi-ar
-CC = $(GCC_BIN)arm-none-eabi-gcc
-
-ifeq ($(TARGET), lpc1768)
-  CC_SYMBOLS += -DTARGET_LPC1768
-endif
-ifeq ($(TARGET), frdm-k64f)
-  CC_SYMBOLS += -DTARGET_K64F
-endif
-ifeq ($(TARGET), edu-ciaa-nxp)
-  CC_SYMBOLS = 
-  CC_FLAGS = $(CFLAGS)
-endif
-
-CC_FLAGS += $(CPU) -c -fmessage-length=0 -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -Wall -MMD -MP
-
+###############################################################################
 #
-# Required for tests (see test directory)
+# Flags and symbols required by the linker.
 #
-ifeq ($(TEST), 1)
-  CC_SYMBOLS += -DTASK_COUNT_PARAM=$(TASK_COUNT_PARAM)
-  CC_SYMBOLS += -DRELEASE_COUNT_PARAM=$(RELEASE_COUNT_PARAM)
-  CC_SYMBOLS += -DSLACK=$(SLACK) 
-  CC_SYMBOLS += -DSLACK_K=$(SLACK_K)
-  CC_SYMBOLS += -DSLACK_METHOD=$(SLACK_METHOD)
-  CC_SYMBOLS += -DFREERTOS_VERSION=$(FREERTOS_VERSION)
-endif
-
 AR_FLAGS = -r
 
 CC_SYMBOLS += -DUSE_SLACK=$(USE_SLACK)
 
-ifeq ($(DEBUG), 1)
-  CC_FLAGS += -g
-  CC_SYMBOLS += -DDEBUG
-else
-  CC_FLAGS += -Os
-  CC_SYMBOLS += -DNDEBUG
-endif
-
+###############################################################################
+#
+# Rules used to build FreeRTOS
+#
 all: $(PROJECT).a	
 
 clean:
@@ -142,11 +140,11 @@ clean:
 
 .c.o:
 	+@echo "Compile: $<"
-	@$(CC) $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu99 $(INCLUDE_PATHS) -o $@ $<
+	@$(CC) $(CPU) $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
 
-$(PROJECT).a: $(OBJECTS) $(SYS_OBJECTS)
+$(PROJECT).a: $(OBJECTS)
 	+@echo "Linking: $@"
 	@$(AR) $(AR_FLAGS) $@ $^ -c
 
-DEPS = $(OBJECTS:.o=.d) $(SYS_OBJECTS:.o=.d)
+DEPS = $(OBJECTS:.o=.d)
 -include $(DEPS)

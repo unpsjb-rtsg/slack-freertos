@@ -21,6 +21,8 @@ void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
 #if( configUSE_SLACK_STEALING == 1 )
 void periodicTaskBody( void* params )
 {
+    ( void ) params;
+
 	SsTCB_t *pxTaskSsTCB;
 
 #if( tskKERNEL_VERSION_MAJOR == 8 )
@@ -132,10 +134,9 @@ void vApplicationNotSchedulable( void )
 	}
 }
 
-void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount )
+void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB, TickType_t xTickCount )
 {
-    ( void ) uxRelease;
-    ( void ) xTickCount;
+    ( void ) xSsTCB;
 
     taskDISABLE_INTERRUPTS();
 

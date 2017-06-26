@@ -9,7 +9,8 @@
  * Written by Lukás Chmela
  * Released under GPLv3.
  */
-char* itoa(int value, char* result, int base) {
+char* itoa(int value, char* result, int base)
+{
    // check that the base if valid
    if (base < 2 || base > 36) { *result = '\0'; return result; }
 
@@ -57,7 +58,7 @@ void prvSetupHardware(void)
 void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
 {
 	/* Buffer */
-	static uint8_t uartBuff[10];
+	static char uartBuff[10];
 
 	vTaskSuspendAll();
 	vTasksGetSlacks( slackArray );
@@ -90,6 +91,8 @@ void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
 
 void periodicTaskBody( void* params )
 {
+    ( void ) params;
+
 	SsTCB_t *pxTaskSsTCB;
 
 #if( tskKERNEL_VERSION_MAJOR == 8 )
@@ -103,23 +106,23 @@ void periodicTaskBody( void* params )
 
 	for(;;)
     {
+	    gpioWrite( leds[ pxTaskSsTCB->xId - 1], ON);
+
 		printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
 
-		gpioWrite( leds[ pxTaskSsTCB->xId - 1], ON);
-
 #if ( configTASK_EXEC == 0 )
-		vUtilsEatCpu( pxTaskSsTCB->xWcet - 250 );
+		vUtilsEatCpu( pxTaskSsTCB->xWcet - 300 );
 #endif
 #if ( configTASK_EXEC == 1 )
-		while( pxTaskSsTCB->xCur <  pxTaskSsTCB->xWcet )
+		while( pxTaskSsTCB->xCur <  ( pxTaskSsTCB->xWcet - 200 ) )
 		{
 			asm("nop");
 		}
 #endif
 
-		gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
-
 		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+
+		gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
 
 		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }

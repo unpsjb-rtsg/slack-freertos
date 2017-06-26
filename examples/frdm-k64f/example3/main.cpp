@@ -1,3 +1,6 @@
+/*****************************************************************************
+ * Includes
+ ****************************************************************************/
 #include "common.h"
 #include "utils.h"
 #include "mbed.h"
@@ -5,6 +8,9 @@
 #include "task.h"
 #include "slack.h"
 
+/*****************************************************************************
+ * Macros and definitions
+ ****************************************************************************/
 #define TASK_CNT 4
 #define TASK_1_WCET 1000
 #define TASK_2_WCET 1000
@@ -15,10 +21,34 @@
 #define TASK_3_PERIOD 6000
 #define TASK_4_PERIOD 12000
 
-void aperiodic_task_body( void* params );
+#define ATASK_WCET 2000
+#define ATASK_MAX_DELAY 8000
 
+#define BAUDRATE 9600
+
+/*****************************************************************************
+ * Private data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Public data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private functions declaration
+ ****************************************************************************/
+static void aperiodic_task_body( void* params );
+
+/*****************************************************************************
+ * Private data
+ ****************************************************************************/
 TaskHandle_t task_handles[ TASK_CNT ];
 
+/*****************************************************************************
+ * Public data
+ ****************************************************************************/
 Serial pc( USBTX, USBRX );
 
 // mbed original LED naming
@@ -28,6 +58,45 @@ Serial pc( USBTX, USBRX );
 // LED4 = LED_RED
 DigitalOut leds[] = { LED_RED, LED_GREEN, LED_BLUE, LED_RED };
 
+/*****************************************************************************
+ * Private functions
+ ****************************************************************************/
+#if( configUSE_SLACK_STEALING == 1 )
+static void aperiodic_task_body( void* params )
+{
+    ( void ) params;
+
+    int32_t slackArray[ 7 ];
+
+    SsTCB_t *pxTaskSsTCB;
+
+#if( tskKERNEL_VERSION_MAJOR == 8 )
+    pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
+#endif
+#if( tskKERNEL_VERSION_MAJOR == 9 )
+    pxTaskSsTCB = getTaskSsTCB( NULL );
+#endif
+
+    vTaskDelay( rand() % ATASK_MAX_DELAY );
+
+    for(;;)
+    {
+        pxTaskSsTCB->xCur = ( TickType_t ) 0;
+
+        printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+
+        vUtilsEatCpu( 100 + ( rand() % ATASK_WCET ) );
+
+        printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+
+        vTaskDelay( rand() % ATASK_MAX_DELAY );
+    }
+}
+#endif
+
+/*****************************************************************************
+ * Public functions
+ ****************************************************************************/
 int main()
 {
 	// Initializes the trace recorder, but does not start the tracing.
@@ -43,8 +112,8 @@ int main()
 #endif
 #endif
 
-	pc.baud(9600);
-    pc.printf("Example 3\n");
+	pc.baud( BAUDRATE );
+    pc.printf( "Example 3\n" );
 
 	// Turn off all the on board LEDs.
 	leds[0] = 1;
@@ -110,32 +179,3 @@ int main()
 
     for(;;);
 }
-
-#if( configUSE_SLACK_STEALING == 1 )
-void aperiodic_task_body( void* params )
-{
-	int32_t slackArray[ 7 ];
-
-	SsTCB_t *pxTaskSsTCB;
-
-#if( tskKERNEL_VERSION_MAJOR == 8 )
-	pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
-#endif
-#if( tskKERNEL_VERSION_MAJOR == 9 )
-	pxTaskSsTCB = getTaskSsTCB( NULL );
-#endif
-
-	for(;;)
-	{
-		pxTaskSsTCB->xCur = ( TickType_t ) 0;
-
-		printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
-
-		vUtilsEatCpu( 100 + ( rand() % 2000 ) );
-
-		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
-
-		vTaskDelay( rand() % 8000 );
-	}
-}
-#endif

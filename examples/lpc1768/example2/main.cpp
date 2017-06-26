@@ -5,24 +5,68 @@
 #include "utils.h"
 #include "common.h"
 
+/*****************************************************************************
+ * Private types/enumerations/variables
+ ****************************************************************************/
 #define TASK_CNT 4
-#define TASK_1_PERIOD 3000
-#define TASK_2_PERIOD 4000
-#define TASK_3_PERIOD 6000
-#define TASK_4_PERIOD 12000
 #define TASK_1_WCET 1000
 #define TASK_2_WCET 1000
 #define TASK_3_WCET 1000
 #define TASK_4_WCET 1000
+#define TASK_1_PERIOD 3000
+#define TASK_2_PERIOD 4000
+#define TASK_3_PERIOD 6000
+#define TASK_4_PERIOD 12000
 
-void aperiodic_task_body( void* params );
+#define ATASK_WCET 2000
+#define ATASK_MAX_DELAY 4000
 
-TaskHandle_t task_handles[ TASK_CNT ];
+static TaskHandle_t task_handles[ TASK_CNT ];
 
+/*****************************************************************************
+ * Public types/enumerations/variables
+ ****************************************************************************/
 Serial pc( USBTX, USBRX );
 DigitalOut leds[] = { LED1, LED2, LED3, LED4 };
 
-int main()
+/*****************************************************************************
+ * Private functions
+ ****************************************************************************/
+static void aperiodic_task_body( void* params );
+
+static void aperiodic_task_body( void* params )
+{
+    int32_t slackArray[ 7 ];
+
+    SsTCB_t *pxTaskSsTCB;
+
+#if( tskKERNEL_VERSION_MAJOR == 8 )
+    pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
+#endif
+#if( tskKERNEL_VERSION_MAJOR == 9 )
+    pxTaskSsTCB = getTaskSsTCB( NULL );
+#endif
+
+    vTaskDelay( rand() % ATASK_MAX_DELAY );
+
+    for(;;)
+    {
+        pxTaskSsTCB->xCur = ( TickType_t ) 0;
+
+        printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+
+        vUtilsEatCpu( ATASK_WCET );
+
+        printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+
+        vTaskDelay( rand() % ATASK_MAX_DELAY );
+    }
+}
+
+/*****************************************************************************
+ * Public functions
+ ****************************************************************************/
+int main(void)
 {
 	pc.baud(9600);
     pc.printf("Example 2\n");
@@ -43,7 +87,7 @@ int main()
     xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
     xTaskCreate( periodicTaskBody, "T4", 256, NULL, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
 
-    /* Aperiodic task */
+    // Aperiodic task
     TaskHandle_t xApTaskHandle;
     xTaskCreate ( aperiodic_task_body, "TA", 256, NULL, configMAX_PRIORITIES - 1, &xApTaskHandle );
 
@@ -73,31 +117,4 @@ int main()
     vTaskStartScheduler();
 
     for(;;);
-}
-
-void aperiodic_task_body( void* params )
-{
-	int32_t slackArray[ 7 ];
-
-    SsTCB_t *pxTaskSsTCB;
-
-#if( tskKERNEL_VERSION_MAJOR == 8 )
-	pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
-#endif
-#if( tskKERNEL_VERSION_MAJOR == 9 )
-	pxTaskSsTCB = getTaskSsTCB( NULL );
-#endif
-
-	for(;;)
-	{
-		pxTaskSsTCB->xCur = ( TickType_t ) 0;
-
-		printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
-
-		vUtilsEatCpu( 2000 );
-
-		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
-
-		vTaskDelay( rand() % 4000 );
-	}
 }
