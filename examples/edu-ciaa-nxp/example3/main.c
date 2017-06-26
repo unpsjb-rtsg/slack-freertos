@@ -143,6 +143,8 @@ int main(void)
 
 static void aperiodic_task_body( void* params )
 {
+    ( void ) params;
+
 	int32_t slackArray[ 6 ];
 
     SsTCB_t *pxTaskSsTCB;

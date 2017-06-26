@@ -114,6 +114,8 @@ int main()
 #if( configUSE_SLACK_STEALING == 1 )
 void aperiodic_task_body( void* params )
 {
+    ( void ) params;
+
 	int32_t slackArray[ 7 ];
 
 	SsTCB_t *pxTaskSsTCB;
