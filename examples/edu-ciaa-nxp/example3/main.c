@@ -76,6 +76,8 @@ static void aperiodic_task_body( void* params );
  * Private data
  ****************************************************************************/
 static TaskHandle_t task_handles[ TASK_CNT ];
+static TaskHandle_t ap_task_handles[ 3 ];
+static gpioMap_t ap_leds[] = { LEDR, LEDG, LEDB };
 
 /*****************************************************************************
  * Public data
@@ -108,7 +110,7 @@ static void aperiodic_task_body( void* params )
 
     for(;;)
     {
-        gpioWrite( LEDR, ON );
+        gpioWrite( ap_leds[ pxTaskSsTCB->xId - 1], ON);
 
         pxTaskSsTCB->xCur = ( TickType_t ) 0;
 
@@ -118,7 +120,7 @@ static void aperiodic_task_body( void* params )
 
         printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
 
-        gpioWrite( LEDR, OFF );
+        gpioWrite( ap_leds[ pxTaskSsTCB->xId - 1], ON);
 
         vTaskDelay( rand() % ATASK_MAX_DELAY );
     }
@@ -151,29 +153,33 @@ int main(void)
     }
     #endif
 
-    // create periodic tasks
-    xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
-    xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
-    xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
+    // Periodic tasks.
+    xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1, &task_handles[ 0 ] );  // max priority
+    xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - configMAX_SLACK_PRIO - 2, &task_handles[ 1 ] );
+    xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - configMAX_SLACK_PRIO - 3, &task_handles[ 2 ] );
 
-    /* Aperiodic task */
-    TaskHandle_t xApTaskHandle;
-    xTaskCreate ( aperiodic_task_body, "TA", 256, NULL, configMAX_PRIORITIES - 1, &xApTaskHandle );
+    // Aperiodic tasks.
+    xTaskCreate ( aperiodic_task_body, "TA1", 256, NULL, configMAX_PRIORITIES - 1, &ap_task_handles[ 0 ] );
+    xTaskCreate ( aperiodic_task_body, "TA2", 256, NULL, configMAX_PRIORITIES - 2, &ap_task_handles[ 1 ] );
+    xTaskCreate ( aperiodic_task_body, "TA3", 256, NULL, configMAX_PRIORITIES - 3, &ap_task_handles[ 2 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
-    // additional parameters needed by the slack stealing framework
+    // Configure additional parameters needed by the slack stealing framework
 #if( tskKERNEL_VERSION_MAJOR == 8 )
     vTaskSetParams( task_handles[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
     vTaskSetParams( task_handles[ 1 ], TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
     vTaskSetParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
 #endif
 #if( tskKERNEL_VERSION_MAJOR == 9 )
+    // Set periodic tasks parameters.
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
     vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
     vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
 
-    /* Aperiodic task */
-    vSlackSetTaskParams( xApTaskHandle, APERIODIC_TASK, 0, 0, 0, 4 );
+    // Set aperiodic tasks parameters.
+    vSlackSetTaskParams( ap_task_handles[ 0 ], APERIODIC_TASK, 0, 0, 0, 1 );
+    vSlackSetTaskParams( ap_task_handles[ 1 ], APERIODIC_TASK, 0, 0, 0, 2 );
+    vSlackSetTaskParams( ap_task_handles[ 2 ], APERIODIC_TASK, 0, 0, 0, 3 );
 #endif
 #endif
 
@@ -183,7 +189,7 @@ int main(void)
     }
     #endif
 
-    // Starts the tracing.
+    // Start the tracing.
 #ifdef TRACEALYZER_v3_0_2
     uiTraceStart();
 #endif
@@ -191,9 +197,9 @@ int main(void)
     vTraceEnable( TRC_START );
 #endif
 
-	/* Start the scheduler */
+	// Start the scheduler.
 	vTaskStartScheduler();
 
-	/* Should never arrive here */
+	// Should never arrive here.
 	for(;;);
 }
