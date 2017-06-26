@@ -97,7 +97,7 @@ struct SsTCB
 
 typedef struct SsTCB SsTCB_t;
 
-void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
+void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB, TickType_t xTickCount );
 void vApplicationNotSchedulable( void );
 
 void vSlackSystemSetup( void );

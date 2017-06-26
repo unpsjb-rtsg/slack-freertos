@@ -252,10 +252,11 @@ inline void vSlackDecrementAllTasksSlack( const TickType_t xTicks, const TickTyp
 
 		if( xTask->xSlack > 0 )
 		{
-			if( xTask->xEndTick < ( xTickCount - ( TickType_t ) 1U ) )
+			/*if( xTask->xEndTick < ( xTickCount - ( TickType_t ) 1U ) )
 			{
 				xTask->xSlack = xTask->xSlack - ( BaseType_t ) xTicks;
-			}
+			}*/
+		    xTask->xSlack = xTask->xSlack - ( BaseType_t ) xTicks;
 		}
 
 		pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
@@ -274,10 +275,11 @@ inline void vSlackDecrementTasksSlack( TaskHandle_t pxTask, const TickType_t xTi
 
         if( xTask->xSlack > 0 )
         {
-            if( xTask->xEndTick < ( xTickCount - ( TickType_t ) 1U ) )
+            /*if( xTask->xEndTick < ( xTickCount - ( TickType_t ) 1U ) )
             {
                xTask->xSlack = xTask->xSlack - ( BaseType_t ) xTicks;
-            }
+            }*/
+            xTask->xSlack = xTask->xSlack - ( BaseType_t ) xTicks;
         }
 
         pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );

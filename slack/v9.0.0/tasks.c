@@ -1255,7 +1255,7 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB )
 				/* The current tick is considered as consumed. */
                 #if ( configUSE_SLACK_K == 0 )
 				{
-					vTaskCalculateSlack( pxCurrentTCB, xConstTickCount + ( TickType_t ) 1U, &xSsTaskList );
+				    vTaskCalculateSlack( pxCurrentTCB, xConstTickCount, &xSsTaskList );
 				}
                 #else
 				{
@@ -2786,7 +2786,7 @@ BaseType_t xSwitchRequired = pdFALSE;
 						/* The current release of task pxTCB has missed its
                         deadline. Invoke the application missed-deadline
                         hook function. */
-						vApplicationDeadlineMissedHook( pxTask->pcTaskName, pxTaskSs->uxReleaseCount, xTickCount );
+						vApplicationDeadlineMissedHook( pxTask->pcTaskName, pxTaskSs, xTickCount );
 					}
 					else
 					{
