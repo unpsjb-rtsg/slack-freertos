@@ -13,7 +13,7 @@ $ arm-none-eabi-gdb
 (gdb) load
 (gdb) continue
 ^C
-(gdb) dump binary memory example3.dump 0x1FFF0000 0x2002FFFF
+(gdb) dump binary memory example3.dump 0x10000000 0x10008000
 (gdb) quit
 $ 
 ```
