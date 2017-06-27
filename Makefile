@@ -14,6 +14,7 @@ EXAMPLE = $(TARGET)-$(APP_NAME)
 # Compiler executables path and names.
 # 
 GCC_BIN =
+AR      = $(GCC_BIN)arm-none-eabi-ar
 AS      = $(GCC_BIN)arm-none-eabi-as
 CC      = $(GCC_BIN)arm-none-eabi-gcc
 CPP     = $(GCC_BIN)arm-none-eabi-g++
@@ -69,7 +70,7 @@ MAKE_FLAGS += --no-print-directory
 #
 # Export variables to be used by others Makefile.mk files.
 #
-export AS CC CPP LD OBJCOPY SIZE FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_VERSION_NUMBER MAKEDIR TARGET COMMON_FLAGS C_COMMON_FLAGS CPP_COMMON_FLAGS EXAMPLE
+export AR AS CC CPP LD OBJCOPY SIZE FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_VERSION_NUMBER MAKEDIR TARGET COMMON_FLAGS C_COMMON_FLAGS CPP_COMMON_FLAGS EXAMPLE
 
 ###############################################################################
 #
