@@ -38,7 +38,7 @@
 /* The linker does not include this code in liblpc.a because nothing in it
  * references it... */
 #define CRP_NO_CRP          0xFFFFFFFF
-__attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP ;
+__attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP;
 
 /*****************************************************************************
  * Private types/enumerations/variables
@@ -68,7 +68,6 @@ traceString slack_channel;
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
-
 /**
  * @brief	main routine for FreeRTOS blinky example
  * @return	Nothing, function should not exit
@@ -88,36 +87,42 @@ int main(void)
 
     uartWriteString( UART_USB, "Example 1\r\n" );
 
-    #if( tskKERNEL_VERSION_MAJOR == 9 )
-    {
-	    vSlackSystemSetup();
-    }
-    #endif
-
     // Periodic tasks.
-    xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
-    xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
-    xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
+    xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 2,
+    		&task_handles[ 0 ] );
+    xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - 3,
+    		&task_handles[ 1 ] );
+    xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 4,
+    		&task_handles[ 2 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
-    // Configure additional parameters needed by the slack stealing framework.
+	#if( tskKERNEL_VERSION_MAJOR == 9 )
+	{
+		vSlackSystemSetup();
+	}
+	#endif
+
+	// Configure additional parameters needed by the slack stealing framework.
 #if( tskKERNEL_VERSION_MAJOR == 8 )
     vTaskSetParams( task_handles[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
     vTaskSetParams( task_handles[ 1 ], TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
     vTaskSetParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
 #endif
 #if( tskKERNEL_VERSION_MAJOR == 9 )
-    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
-    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
-    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
-#endif
+    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
+    		TASK_1_PERIOD, TASK_1_WCET, 1 );
+    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD,
+    		TASK_2_PERIOD, TASK_2_WCET, 2 );
+    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD,
+    		TASK_3_PERIOD, TASK_3_WCET, 3 );
 #endif
 
     #if( tskKERNEL_VERSION_MAJOR == 9 )
-    {
-    	vSlackSchedulerSetup();
-    }
-    #endif
+	{
+		vSlackSchedulerSetup();
+	}
+	#endif
+#endif
 
     // Start the tracing.
 #ifdef TRACEALYZER_v3_0_2
