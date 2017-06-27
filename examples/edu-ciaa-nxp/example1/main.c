@@ -57,6 +57,9 @@ static TaskHandle_t task_handles[ TASK_CNT ];
  * Public types/enumerations/variables
  ****************************************************************************/
 gpioMap_t leds[] = { LED1, LED2, LED3 };
+#ifdef TRACEALYZER_v3_1_3
+traceString slack_channel;
+#endif
 
 /*****************************************************************************
  * Private functions
@@ -74,6 +77,15 @@ int main(void)
 {
 	prvSetupHardware();
 
+    // Initializes the trace recorder, but does not start the tracing.
+#ifdef TRACEALYZER_v3_0_2
+    vTraceInitTraceData();
+#endif
+#ifdef TRACEALYZER_v3_1_3
+    vTraceEnable( TRC_INIT );
+    slack_channel = xTraceRegisterString("Slack Events");
+#endif
+
     uartWriteString( UART_USB, "Example 1\r\n" );
 
     #if( tskKERNEL_VERSION_MAJOR == 9 )
@@ -82,13 +94,13 @@ int main(void)
     }
     #endif
 
-    // create periodic tasks
+    // Periodic tasks.
     xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
     xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
     xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
-    // additional parameters needed by the slack stealing framework
+    // Configure additional parameters needed by the slack stealing framework.
 #if( tskKERNEL_VERSION_MAJOR == 8 )
     vTaskSetParams( task_handles[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
     vTaskSetParams( task_handles[ 1 ], TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
@@ -107,9 +119,17 @@ int main(void)
     }
     #endif
 
-	/* Start the scheduler */
+    // Start the tracing.
+#ifdef TRACEALYZER_v3_0_2
+    uiTraceStart();
+#endif
+#ifdef TRACEALYZER_v3_1_3
+    vTraceEnable( TRC_START );
+#endif
+
+	// Start the scheduler.
 	vTaskStartScheduler();
 
-	/* Should never arrive here */
+	// Should never arrive here.
 	for(;;);
 }

@@ -72,7 +72,7 @@ MAKE_FLAGS += --no-print-directory
 #
 export AR AS CC CPP LD OBJCOPY SIZE 
 export FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_VERSION_NUMBER 
-export COMMON_FLAGS C_COMMON_FLAGS CPP_COMMON_FLAGS TARGET EXAMPLE
+export COMMON_FLAGS C_COMMON_FLAGS CPP_COMMON_FLAGS TARGET EXAMPLE TZ
 
 ###############################################################################
 #

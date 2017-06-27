@@ -83,6 +83,9 @@ static gpioMap_t ap_leds[] = { LEDR, LEDG, LEDB };
  * Public data
  ****************************************************************************/
 gpioMap_t leds[] = { LED1, LED2, LED3 };
+#ifdef TRACEALYZER_v3_1_3
+traceString slack_channel;
+#endif
 
 /*****************************************************************************
  * Private functions
@@ -110,19 +113,27 @@ static void aperiodic_task_body( void* params )
 
     for(;;)
     {
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
+
         gpioWrite( ap_leds[ pxTaskSsTCB->xId - 1], ON);
 
         pxTaskSsTCB->xCur = ( TickType_t ) 0;
 
         printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
 
-        vUtilsEatCpu( ATASK_WCET );
+        vUtilsEatCpu( rand() % ATASK_WCET );
 
         printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
 
         gpioWrite( ap_leds[ pxTaskSsTCB->xId - 1], ON);
 
         vTaskDelay( rand() % ATASK_MAX_DELAY );
+
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
     }
 }
 
@@ -143,6 +154,7 @@ int main(void)
 #endif
 #ifdef TRACEALYZER_v3_1_3
 	vTraceEnable( TRC_INIT );
+	slack_channel = xTraceRegisterString("Slack Events");
 #endif
 
     uartWriteString( UART_USB, "Example 3\r\n" );

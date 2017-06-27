@@ -54,17 +54,81 @@ __attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP 
 #define ATASK_WCET 2000
 #define ATASK_MAX_DELAY 4000
 
+/*****************************************************************************
+ * Private data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Public data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private functions declaration
+ ****************************************************************************/
+static void aperiodic_task_body( void* params );
+
+/*****************************************************************************
+ * Private data
+ ****************************************************************************/
 static TaskHandle_t task_handles[ TASK_CNT ];
 
 /*****************************************************************************
- * Public types/enumerations/variables
+ * Public data
  ****************************************************************************/
 gpioMap_t leds[] = { LED1, LED2, LED3 };
+#ifdef TRACEALYZER_v3_1_3
+traceString slack_channel;
+#endif
 
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
-static void aperiodic_task_body( void* params );
+/**
+ * Aperiodic task.
+ * @param params Not used.
+ */
+static void aperiodic_task_body( void* params )
+{
+    int32_t slackArray[ 6 ];
+
+    SsTCB_t *pxTaskSsTCB;
+
+#if( tskKERNEL_VERSION_MAJOR == 8 )
+    pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
+#endif
+#if( tskKERNEL_VERSION_MAJOR == 9 )
+    pxTaskSsTCB = getTaskSsTCB( NULL );
+#endif
+
+    vTaskDelay( rand() % ATASK_MAX_DELAY );
+
+    for(;;)
+    {
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
+
+        pxTaskSsTCB->xCur = ( TickType_t ) 0;
+
+        gpioWrite( LEDR, ON );
+
+        printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+
+        vUtilsEatCpu( rand() % ATASK_WCET );
+
+        printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+
+        gpioWrite( LEDR, OFF );
+
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
+
+        vTaskDelay( rand() % ATASK_MAX_DELAY );
+    }
+}
 
 /*****************************************************************************
  * Public functions
@@ -77,6 +141,15 @@ static void aperiodic_task_body( void* params );
 int main(void)
 {
 	prvSetupHardware();
+
+    // Initializes the trace recorder, but does not start the tracing.
+#ifdef TRACEALYZER_v3_0_2
+    vTraceInitTraceData();
+#endif
+#ifdef TRACEALYZER_v3_1_3
+    vTraceEnable( TRC_INIT );
+    slack_channel = xTraceRegisterString("Slack Events");
+#endif
 
     uartWriteString( UART_USB, "Example 2\r\n" );
 
@@ -118,46 +191,17 @@ int main(void)
     }
     #endif
 
-	/* Start the scheduler */
+    // Start the tracing.
+#ifdef TRACEALYZER_v3_0_2
+    uiTraceStart();
+#endif
+#ifdef TRACEALYZER_v3_1_3
+    vTraceEnable( TRC_START );
+#endif
+
+	// Start the scheduler.
 	vTaskStartScheduler();
 
-	/* Should never arrive here */
+	// Should never arrive here.
 	for(;;);
-}
-
-/**
- * Aperiodic task.
- * @param params Not used.
- */
-static void aperiodic_task_body( void* params )
-{
-	int32_t slackArray[ 6 ];
-
-    SsTCB_t *pxTaskSsTCB;
-
-#if( tskKERNEL_VERSION_MAJOR == 8 )
-	pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
-#endif
-#if( tskKERNEL_VERSION_MAJOR == 9 )
-	pxTaskSsTCB = getTaskSsTCB( NULL );
-#endif
-
-	vTaskDelay( rand() % ATASK_MAX_DELAY );
-
-	for(;;)
-	{
-		pxTaskSsTCB->xCur = ( TickType_t ) 0;
-
-		gpioWrite( LEDR, ON );
-
-		printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
-
-		vUtilsEatCpu( ATASK_WCET );
-
-		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
-
-		gpioWrite( LEDR, OFF );
-
-		vTaskDelay( rand() % ATASK_MAX_DELAY );
-	}
 }

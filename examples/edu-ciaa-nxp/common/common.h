@@ -5,6 +5,10 @@
 
 extern gpioMap_t leds[];
 
+#ifdef TRACEALYZER_v3_1_3
+extern traceString slack_channel;
+#endif
+
 char* itoa( int value, char* result, int base );
 void prvSetupHardware( void );
 void printSlacks( char s, int32_t * slackArray, TickType_t xCur );
