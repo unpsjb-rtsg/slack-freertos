@@ -34,6 +34,10 @@ void periodicTaskBody( void* params )
 
 	for(;;)
     {
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
+
 		printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
 
 		leds[ pxTaskSsTCB->xId - 1] = 1;
@@ -51,6 +55,10 @@ void periodicTaskBody( void* params )
 		leds[ pxTaskSsTCB->xId - 1] = 0;
 
 		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
 
 		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }

@@ -1,8 +1,8 @@
-#include "common.h"
-#include "utils.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "slack.h"
+#include "common.h"
+#include "utils.h"
 
 #if( configUSE_SLACK_STEALING == 1 )
 void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
@@ -36,6 +36,10 @@ void periodicTaskBody( void* params )
 
 	for(;;)
     {
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
+
 		printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
 
 		leds[ pxTaskSsTCB->xId - 1] = 0;
@@ -53,6 +57,10 @@ void periodicTaskBody( void* params )
 		leds[ pxTaskSsTCB->xId - 1] = 1;
 
 		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
 
 		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }

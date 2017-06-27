@@ -6,6 +6,10 @@
 extern Serial pc;
 extern DigitalOut leds[];
 
+#ifdef TRACEALYZER_v3_1_3
+extern traceString slack_channel;
+#endif
+
 /* The extern "C" is required to avoid name mangling between C and C++ code. */
 extern "C"
 {

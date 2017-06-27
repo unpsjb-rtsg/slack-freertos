@@ -20,9 +20,15 @@
 #define TASK_2_PERIOD 4000
 #define TASK_3_PERIOD 6000
 #define TASK_4_PERIOD 12000
+#define TASK_1_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1
+#define TASK_2_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 2
+#define TASK_3_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 3
+#define TASK_4_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 4
 
 #define ATASK_WCET 2000
 #define ATASK_MAX_DELAY 8000
+#define ATASK_1_PRIO configMAX_PRIORITIES - 1
+#define ATASK_2_PRIO configMAX_PRIORITIES - 2
 
 /*****************************************************************************
  * Private data declaration
@@ -49,6 +55,9 @@ static TaskHandle_t task_handles[ TASK_CNT ];
  ****************************************************************************/
 Serial pc( USBTX, USBRX );
 DigitalOut leds[] = { LED1, LED2, LED3, LED4 };
+#ifdef TRACEALYZER_v3_1_3
+traceString slack_channel;
+#endif
 
 /*****************************************************************************
  * Private functions
@@ -72,6 +81,10 @@ static void aperiodic_task_body( void* params )
 
     for(;;)
     {
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
+
         pxTaskSsTCB->xCur = ( TickType_t ) 0;
 
         printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
@@ -79,6 +92,10 @@ static void aperiodic_task_body( void* params )
         vUtilsEatCpu( 100 + ( rand() % ATASK_WCET ) );
 
         printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
 
         vTaskDelay( rand() % ATASK_MAX_DELAY );
     }
@@ -106,26 +123,30 @@ int main()
 	leds[2] = 0;
 	leds[3] = 0;
 
-#if( tskKERNEL_VERSION_MAJOR == 9 )
-	vSlackSystemSetup();
-#endif
+	// Periodic tasks.
+	xTaskCreate( periodicTaskBody, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
+	xTaskCreate( periodicTaskBody, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
+	xTaskCreate( periodicTaskBody, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
+	xTaskCreate( periodicTaskBody, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
 
-    // Create the periodic tasks.
-    xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 0 ] );  // max priority
-    xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 1 ] );
-    xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 5, &task_handles[ 2 ] );
-    xTaskCreate( periodicTaskBody, "T4", 256, NULL, configMAX_PRIORITIES - 6, &task_handles[ 3 ] );
+	TaskHandle_t xApTaskHandle1, xApTaskHandle2;
+	xTaskCreate( aperiodic_task_body, "TA1", 256, NULL, ATASK_1_PRIO, &xApTaskHandle1 );
+	xTaskCreate( aperiodic_task_body, "TA2", 256, NULL, ATASK_2_PRIO, &xApTaskHandle2 );
 
 #if( configUSE_SLACK_STEALING == 1 )
+
+    #if( tskKERNEL_VERSION_MAJOR == 9 )
+    {
+        vSlackSystemSetup();
+    }
+    #endif
+
     // Additional parameters needed by the slack stealing framework.
 #if( tskKERNEL_VERSION_MAJOR == 8 )
     vTaskSetParams( task_handles[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
     vTaskSetParams( task_handles[ 1 ], TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
     vTaskSetParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
     vTaskSetParams( task_handles[ 3 ], TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
-
-    // Create the aperiodic task.
-    xTaskCreate( aperiodic_task_body, "TA", 256, NULL, configMAX_PRIORITIES - 1, NULL );
 #endif
 #if( tskKERNEL_VERSION_MAJOR == 9 )
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
@@ -134,16 +155,15 @@ int main()
     vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 
     // Create the aperiodic tasks.
-    TaskHandle_t xApTaskHandle1, xApTaskHandle2;
-    xTaskCreate( aperiodic_task_body, "TA1", 256, NULL, configMAX_PRIORITIES - 1, &xApTaskHandle1 );
-    xTaskCreate( aperiodic_task_body, "TA2", 256, NULL, configMAX_PRIORITIES - 2, &xApTaskHandle2 );
-    vSlackSetTaskParams( xApTaskHandle1, APERIODIC_TASK, 0, 0, 0, 5 );
-    vSlackSetTaskParams( xApTaskHandle2, APERIODIC_TASK, 0, 0, 0, 5 );
-#endif
+    vSlackSetTaskParams( xApTaskHandle1, APERIODIC_TASK, 0, 0, 0, 1 );
+    vSlackSetTaskParams( xApTaskHandle2, APERIODIC_TASK, 0, 0, 0, 2 );
 #endif
 
-#if( tskKERNEL_VERSION_MAJOR == 9 )
-    vSlackSchedulerSetup();
+    #if( tskKERNEL_VERSION_MAJOR == 9 )
+    {
+        vSlackSchedulerSetup();
+    }
+    #endif
 #endif
 
     // Starts the tracing.
@@ -154,7 +174,9 @@ int main()
     vTraceEnable( TRC_START );
 #endif
 
+    // Start the scheduler.
     vTaskStartScheduler();
 
+    // Should never arrive here.
     for(;;);
 }

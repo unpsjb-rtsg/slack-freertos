@@ -68,8 +68,7 @@ LINKER_SCRIPT = ../../board/frdm-k64f/TARGET_K64F/TOOLCHAIN_GCC_ARM/MK64FN1M0xxx
 #
 # Tracealyzer sources, include paths and symbols.
 #
-ifeq ($(APP_NAME), example3)
-  TZ = 1
+ifeq ($(TZ), 1)
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
@@ -81,8 +80,6 @@ ifeq ($(APP_NAME), example3)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/include    
     CPP_SYMBOLS += -DTRACEALYZER_v3_1_3
   endif
-else
-  TZ = 0
 endif
 
 ifeq ($(HARDFP), 1)

@@ -65,8 +65,7 @@ LINKER_SCRIPT = ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/LPC1768.ld
 #
 # Tracealyzer sources, include paths and symbols
 #
-ifeq ($(APP_NAME), example3)
-  TZ = 1
+ifeq ($(TZ), 1)
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
@@ -77,8 +76,6 @@ ifeq ($(APP_NAME), example3)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
     CC_SYMBOLS += -DTRACEALYZER_v3_1_3
   endif
-else
-  TZ = 0
 endif
 
 ###############################################################################
