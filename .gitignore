@@ -49,8 +49,10 @@ language.settings.xml
 Makefile.mine
 
 # mbed object files and libraries should be versioned
-!libs/mbed/**/*.o
-!libs/mbed/**/*.a
+!board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/*.o
+!board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/*.a
+!board/frdm-k64f/TARGET_K64F/TOOLCHAIN_GCC_ARM/*.o
+!board/frdm-k64f/TARGET_K64F/TOOLCHAIN_GCC_ARM/*.a
 
 # build directory
 build

@@ -1,14 +1,13 @@
-# Slack Stealing example 2
-This example project implements a *Rate Monotonic* scheduling policy with *Slack Stealing*. The available slack is used to schedule an aperiodic task, which is ready to run at random times.
+# Example 2
+This example project implements a *Rate Monotonic Scheduling* policy and performs an online slack calculation. The available slack is used to schedule an aperiodic task, which is ready to run at random times.
 
 Each task print the following data into the serial port: 
-* Its name, followed by a S if the task is Starting, or an E if it is ending.
+* Its assigned name, followed by a `S` character if the task is Starting, or an `E` if it is ending.
 * The current tick count.
 * The system available slack, followed by the slack counters for all the tasks.
 * The current task executed time, measured in ticks.
 
 This is a example output:
-
 ```
 Example 2
 TA  S   0       1000    2000    1000    1000    2000    0
