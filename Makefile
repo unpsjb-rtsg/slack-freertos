@@ -70,7 +70,9 @@ MAKE_FLAGS += --no-print-directory
 #
 # Export variables to be used by others Makefile.mk files.
 #
-export AR AS CC CPP LD OBJCOPY SIZE FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_VERSION_NUMBER MAKEDIR TARGET COMMON_FLAGS C_COMMON_FLAGS CPP_COMMON_FLAGS EXAMPLE
+export AR AS CC CPP LD OBJCOPY SIZE 
+export FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_VERSION_NUMBER 
+export COMMON_FLAGS C_COMMON_FLAGS CPP_COMMON_FLAGS TARGET EXAMPLE
 
 ###############################################################################
 #
@@ -78,12 +80,13 @@ export AR AS CC CPP LD OBJCOPY SIZE FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_V
 #
 $(APP_NAME):
 	+@echo "-- Target: $(TARGET)"
-	+@echo "-- Building $(APP_NAME)"
+	+@echo "-- Building: $(APP_NAME)"
 	+@echo "-- DEBUG: $(DEBUG)"
 	@$(MAKE) $(MAKE_FLAGS) -C examples/$(TARGET)/ -f Makefile.mk APP_NAME=$(APP_NAME)
 
 $(APP_NAME)_clean:
-	+@echo "-- Cleaning $(APP_NAME)"
+	+@echo "-- Target: $(TARGET)"
+	+@echo "-- Cleaning: $(APP_NAME)"
 	@$(MAKE) $(MAKE_FLAGS) -C examples/$(TARGET)/ -f Makefile.mk clean APP_NAME=$(APP_NAME)
 
 all: $(APP_NAME)
@@ -94,26 +97,16 @@ clean: $(APP_NAME)_clean
 #
 # Rules for the EDU-CIAA-NXP.
 #
-OOCD=C:\\Users\\fep\\Documents\\bin\\openocd-0.10.0\\bin\\openocd
-
-openocd:
-	$(Q)$(OOCD) -f board/edu-ciaa-nxp/ciaa-nxp.cfg
-
-debug: $(APP_NAME)
-	$(Q)$(GDB) $< -ex "target remote :3333" -ex "mon reset halt" -ex "load" -ex "continue"
-
-run: $(APP_NAME)
-	$(Q)$(GDB) $< -batch -ex "target remote :3333" -ex "mon reset halt" -ex "load" -ex "mon reset run" -ex "quit"
-
 download: $(APP_NAME)
-	$(Q)$(OOCD) -f board/edu-ciaa-nxp/ciaa-nxp.cfg \
-		-c "init" \
-		-c "halt 0" \
-		-c "flash write_image erase unlock build/$(EXAMPLE).bin 0x1A000000 bin" \
-		-c "reset run" \
-		-c "shutdown"
+	+@echo "-- Download $(EXAMPLE) to EDU-CIAA-NXP ..."
+	@$(OOCD) -f board/edu-ciaa-nxp/ciaa-nxp.cfg \
+		-c 'init' \
+		-c 'halt 0' \
+		-c 'flash write_image erase unlock build/$(EXAMPLE).bin 0x1A000000 bin' \
+		-c 'reset run' \
+		-c 'shutdown'
 
 erase:
-	$(Q)$(OOCD) -f ciaa-nxp.cfg \
-		-c "init" -c "halt 0" -c "flash erase_sector 0 0 last" -c "shutdown"
-
+	+@echo "-- Erase EDU-CIAA-NXP memory ..."
+	@$(OOCD) -f board/edu-ciaa-nxp/ciaa-nxp.cfg \
+		-c 'init' -c 'halt 0' -c 'flash erase_sector 0 0 last' -c 'shutdown'
