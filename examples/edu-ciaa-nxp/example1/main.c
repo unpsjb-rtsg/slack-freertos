@@ -28,21 +28,23 @@
  * copyright, permission, and disclaimer notice must appear in all copies of
  * this code.
  */
-
+/*****************************************************************************
+ * Includes
+ ****************************************************************************/
 #include "FreeRTOS.h"
 #include "task.h"
 #include "slack.h"
 #include "utils.h"
 #include "common.h"
 
+/*****************************************************************************
+ * Macros and definitions
+ ****************************************************************************/
 /* The linker does not include this code in liblpc.a because nothing in it
  * references it... */
 #define CRP_NO_CRP          0xFFFFFFFF
-__attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP ;
+__attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP;
 
-/*****************************************************************************
- * Private types/enumerations/variables
- ****************************************************************************/
 #define TASK_CNT 3
 #define TASK_1_WCET 1000
 #define TASK_2_WCET 1000
@@ -50,66 +52,110 @@ __attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP 
 #define TASK_1_PERIOD 3000
 #define TASK_2_PERIOD 4000
 #define TASK_3_PERIOD 6000
+#define TASK_1_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1
+#define TASK_2_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 2
+#define TASK_3_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 3
 
+/*****************************************************************************
+ * Private data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Public data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private functions declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private data
+ ****************************************************************************/
 static TaskHandle_t task_handles[ TASK_CNT ];
 
 /*****************************************************************************
- * Public types/enumerations/variables
+ * Public data
  ****************************************************************************/
 gpioMap_t leds[] = { LED1, LED2, LED3 };
+#ifdef TRACEALYZER_v3_1_3
+traceString slack_channel;
+#endif
 
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
+/* None */
 
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
-
 /**
  * @brief	main routine for FreeRTOS blinky example
  * @return	Nothing, function should not exit
  */
 int main(void)
 {
-	prvSetupHardware();
+	vCommonSetupHardware();
+
+    // Initializes the trace recorder, but does not start the tracing.
+#ifdef TRACEALYZER_v3_0_2
+    vTraceInitTraceData();
+#endif
+#ifdef TRACEALYZER_v3_1_3
+    vTraceEnable( TRC_INIT );
+    slack_channel = xTraceRegisterString("Slack Events");
+#endif
 
     uartWriteString( UART_USB, "Example 1\r\n" );
 
-    #if( tskKERNEL_VERSION_MAJOR == 9 )
-    {
-	    vSlackSystemSetup();
-    }
-    #endif
-
-    // create periodic tasks
-    xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
-    xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
-    xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
+    // Periodic tasks.
+    xTaskCreate( vCommonPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
+    xTaskCreate( vCommonPeriodicTask, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
+    xTaskCreate( vCommonPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
-    // additional parameters needed by the slack stealing framework
+	#if( tskKERNEL_VERSION_MAJOR == 9 )
+	{
+		vSlackSystemSetup();
+	}
+	#endif
+
+	// Configure additional parameters needed by the slack stealing framework.
 #if( tskKERNEL_VERSION_MAJOR == 8 )
     vTaskSetParams( task_handles[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
     vTaskSetParams( task_handles[ 1 ], TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
     vTaskSetParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
 #endif
 #if( tskKERNEL_VERSION_MAJOR == 9 )
-    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
-    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
-    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
-#endif
+    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
+    		TASK_1_PERIOD, TASK_1_WCET, 1 );
+    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD,
+    		TASK_2_PERIOD, TASK_2_WCET, 2 );
+    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD,
+    		TASK_3_PERIOD, TASK_3_WCET, 3 );
 #endif
 
     #if( tskKERNEL_VERSION_MAJOR == 9 )
-    {
-    	vSlackSchedulerSetup();
-    }
-    #endif
+	{
+		vSlackSchedulerSetup();
+	}
+	#endif
+#endif
 
-	/* Start the scheduler */
+    // Start the tracing.
+#ifdef TRACEALYZER_v3_0_2
+    uiTraceStart();
+#endif
+#ifdef TRACEALYZER_v3_1_3
+    vTraceEnable( TRC_START );
+#endif
+
+	// Start the scheduler.
 	vTaskStartScheduler();
 
-	/* Should never arrive here */
+	// Should never arrive here.
 	for(;;);
 }

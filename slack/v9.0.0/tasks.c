@@ -2199,7 +2199,7 @@ BaseType_t xAlreadyYielded = pdFALSE;
 
                 #if( configUSE_SLACK_STEALING == 1 )
 				{
-					if( xSlackSD > 0 )
+					if( xSlackSD > configMIN_SLACK_SD )
 					{
 						/* Resume slack-delayed tasks if there is enough
 						available slack. */
@@ -2854,7 +2854,7 @@ BaseType_t xSwitchRequired = pdFALSE;
 			// Update available slack
 			vSlackUpdateAvailableSlack( &xSlackSD, &xSsTaskList );
 
-			if( xSlackSD == 0 )
+			if( xSlackSD <= configMIN_SLACK_SD )
 			{
 				UBaseType_t x;
 

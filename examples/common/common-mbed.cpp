@@ -1,22 +1,27 @@
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 #include "slack.h"
-#include "common.h"
 #include "utils.h"
+#include "common-mbed.h"
 
-void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
+/*****************************************************************************
+ * Private functions
+ ****************************************************************************/
+static void vCommonPrintSlacks( char s, int32_t * slackArray, TickType_t xCur )
 {
-	vTaskSuspendAll();
 	vTasksGetSlacks( slackArray );
 	pc.printf("%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
 			pcTaskGetTaskName(NULL), s,
 			slackArray[0], slackArray[2], slackArray[3],
 			slackArray[4], slackArray[5], slackArray[6],
 			xCur);
-	xTaskResumeAll();
 }
 
-void periodicTaskBody( void* params )
+/*****************************************************************************
+ * Public functions
+ ****************************************************************************/
+void vCommonPeriodicTask( void* params )
 {
     ( void ) params;
 
@@ -29,17 +34,24 @@ void periodicTaskBody( void* params )
 	pxTaskSsTCB = getTaskSsTCB( NULL );
 #endif
 
-
     int32_t slackArray[ 7 ];
 
 	for(;;)
     {
-		printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
+
+        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        {
+            vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+            xSemaphoreGive( xMutex );
+        }
 
 		leds[ pxTaskSsTCB->xId - 1] = 1;
 
 #if ( configTASK_EXEC == 0 )
-		vUtilsEatCpu( pxTaskSsTCB->xWcet - 250 );
+		vUtilsEatCpu( pxTaskSsTCB->xWcet - 500 );
 #endif
 #if ( configTASK_EXEC == 1 )
 		while( pxTaskSsTCB->xCur <  pxTaskSsTCB->xWcet )
@@ -50,9 +62,62 @@ void periodicTaskBody( void* params )
 
 		leds[ pxTaskSsTCB->xId - 1] = 0;
 
-		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+		if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+		{
+		    vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+		    xSemaphoreGive( xMutex );
+		}
+
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
 
 		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
+    }
+}
+
+void vCommonAperiodicTask( void* params )
+{
+    int32_t slackArray[ 7 ];
+
+    SsTCB_t *pxTaskSsTCB;
+
+#if( tskKERNEL_VERSION_MAJOR == 8 )
+    pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
+#endif
+#if( tskKERNEL_VERSION_MAJOR == 9 )
+    pxTaskSsTCB = getTaskSsTCB( NULL );
+#endif
+
+    vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
+
+    for(;;)
+    {
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
+
+        pxTaskSsTCB->xCur = ( TickType_t ) 0;
+
+        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        {
+            vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+            xSemaphoreGive( xMutex );
+        }
+
+        vUtilsEatCpu( rand() % pxTaskSsTCB->xWcet );
+
+        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        {
+            vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+            xSemaphoreGive( xMutex );
+        }
+
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
+
+        vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
     }
 }
 

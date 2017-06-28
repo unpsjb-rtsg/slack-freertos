@@ -10,8 +10,8 @@ USE_SLACK ?= 1
 # Source code.
 #
 OBJECTS += ./$(APP_NAME)/main.o 
-OBJECTS += ./utils/utils.o
-OBJECTS += ./common/common.o
+OBJECTS += ./../common/common-mbed.o
+OBJECTS += ./../utils/utils.o
 
 ###############################################################################
 #
@@ -43,8 +43,8 @@ FREERTOS_INCLUDE_PATHS += -I../../libs/FreeRTOS/$(FREERTOS_KERNEL_VERSION_NUMBER
 # application
 INCLUDE_PATHS += -I.
 INCLUDE_PATHS += -I./$(APP_NAME)
-INCLUDE_PATHS += -I./utils/ 
-INCLUDE_PATHS += -I./common/
+INCLUDE_PATHS += -I./../common/
+INCLUDE_PATHS += -I./../utils/
 INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += $(FREERTOS_INCLUDE_PATHS) 
 INCLUDE_PATHS += $(MBED_INCLUDE_PATHS) 
@@ -68,8 +68,7 @@ LINKER_SCRIPT = ../../board/frdm-k64f/TARGET_K64F/TOOLCHAIN_GCC_ARM/MK64FN1M0xxx
 #
 # Tracealyzer sources, include paths and symbols.
 #
-ifeq ($(APP_NAME), example3)
-  TZ = 1
+ifeq ($(TZ), 1)
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
@@ -81,8 +80,6 @@ ifeq ($(APP_NAME), example3)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/include    
     CPP_SYMBOLS += -DTRACEALYZER_v3_1_3
   endif
-else
-  TZ = 0
 endif
 
 ifeq ($(HARDFP), 1)
@@ -95,7 +92,9 @@ endif
 #
 # Flags and symbols required by the compiler.
 #
-CPU += -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=$(FLOAT_ABI) 
+CPU += -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=$(FLOAT_ABI)
+
+CC_FLAGS += $(CPU) 
 
 CPP_FLAGS += $(CPU)
 CPP_FLAGS += -include mbed_config.h
@@ -128,6 +127,10 @@ clean:
 	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean APP_DIR=$(APP_NAME) USE_SLACK=$(USE_SLACK) TZ=$(TZ)
 	+@echo "Cleaning $(TARGET) files..."
 	@rm -f $(BUILD_DIR)/$(EXAMPLE).bin $(BUILD_DIR)/$(EXAMPLE).elf $(OBJECTS) $(DEPS)
+
+.c.o:
+	+@echo "Compile: $<"
+	@$(CC)  $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
 
 .cpp.o:
 	+@echo "Compile: $<"

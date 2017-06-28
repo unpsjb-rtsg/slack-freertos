@@ -1,11 +1,15 @@
+/*****************************************************************************
+ * Includes
+ ****************************************************************************/
 #include "mbed.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 #include "slack.h"
-#include "common.h"
+#include "common-mbed.h"
 
 /*****************************************************************************
- * Private types/enumerations/variables
+ * Macros and definitions
  ****************************************************************************/
 #define TASK_CNT 4
 #define TASK_1_WCET 1000
@@ -16,27 +20,68 @@
 #define TASK_2_PERIOD 4000
 #define TASK_3_PERIOD 6000
 #define TASK_4_PERIOD 12000
+#define TASK_1_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1
+#define TASK_2_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 2
+#define TASK_3_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 3
+#define TASK_4_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 4
 
+#define BAUDRATE 9600
+
+/*****************************************************************************
+ * Private data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Public data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private functions declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private data
+ ****************************************************************************/
 static TaskHandle_t task_handles[ TASK_CNT ];
 
 /*****************************************************************************
- * Public types/enumerations/variables
+ * Public data
  ****************************************************************************/
 Serial pc( USBTX, USBRX );
 DigitalOut leds[] = { LED1, LED2, LED3, LED4 };
+SemaphoreHandle_t xMutex = NULL;
+#ifdef TRACEALYZER_v3_1_3
+traceString slack_channel;
+#endif
 
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
+/* None */
 
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
-
+/**
+ *
+ * @return Nothing, function should not exit.
+ */
 int main(void)
 {
-	pc.baud(9600);
-    pc.printf("Example 1\n");
+    // Initializes the trace recorder, but does not start the tracing.
+#ifdef TRACEALYZER_v3_0_2
+    vTraceInitTraceData();
+#endif
+#ifdef TRACEALYZER_v3_1_3
+    vTraceEnable( TRC_INIT );
+    slack_channel = xTraceRegisterString("Slack Events");
+#endif
+
+	pc.baud( BAUDRATE );
+    pc.printf( "Example 1\n" );
 
 	// turn off all the on board LEDs.
 	leds[0] = 0;
@@ -44,19 +89,22 @@ int main(void)
 	leds[2] = 0;
 	leds[3] = 0;
 
-    #if( tskKERNEL_VERSION_MAJOR == 9 )
-	{
-		vSlackSystemSetup();
-	}
-    #endif
+	// Create mutex.
+	xMutex = xSemaphoreCreateMutex();
 
-    // create periodic tasks
-    xTaskCreate( periodicTaskBody, "T1", 256, NULL, configMAX_PRIORITIES - 2, &task_handles[ 0 ] );  // max priority
-    xTaskCreate( periodicTaskBody, "T2", 256, NULL, configMAX_PRIORITIES - 3, &task_handles[ 1 ] );
-    xTaskCreate( periodicTaskBody, "T3", 256, NULL, configMAX_PRIORITIES - 4, &task_handles[ 2 ] );
-    xTaskCreate( periodicTaskBody, "T4", 256, NULL, configMAX_PRIORITIES - 5, &task_handles[ 3 ] );
+    // Periodic tasks.
+    xTaskCreate( vCommonPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
+    xTaskCreate( vCommonPeriodicTask, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
+    xTaskCreate( vCommonPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
+    xTaskCreate( vCommonPeriodicTask, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
+    #if( tskKERNEL_VERSION_MAJOR == 9 )
+    {
+        vSlackSystemSetup();
+    }
+    #endif
+
     // additional parameters needed by the slack stealing framework
 #if( tskKERNEL_VERSION_MAJOR == 8 )
     vTaskSetParams( task_handles[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
@@ -70,15 +118,25 @@ int main(void)
     vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
     vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 #endif
-#endif
 
     #if( tskKERNEL_VERSION_MAJOR == 9 )
     {
     	vSlackSchedulerSetup();
     }
     #endif
+#endif
 
+    // Start the tracing.
+#ifdef TRACEALYZER_v3_0_2
+    uiTraceStart();
+#endif
+#ifdef TRACEALYZER_v3_1_3
+    vTraceEnable( TRC_START );
+#endif
+
+    // Start the scheduler.
     vTaskStartScheduler();
 
+    // Should never arrive here.
     for(;;);
 }

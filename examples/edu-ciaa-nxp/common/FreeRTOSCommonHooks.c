@@ -28,35 +28,34 @@
  * copyright, permission, and disclaimer notice must appear in all copies of
  * this code.
  */
-#include "FreeRTOSCommonHooks.h"
-
+/*****************************************************************************
+ * Includes
+ ****************************************************************************/
 #include "FreeRTOS.h"
 #include "task.h"
 #include "slack.h"
 #include "utils.h"
 #include "sapi.h"         /* <= sAPI header */
 #include "common.h"
+#include "FreeRTOSCommonHooks.h"
 
 /*****************************************************************************
- * Private types/enumerations/variables
+ * Macros and definitions
  ****************************************************************************/
 #if defined ( __ICCARM__ )
 #define __WEAK__   __weak
 #else
 #define __WEAK__   __attribute__((weak))
 #endif
-/*****************************************************************************
- * Public types/enumerations/variables
- ****************************************************************************/
 
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
+/* None */
 
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
-
 /* Delay for the specified number of milliSeconds */
 void FreeRTOSDelay(uint32_t ms)
 {
@@ -134,8 +133,6 @@ __WEAK__ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *x
 {
     taskDISABLE_INTERRUPTS();
 
-    TickType_t xCur = xSsTCB->xCur;
-
     /* Buffer */
     static char uartBuff[10];
 
@@ -144,8 +141,6 @@ __WEAK__ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *x
 	itoa( xTickCount, uartBuff, 10 );
 	uartWriteString( UART_USB, uartBuff );
 	uartWriteString( UART_USB, "\n\r");
-
-    //pc.printf( "%s\tdeadline miss at %d\r\n", pcTaskName, xTickCount );
 
     for( ;; )
     {

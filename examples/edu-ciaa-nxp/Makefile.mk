@@ -8,8 +8,8 @@ BUILD_DIR = ../../build
 # Source code.
 #
 SRC += $(wildcard $(APP_NAME)/*.c)
-SRC += $(wildcard utils/*.c)
 SRC += $(wildcard common/*.c)
+SRC += $(wildcard ../utils/*.c)
 
 OBJECTS = $(SRC:.c=.o)
 
@@ -32,8 +32,8 @@ SAPI_INCLUDE_PATH += -I../../libs/sapi_bm/inc
 # applicaton
 INCLUDE_PATHS += -I.
 INCLUDE_PATHS += -I./$(APP_NAME)
-INCLUDE_PATHS += -I./utils
 INCLUDE_PATHS += -I./common
+INCLUDE_PATHS += -I./../utils
 INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += $(LPC_INCLUDE_PATH)
 INCLUDE_PATHS += $(SAPI_INCLUDE_PATH)
@@ -63,8 +63,7 @@ LINKER_SCRIPT = ../../board/edu-ciaa-nxp/ldscript/ciaa_lpc4337.ld
 #
 # Tracealyzer sources, include paths and symbols.
 #
-ifeq ($(APP_NAME), example3)
-  TZ = 1
+ifeq ($(TZ), 1)
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
@@ -75,8 +74,6 @@ ifeq ($(APP_NAME), example3)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
     CC_FLAGS += -DTRACEALYZER_v3_1_3
   endif
-else
-  TZ = 0
 endif
 
 ###############################################################################

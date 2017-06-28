@@ -1,9 +1,50 @@
+/*****************************************************************************
+ * Includes
+ ****************************************************************************/
 #include "freertos.h"
 #include "task.h"
 #include "slack.h"
 #include "utils.h"
 #include "common.h"
 
+/*****************************************************************************
+ * Macros and definitions
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Public data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private functions declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private data
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Public data
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private functions
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Public functions
+ ****************************************************************************/
 /**
  * C++ version 0.4 char* style "itoa":
  * Written by Lukás Chmela
@@ -34,16 +75,15 @@ char* itoa(int value, char* result, int base)
    return result;
 }
 
-/* Sets up system hardware */
-void prvSetupHardware(void)
+void vCommonSetupHardware(void)
 {
-	/* Inicializar la placa */
+	// Configure board.
 	boardConfig();
 
-	/* Inicializar GPIOs */
+	// Initialize GPIO.
 	gpioConfig( 0, GPIO_ENABLE );
 
-	/* Configuración de pines de salida para Leds de la CIAA-NXP */
+	// Output LEDs.
 	gpioConfig( LEDR, GPIO_OUTPUT );
 	gpioConfig( LEDG, GPIO_OUTPUT );
 	gpioConfig( LEDB, GPIO_OUTPUT );
@@ -51,11 +91,11 @@ void prvSetupHardware(void)
 	gpioConfig( LED2, GPIO_OUTPUT );
 	gpioConfig( LED3, GPIO_OUTPUT );
 
-   /* Inicializar UART_USB a 115200 baudios */
+   // Initialize UART @ 115200 bauds.
    uartConfig( UART_USB, 115200 );
 }
 
-void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
+void vCommonPrintSlacks( char s, int32_t * slackArray, TickType_t xCur )
 {
 	/* Buffer */
 	static char uartBuff[10];
@@ -89,7 +129,7 @@ void printSlacks( char s, int32_t * slackArray, TickType_t xCur )
 	xTaskResumeAll();
 }
 
-void periodicTaskBody( void* params )
+void vCommonPeriodicTask( void* params )
 {
     ( void ) params;
 
@@ -106,9 +146,13 @@ void periodicTaskBody( void* params )
 
 	for(;;)
     {
+#ifdef TRACEALYZER_v3_1_3
+        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
+
 	    gpioWrite( leds[ pxTaskSsTCB->xId - 1], ON);
 
-		printSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+	    vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
 
 #if ( configTASK_EXEC == 0 )
 		vUtilsEatCpu( pxTaskSsTCB->xWcet - 300 );
@@ -120,9 +164,13 @@ void periodicTaskBody( void* params )
 		}
 #endif
 
-		printSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+		vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
 
 		gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
+
+#ifdef TRACEALYZER_v3_1_3
+		vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
 
 		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }
