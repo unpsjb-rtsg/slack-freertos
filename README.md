@@ -8,6 +8,7 @@ This project implements a Slack Stealing (SS) scheduler, in order to support Mix
 * `board`: libraries required for compiling the example programs for multiple boards.
 * `libs`: contains copies of the [FreeRTOS](http://www.freertos.org) source code, the [Percepio Tracealyzer](https://percepio.com/tz/) library and the [sAPI](https://github.com/epernia/sAPI) library.
 * `examples`: example programs that use the Slack Stealing framework to schedule both periodic and aperiodic tasks.
+* `slack`: slack stealing framework source code.
 * `test`: source code, scripts and other resources for running several tests that evaluate the perfomance of the Slack Stealing framework according to different metrics.
 
 ## Publications
@@ -16,8 +17,10 @@ The design of the first version is documented in *Métodos de Slack Stealing en 
 ## COPYING
 This software is licensed under the GNU General Public License v2.0. A copy of the license can be found in the `LICENSE` file.
 
-FreeRTOS is Copyright (C) 2010 Real Time Engineers Ltd., and is licensed under a modified GNU General Public License (GPL). See: http://www.freertos.org/a00114.html
+FreeRTOS is Copyright (C) 2010 Real Time Engineers Ltd., and is licensed under a modified GNU General Public License (GPL).
 
 The Tracealyzer Recorder Library is Copyright (C) Percepio AB, 2014.
 
 The mbed Microcontroller Library is Copyright (c) 2006-2013 ARM Limited, and is licensed under the Apache License, Version 2.0.
+
+The LPCOpen library is Copyright(C) NXP Semiconductors, 2012.
