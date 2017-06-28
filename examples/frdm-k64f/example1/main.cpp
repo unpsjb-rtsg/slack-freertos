@@ -4,8 +4,9 @@
 #include "mbed.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 #include "slack.h"
-#include "common.h"
+#include "common-mbed.h"
 
 /*****************************************************************************
  * Macros and definitions
@@ -51,6 +52,7 @@ static TaskHandle_t task_handles[ TASK_CNT ];
  ****************************************************************************/
 Serial pc( USBTX, USBRX );
 DigitalOut leds[] = { LED_RED, LED_GREEN, LED_BLUE, LED_RED };
+SemaphoreHandle_t xMutex = NULL;
 #ifdef TRACEALYZER_v3_1_3
 traceString slack_channel;
 #endif
@@ -83,11 +85,14 @@ int main()
 	leds[2] = 1;
 	leds[3] = 1;
 
+    // Create mutex.
+    xMutex = xSemaphoreCreateMutex();
+
     // Periodic tasks.
-    xTaskCreate( periodicTaskBody, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
-    xTaskCreate( periodicTaskBody, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
-    xTaskCreate( periodicTaskBody, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
-    xTaskCreate( periodicTaskBody, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
+    xTaskCreate( vCommonPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
+    xTaskCreate( vCommonPeriodicTask, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
+    xTaskCreate( vCommonPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
+    xTaskCreate( vCommonPeriodicTask, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
 
