@@ -98,7 +98,7 @@ traceString slack_channel;
  */
 int main(void)
 {
-	prvSetupHardware();
+	vCommonSetupHardware();
 
     // Initializes the trace recorder, but does not start the tracing.
 #ifdef TRACEALYZER_v3_0_2
@@ -112,9 +112,9 @@ int main(void)
     uartWriteString( UART_USB, "Example 1\r\n" );
 
     // Periodic tasks.
-    xTaskCreate( periodicTaskBody, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
-    xTaskCreate( periodicTaskBody, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
-    xTaskCreate( periodicTaskBody, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
+    xTaskCreate( vCommonPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
+    xTaskCreate( vCommonPeriodicTask, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
+    xTaskCreate( vCommonPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
 	#if( tskKERNEL_VERSION_MAJOR == 9 )

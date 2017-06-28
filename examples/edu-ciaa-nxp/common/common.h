@@ -10,8 +10,8 @@ extern traceString slack_channel;
 #endif
 
 char* itoa( int value, char* result, int base );
-void prvSetupHardware( void );
-void printSlacks( char s, int32_t * slackArray, TickType_t xCur );
-void periodicTaskBody( void* params );
+void vCommonSetupHardware( void );
+void vCommonPrintSlacks( char s, int32_t * slackArray, TickType_t xCur );
+void vCommonPeriodicTask( void* params );
 
 #endif /* EXAMPLES_EDU_CIAA_NXP_COMMON_COMMON_H_ */

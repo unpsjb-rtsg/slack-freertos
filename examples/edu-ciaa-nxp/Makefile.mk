@@ -8,8 +8,8 @@ BUILD_DIR = ../../build
 # Source code.
 #
 SRC += $(wildcard $(APP_NAME)/*.c)
-SRC += $(wildcard utils/*.c)
 SRC += $(wildcard common/*.c)
+SRC += $(wildcard ../utils/*.c)
 
 OBJECTS = $(SRC:.c=.o)
 
@@ -32,8 +32,8 @@ SAPI_INCLUDE_PATH += -I../../libs/sapi_bm/inc
 # applicaton
 INCLUDE_PATHS += -I.
 INCLUDE_PATHS += -I./$(APP_NAME)
-INCLUDE_PATHS += -I./utils
 INCLUDE_PATHS += -I./common
+INCLUDE_PATHS += -I./../utils
 INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += $(LPC_INCLUDE_PATH)
 INCLUDE_PATHS += $(SAPI_INCLUDE_PATH)

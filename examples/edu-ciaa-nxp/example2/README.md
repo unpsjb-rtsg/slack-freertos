@@ -1,8 +1,8 @@
 # Example 2
-This example project implements a *Rate Monotonic Scheduling* policy and performs an online slack calculation. The available slack is used to schedule an aperiodic task, which is ready to run at random times.
+This example project implements a *Rate Monotonic Scheduling* (RMS) policy and performs an online slack calculation. The available slack is used to schedule a set of aperiodic task, which are ready to run at random times.
 
 Each task print the following data into the serial port: 
-* Its assigned name, followed by a `S` character if the task is Starting, or an `E` if it is ending.
+* Its assigned name, followed by a `S` character if the task is Starting or an `E` if it is ending.
 * The current tick count.
 * The system available slack, followed by the slack counters for all the tasks.
 * The current task executed time, measured in ticks.
@@ -26,5 +26,22 @@ T1  S   6871    130     1129    2129    1130    130     0
 T1  E   7764    130     1129    2129    1130    130     893
 ...
 ```
-
 Note that the `pc.printf()` function has a considerable overhead.
+
+A detailed trace of the system execution is generated using the [Percepio Tracealyzer](https://percepio.com/tz/) library. By default the example uses the [Snapshot Mode](https://percepio.com/docs/FreeRTOS/manual/Recorder.html#Trace_Recorder_Library_Snapshot_Mode), which keeps the trace in a buffer, allowing for saving a snapshot at any point by making a memory dump.
+
+For example, using CMSIS-DAP a memory dump could be done starting the `pyocd-gdbserver` with the EDU-CIAA-NXP board connected, and then executing the following commands in `arm-none-eabi-gdb` debugger session:
+```bash
+$ arm-none-eabi-gdb
+(gdb) target remote localhost:3333
+(gdb) file example2.elf
+(gdb) load
+(gdb) continue
+^C
+(gdb) dump binary memory example2.dump 0x1000000 0x10008000
+(gdb) quit
+$ 
+```
+
+The trace can be then inspected opening the `example2.dump` file with the *Tracealyzer for FreeRTOS* application.
+
