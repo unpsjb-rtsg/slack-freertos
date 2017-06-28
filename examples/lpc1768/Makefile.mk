@@ -8,8 +8,8 @@ BUILD_DIR = ../../build
 # Source code.
 #
 OBJECTS += ./$(APP_NAME)/main.o 
-OBJECTS += ./utils/utils.o
-OBJECTS += ./common/common.o
+OBJECTS += ./../common/common-mbed.o
+OBJECTS += ./../utils/utils.o
 
 ###############################################################################
 #
@@ -40,9 +40,9 @@ FREERTOS_INCLUDE_PATHS += -I../../libs/FreeRTOS/$(FREERTOS_KERNEL_VERSION_NUMBER
 # application
 INCLUDE_PATHS += -I.
 INCLUDE_PATHS += -I./$(APP_NAME)
-INCLUDE_PATHS += -I./utils/ 
-INCLUDE_PATHS += -I./common/
-INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
+INCLUDE_PATHS += -I./../common/
+INCLUDE_PATHS += -I./../utils/
+INCLUDE_PATHS += -I./../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += $(FREERTOS_INCLUDE_PATHS) 
 INCLUDE_PATHS += $(MBED_INCLUDE_PATHS) 
 
