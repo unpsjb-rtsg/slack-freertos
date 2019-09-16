@@ -3,6 +3,11 @@
 
 #include "mbed.h"
 
+typedef int32_t xType[250][7];
+typedef int32_t xType2[50][7];
+
+extern xType *sdArray;
+extern xType2 *sdArray2;
 extern Serial pc;
 extern DigitalOut leds[];
 extern SemaphoreHandle_t xMutex;
@@ -15,6 +20,7 @@ extern traceString slack_channel;
 extern "C"
 {
 // FreeRTOS callback/hook functions
+void vApplicationTickHook(void);
 void vApplicationMallocFailedHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 }

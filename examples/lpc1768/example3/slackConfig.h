@@ -1,9 +1,12 @@
 #ifndef EXAMPLES_LPC1768_EXAMPLE2_SLACKCONFIG_H_
 #define EXAMPLES_LPC1768_EXAMPLE2_SLACKCONFIG_H_
 
-#define EXAMPLE 1
+#define EXAMPLE 3
 
 /* ========================================================================= */
+#undef  configUSE_TICK_HOOK
+#define configUSE_TICK_HOOK             1
+
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
 
@@ -17,7 +20,7 @@
 #define configUSE_SLACK_STEALING        1 /* 1: Use slack stealing methods, 0: No slack. */
 #define configUSE_SLACK_METHOD          0 /* Slack method to use */
 #define configUSE_SLACK_K               0 /* Only calculate slack at the scheduler start */
-#define configMAX_SLACK_PRIO            2 /* priority levels that are used for slack. */
+#define configMAX_SLACK_PRIO            1 /* priority levels that are used for slack. */
 #define configMIN_SLACK_SD              0 /* Minimum amount of available slack. */
 
 /*
@@ -27,5 +30,9 @@
  */
 #define configTASK_EXEC                 0
 /* ========================================================================= */
+
+void traceTaskSwitchedIn();
+
+#define traceTASK_SWITCHED_IN() traceTaskSwitchedIn()
 
 #endif /* EXAMPLES_LPC1768_EXAMPLE2_SLACKCONFIG_H_ */
