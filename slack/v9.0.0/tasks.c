@@ -5124,7 +5124,7 @@ const TickType_t xConstTickCount = xTickCount;
     void vTasksGetSlacks( int32_t *pxArray )
     {
         pxArray[ 0 ] = xTickCount;
-        pxArray[ 1 ] = getSsTCB( pxCurrentTCB )->xCur;
+        pxArray[ 1 ] = getSsTCB( pxCurrentTCB )->xId; //getSsTCB( pxCurrentTCB )->xCur;
         pxArray[ 2 ] = xSlackSD;
 
         ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );

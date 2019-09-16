@@ -1,6 +1,8 @@
 #ifndef EXAMPLES_LPC1768_EXAMPLE1_SLACKCONFIG_H_
 #define EXAMPLES_LPC1768_EXAMPLE1_SLACKCONFIG_H_
 
+#define EXAMPLE 1
+
 /* ========================================================================= */
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
