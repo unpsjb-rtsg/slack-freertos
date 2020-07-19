@@ -84,19 +84,22 @@ void vCommonPeriodicTask( void* params )
 
 	SsTCB_t *pxTaskSsTCB;
 
+#if(configUSE_SLACK_STEALING == 1)
 #if( tskKERNEL_VERSION_MAJOR == 8 )
 	pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
 #endif
-#if( tskKERNEL_VERSION_MAJOR == 9 )
+#if( tskKERNEL_VERSION_MAJOR >= 9 )
 	pxTaskSsTCB = getTaskSsTCB( NULL );
 #endif
 
 #if EXAMPLE == 1
     int32_t slackArray[ 7 ];
 #endif
+#endif
 
 	for(;;)
     {
+#if (configUSE_SLACK_STEALING == 1)
 #if EXAMPLE == 3
 	    if (pxTaskSsTCB->xId == 1) {
 	        if (xTaskGetTickCount() > 24900) {
@@ -138,6 +141,7 @@ void vCommonPeriodicTask( void* params )
             xSemaphoreGive( xMutex );
         }
 #endif
+#endif
 
 		leds[ pxTaskSsTCB->xId - 1] = 1;
 
@@ -153,6 +157,7 @@ void vCommonPeriodicTask( void* params )
 
 		leds[ pxTaskSsTCB->xId - 1] = 0;
 
+#if (configUSE_SLACK_STEALING == 1)
 #if EXAMPLE == 1
 	    if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
 		{
@@ -164,6 +169,7 @@ void vCommonPeriodicTask( void* params )
 
 #ifdef TRACEALYZER_v3_1_3
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
 #endif
 
 		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
@@ -179,7 +185,7 @@ void vCommonAperiodicTask( void* params )
 #if( tskKERNEL_VERSION_MAJOR == 8 )
     pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
 #endif
-#if( tskKERNEL_VERSION_MAJOR == 9 )
+#if( tskKERNEL_VERSION_MAJOR >= 9 )
     pxTaskSsTCB = getTaskSsTCB( NULL );
 #endif
 
