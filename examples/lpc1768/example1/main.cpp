@@ -81,7 +81,8 @@ int main(void)
 #endif
 
 	pc.baud( BAUDRATE );
-    pc.printf( "Example 1\n" );
+    pc.printf( "Example %d\n", EXAMPLE );
+    pc.printf( "Using FreeRTOS %s\n", tskKERNEL_VERSION_NUMBER );
 
 	// turn off all the on board LEDs.
 	leds[0] = 0;
