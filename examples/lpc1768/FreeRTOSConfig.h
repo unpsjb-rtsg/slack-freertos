@@ -174,3 +174,6 @@ standard names. */
 
 /* Slack Stealing configuration. */
 #include "slackConfig.h"
+
+#define configSS_ASSERT_EQUAL( x, y ) if( ( x ) != ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
+#define configSS_ASSERT_GREATHER_OR_EQUAL( x, y ) if( ( x ) < ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
