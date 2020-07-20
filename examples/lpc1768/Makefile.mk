@@ -83,9 +83,7 @@ endif
 # Flags and symbols required by the compiler.
 #
 CPU = -mcpu=cortex-m3 -mthumb
-
 CC_FLAGS += $(CPU)
-
 CC_SYMBOLS += -DTARGET_LPC1768
 CC_SYMBOLS += -DTARGET_M3
 CC_SYMBOLS += -DTARGET_NXP
@@ -106,11 +104,14 @@ CC_SYMBOLS += -DMAX_PRIO=$(MAX_PRIO)
 LD_FLAGS = $(CPU) -Wl,--gc-sections -u _printf_float -u _scanf_float
 LD_SYS_LIBS = -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
+# Replace these functions
+WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+
 export CPU CC_SYMBOLS MBED_INCLUDE_PATHS
 
 ###############################################################################
 #
-# Rules used to build the example.
+# Rules to build the example program.
 #
 all: $(BUILD_DIR)/$(EXAMPLE).bin size
 
@@ -130,7 +131,7 @@ clean:
 $(BUILD_DIR)/$(EXAMPLE).elf: $(OBJECTS) $(SYS_OBJECTS)
 	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ)
 	+@echo "Linking: $@"
-	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS)
+	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS) $(WRAP)
 
 $(BUILD_DIR)/$(EXAMPLE).bin: $(BUILD_DIR)/$(EXAMPLE).elf
 	+@echo "Binary: $@"
