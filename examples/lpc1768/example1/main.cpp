@@ -100,7 +100,7 @@ int main(void)
     xTaskCreate( vCommonPeriodicTask, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
-    #if( tskKERNEL_VERSION_MAJOR == 9 )
+    #if( tskKERNEL_VERSION_MAJOR >= 9 )
     {
         vSlackSystemSetup();
     }
@@ -113,14 +113,14 @@ int main(void)
     vTaskSetParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
     vTaskSetParams( task_handles[ 3 ], TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 #endif
-#if( tskKERNEL_VERSION_MAJOR == 9 )
+#if( tskKERNEL_VERSION_MAJOR >= 9 )
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
     vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
     vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
     vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 #endif
 
-    #if( tskKERNEL_VERSION_MAJOR == 9 )
+    #if( tskKERNEL_VERSION_MAJOR >= 9 )
     {
     	vSlackSchedulerSetup();
     }
