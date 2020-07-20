@@ -170,6 +170,9 @@ standard names. */
 #ifdef TRACEALYZER_v3_1_3
 #include "trcRecorder.h"
 #endif
+#ifdef TRACEALYZER_v3_3_1
+#include "trcRecorder.h"
+#endif
 #endif
 
 /* Slack Stealing configuration. */
