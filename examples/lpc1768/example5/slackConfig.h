@@ -22,7 +22,7 @@
 #define configUSE_SLACK_METHOD          0 /* Slack method to use */
 #define configUSE_SLACK_K               0 /* Only calculate slack at the scheduler start */
 #define configMAX_SLACK_PRIO            2 /* priority levels that are used for slack. */
-#define configMIN_SLACK_SD              0 /* Minimum amount of available slack. */
+#define configMIN_SLACK_SD              1 /* Minimum amount of available slack. */
 
 /*
  * How the task simulate the execution time.
