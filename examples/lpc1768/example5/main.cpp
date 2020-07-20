@@ -61,7 +61,7 @@ static TaskHandle_t xApTaskHandle1, xApTaskHandle2;
 SemaphoreHandle_t xMutex = NULL;
 Serial pc( USBTX, USBRX );
 DigitalOut leds[] = { LED1, LED2, LED3, LED4 };
-#ifdef TZ
+#if TZ == 1
 traceString slack_channel;
 #endif
 
@@ -89,7 +89,7 @@ static void vAperiodicTask( void* params )
 
     for(;;)
     {
-        #ifdef TZ
+        #if TZ == 1
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
         #endif
 
@@ -111,7 +111,7 @@ static void vAperiodicTask( void* params )
             xSemaphoreGive( xMutex );
         }
 
-        #ifdef TZ
+        #if TZ == 1
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
         #endif
 
@@ -131,7 +131,7 @@ static void vPeriodicTask( void* params )
 
     for(;;)
     {
-        #ifdef TZ
+        #if TZ == 1
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
         #endif
 
@@ -170,7 +170,7 @@ static void vPeriodicTask( void* params )
             xSemaphoreGive( xMutex );
         }
 
-        #ifdef TZ
+        #if TZ == 1
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
         #endif
 
@@ -193,7 +193,7 @@ int main(void)
     configSS_ASSERT_GREATHER_OR_EQUAL( tskKERNEL_VERSION_MAJOR, 9);
 
     // Initializes the trace recorder, but does not start the tracing.
-#ifdef TZ
+#if TZ == 1
     vTraceEnable( TRC_INIT );
     slack_channel = xTraceRegisterString("Slack Events");
 #endif
@@ -235,7 +235,7 @@ int main(void)
     vSlackSchedulerSetup();
 
     // Start the tracing.
-#ifdef TZ
+#if TZ == 1
     vTraceEnable( TRC_START );
 #endif
 
