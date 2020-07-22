@@ -261,7 +261,20 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
         }
         #endif
     }
-    xAlreadyYielded = xTaskResumeAll();
+
+    #if( configUSE_SLACK_STEALING == 1 )
+    {
+        if( xSlackSD > configMIN_SLACK_SD )
+        {
+            /* Resume slack-delayed tasks if there is enough
+            available slack. */
+            if( listLIST_IS_EMPTY( &xSsTaskBlockedList ) == pdFALSE )
+            {
+                xTaskSlackResume();
+            }
+        }
+    }
+    #endif
 
     #if ( configUSE_SLACK_STEALING == 1 )
     {
@@ -275,6 +288,8 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
         pxCurrentSsTCB->xCur = ( TickType_t ) 0U;
     }
     #endif /* configUSE_SLACK_STEALING */
+
+    xAlreadyYielded = xTaskResumeAll();
 
     /* Force a reschedule if xTaskResumeAll has not already done so, we may
     have put ourselves to sleep. */
