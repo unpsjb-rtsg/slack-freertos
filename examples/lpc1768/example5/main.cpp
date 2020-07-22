@@ -221,6 +221,7 @@ int main(void)
     xTaskCreate( vAperiodicTask, "TA1", 256, NULL, ATASK_1_PRIO, &xApTaskHandle1 );
     xTaskCreate( vAperiodicTask, "TA2", 256, NULL, ATASK_2_PRIO, &xApTaskHandle2 );
 
+#if configUSE_SLACK_STEALING == 1
     vSlackSystemSetup();
 
     // additional parameters needed by the slack stealing framework
@@ -233,6 +234,7 @@ int main(void)
     vSlackSetTaskParams( xApTaskHandle2, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 2 );
 
     vSlackSchedulerSetup();
+#endif
 
     // Start the tracing.
 #if TZ == 1

@@ -172,6 +172,7 @@ int main(void)
     xTaskCreate( vPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
     xTaskCreate( vPeriodicTask, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
 
+#if configUSE_SLACK_STEALING == 1
     vSlackSystemSetup();
 
     // additional parameters needed by the slack stealing framework
@@ -181,6 +182,7 @@ int main(void)
     vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 
     vSlackSchedulerSetup();
+#endif
 
     // Start the tracing.
 #ifdef TRACEALYZER_v3_0_2
