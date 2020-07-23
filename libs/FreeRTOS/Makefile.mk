@@ -43,12 +43,26 @@ endif
 
 ###############################################################################
 #
-# Slack Stealing framewrok source code and headers.
+# Slack Stealing framework source and headers.
 #
 ifeq ($(USE_SLACK), 1)
-  OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v8.1.2)
+    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
+  endif  
   ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v9.0.0)
+    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
+  endif
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.2.1)
+    OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
+    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
+  endif
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.3.1)
+    OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
+    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
+    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_davis.o
+    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_fixed.o
+    CC_SYMBOLS += -DSS_ALGORITHM=$(SS_ALGORITHM)
   endif
   INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 else
@@ -109,6 +123,23 @@ ifeq ($(TZ), 1)
     CC_SYMBOLS += -DTRACEALYZER_v3_1_3
   endif
   
+  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernelPort.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcSnapshotRecorder.o
+    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcStreamingRecorder.o
+    
+    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
+    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
+    
+    ifeq ($(TARGET), frdm-k64f)
+      OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/SEGGER_RTT_Printf.o
+      OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/SEGGER_RTT.o
+      INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/include
+    endif
+    
+    CC_SYMBOLS += -DTRACEALYZER_v3_3_1
+  endif
+  
   ifeq ($(TARGET), lpc1768)
     CC_SYMBOLS += -DTARGET_LPC1768
   endif
@@ -125,25 +156,24 @@ endif
 # Flags and symbols required by the linker.
 #
 AR_FLAGS = -r
-
 CC_SYMBOLS += -DUSE_SLACK=$(USE_SLACK)
 
 ###############################################################################
 #
-# Rules used to build FreeRTOS
+# Rules to build FreeRTOS
 #
 all: $(PROJECT).a	
 
 clean:
-	+@echo "Cleaning FreeRTOS object files..."
+	+@echo "[FreeRTOS] Cleaning object files..."
 	@rm -f $(PROJECT).bin $(PROJECT).a $(OBJECTS) $(DEPS)	
 
 .c.o:
-	+@echo "Compile: $<"
+	+@echo "[FreeRTOS] Compile: $<"
 	@$(CC) $(CPU) $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
 
 $(PROJECT).a: $(OBJECTS)
-	+@echo "Linking: $@"
+	+@echo "[FreeRTOS] Linking: $@"
 	@$(AR) $(AR_FLAGS) $@ $^ -c
 
 DEPS = $(OBJECTS:.o=.d)

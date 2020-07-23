@@ -5,6 +5,64 @@
 #include "utils.h"
 #include "common-mbed.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* The prototype shows it is a naked function - in effect this is just an
+assembly function. */
+void HardFault_Handler( void ) __attribute__( ( naked ) );
+
+/* The fault handler implementation calls a function called
+prvGetRegistersFromStack(). */
+void HardFault_Handler(void)
+{
+    __asm volatile
+    (
+        " tst lr, #4                                                \n"
+        " ite eq                                                    \n"
+        " mrseq r0, msp                                             \n"
+        " mrsne r0, psp                                             \n"
+        " ldr r1, [r0, #24]                                         \n"
+        " ldr r2, handler2_address_const                            \n"
+        " bx r2                                                     \n"
+        " handler2_address_const: .word prvGetRegistersFromStack    \n"
+    );
+}
+
+void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
+{
+    /* These are volatile to try and prevent the compiler/linker optimising them
+    away as the variables never actually get used.  If the debugger won't show the
+    values of the variables, make them global my moving their declaration outside
+    of this function. */
+    __attribute__((unused)) volatile uint32_t r0;
+    __attribute__((unused)) volatile uint32_t r1;
+    __attribute__((unused)) volatile uint32_t r2;
+    __attribute__((unused)) volatile uint32_t r3;
+    __attribute__((unused)) volatile uint32_t r12;
+    __attribute__((unused)) volatile uint32_t lr; /* Link register. */
+    __attribute__((unused)) volatile uint32_t pc; /* Program counter. */
+    __attribute__((unused)) volatile uint32_t psr;/* Program status register. */
+
+    r0 = pulFaultStackAddress[ 0 ];
+    r1 = pulFaultStackAddress[ 1 ];
+    r2 = pulFaultStackAddress[ 2 ];
+    r3 = pulFaultStackAddress[ 3 ];
+
+    r12 = pulFaultStackAddress[ 4 ];
+    lr = pulFaultStackAddress[ 5 ];
+    pc = pulFaultStackAddress[ 6 ];
+    psr = pulFaultStackAddress[ 7 ];
+
+    /* When the following line is hit, the variables contain the register values. */
+    for( ;; );
+}
+
+#ifdef __cplusplus
+}
+#endif
+
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
@@ -26,19 +84,22 @@ void vCommonPeriodicTask( void* params )
 
 	SsTCB_t *pxTaskSsTCB;
 
+#if(configUSE_SLACK_STEALING == 1)
 #if( tskKERNEL_VERSION_MAJOR == 8 )
 	pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
 #endif
-#if( tskKERNEL_VERSION_MAJOR == 9 )
+#if( tskKERNEL_VERSION_MAJOR >= 9 )
 	pxTaskSsTCB = getTaskSsTCB( NULL );
 #endif
 
 #if EXAMPLE == 1
     int32_t slackArray[ 7 ];
 #endif
+#endif
 
 	for(;;)
     {
+#if (configUSE_SLACK_STEALING == 1)
 #if EXAMPLE == 3
 	    if (pxTaskSsTCB->xId == 1) {
 	        if (xTaskGetTickCount() > 24900) {
@@ -80,6 +141,7 @@ void vCommonPeriodicTask( void* params )
             xSemaphoreGive( xMutex );
         }
 #endif
+#endif
 
 		leds[ pxTaskSsTCB->xId - 1] = 1;
 
@@ -95,6 +157,7 @@ void vCommonPeriodicTask( void* params )
 
 		leds[ pxTaskSsTCB->xId - 1] = 0;
 
+#if (configUSE_SLACK_STEALING == 1)
 #if EXAMPLE == 1
 	    if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
 		{
@@ -106,6 +169,7 @@ void vCommonPeriodicTask( void* params )
 
 #ifdef TRACEALYZER_v3_1_3
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+#endif
 #endif
 
 		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
@@ -121,7 +185,7 @@ void vCommonAperiodicTask( void* params )
 #if( tskKERNEL_VERSION_MAJOR == 8 )
     pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
 #endif
-#if( tskKERNEL_VERSION_MAJOR == 9 )
+#if( tskKERNEL_VERSION_MAJOR >= 9 )
     pxTaskSsTCB = getTaskSsTCB( NULL );
 #endif
 
@@ -226,20 +290,21 @@ void vApplicationNotSchedulable( void )
 	}
 }
 
-void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB, TickType_t xTickCount )
+void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
+        TickType_t xTickCount )
 {
     ( void ) xSsTCB;
 
     taskDISABLE_INTERRUPTS();
 
-    pc.printf( "%s\tdeadline miss at %d\r\n", pcTaskName, xTickCount );
+    pc.printf( "\n%s [%d]\tdeadline miss at %d, c=%d\r\n", pcTaskName, xSsTCB->uxReleaseCount, xTickCount, xSsTCB->xCur );
 
     for( ;; )
     {
-        leds[ 0 ] = 1;
+        /*leds[ 0 ] = 1;
         wait_ms( 1000 );
         leds[ 0 ] = 0;
-        wait_ms( 1000 );
+        wait_ms( 1000 );*/
     }
 }
 #endif

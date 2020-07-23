@@ -66,6 +66,7 @@ LINKER_SCRIPT = ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/LPC1768.ld
 # Tracealyzer sources, include paths and symbols
 #
 ifeq ($(TZ), 1)
+  CC_SYMBOLS += -DTZ=1
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
@@ -76,6 +77,11 @@ ifeq ($(TZ), 1)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
     CC_SYMBOLS += -DTRACEALYZER_v3_1_3
   endif
+  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
+    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
+    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
+    CC_SYMBOLS += -DTRACEALYZER_v3_3_1
+  endif
 endif
 
 ###############################################################################
@@ -83,9 +89,7 @@ endif
 # Flags and symbols required by the compiler.
 #
 CPU = -mcpu=cortex-m3 -mthumb
-
 CC_FLAGS += $(CPU)
-
 CC_SYMBOLS += -DTARGET_LPC1768
 CC_SYMBOLS += -DTARGET_M3
 CC_SYMBOLS += -DTARGET_NXP
@@ -106,31 +110,39 @@ CC_SYMBOLS += -DMAX_PRIO=$(MAX_PRIO)
 LD_FLAGS = $(CPU) -Wl,--gc-sections -u _printf_float -u _scanf_float
 LD_SYS_LIBS = -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
+# Replace these functions
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.3.1)
+WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.2.1)
+WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
+
 export CPU CC_SYMBOLS MBED_INCLUDE_PATHS
 
 ###############################################################################
 #
-# Rules used to build the example.
+# Rules to build the example program.
 #
 all: $(BUILD_DIR)/$(EXAMPLE).bin size
 
 clean:
 	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ)
-	+@echo "Cleaning $(TARGET) files..."
+	+@echo "[App] Cleaning $(TARGET) files..."
 	@rm -f $(BUILD_DIR)/$(EXAMPLE).bin $(BUILD_DIR)/$(EXAMPLE).elf $(OBJECTS) $(DEPS)
 
 .c.o:
-	+@echo "Compile: $<"
+	+@echo "[App] Compile: $<"
 	@$(CC)  $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
 
 .cpp.o:
-	+@echo "Compile: $<"
+	+@echo "[App] Compile: $<"
 	@$(CPP) $(COMMON_FLAGS) $(CPP_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
 
 $(BUILD_DIR)/$(EXAMPLE).elf: $(OBJECTS) $(SYS_OBJECTS)
 	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ)
-	+@echo "Linking: $@"
-	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS)
+	+@echo "[App] Linking: $@"
+	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS) $(WRAP)
 
 $(BUILD_DIR)/$(EXAMPLE).bin: $(BUILD_DIR)/$(EXAMPLE).elf
 	+@echo "Binary: $@"

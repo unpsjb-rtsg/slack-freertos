@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import glob
@@ -124,11 +126,12 @@ def main():
     return_code = 0
 
     xml_file_list = []
-    for xml_file in args.xml_files:
-        if not os.path.isfile(xml_file):
-            print("warning: {0} file not found.".format(xml_file), file=sys.stderr)
-        else:
-            xml_file_list.append(xml_file)
+    for xml_file_path in args.xml_files:
+        for xml_file in glob.glob(xml_file_path):
+            if not os.path.isfile(xml_file):
+                print("warning: {0} file not found.".format(xml_file), file=sys.stderr)
+            else:
+                xml_file_list.append(xml_file)
     
     if not xml_file_list:
         print("error: no files found.", file=sys.stderr)

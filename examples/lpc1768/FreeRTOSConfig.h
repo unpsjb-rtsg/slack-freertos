@@ -130,18 +130,18 @@ to exclude the API function. */
 	/* __BVIC_PRIO_BITS will be specified when CMSIS is being used. */
 	#define configPRIO_BITS       		__NVIC_PRIO_BITS
 #else
-	#define configPRIO_BITS       		4        /* 15 priority levels */
+	#define configPRIO_BITS       		5        /* 32 priority levels */   // MODIFIED 2020-07-18
 #endif
 
 /* The lowest interrupt priority that can be used in a call to a "set priority"
 function. */
-#define configLIBRARY_LOWEST_INTERRUPT_PRIORITY			0x0f
+#define configLIBRARY_LOWEST_INTERRUPT_PRIORITY			0x1f  // changed from 0x0f on 2020-07-18
 
 /* The highest interrupt priority that can be used by any interrupt service
 routine that makes calls to interrupt safe FreeRTOS API functions.  DO NOT CALL
 INTERRUPT SAFE FREERTOS API FUNCTIONS FROM ANY INTERRUPT THAT HAS A HIGHER
 PRIORITY THAN THIS! (higher priorities are lower numeric values. */
-#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY	10
+#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY	32
 
 /* Interrupt priorities used by the kernel port layer itself.  These are generic
 to all Cortex-M ports, and do not rely on any particular library functions. */
@@ -170,7 +170,13 @@ standard names. */
 #ifdef TRACEALYZER_v3_1_3
 #include "trcRecorder.h"
 #endif
+#ifdef TRACEALYZER_v3_3_1
+#include "trcRecorder.h"
+#endif
 #endif
 
 /* Slack Stealing configuration. */
 #include "slackConfig.h"
+
+#define configSS_ASSERT_EQUAL( x, y ) if( ( x ) != ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
+#define configSS_ASSERT_GREATHER_OR_EQUAL( x, y ) if( ( x ) < ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }

@@ -1,8 +1,8 @@
 # Slack Stealing for FreeRTOS
-Slack Stealing framework for FreeRTOS.
+A slack stealing framework for FreeRTOS.
 
 ## Overview
-This project implements a Slack Stealing (SS) scheduler, in order to support Mixed Critical Systems in a flexible way, in the [FreeRTOS Real-Time Operating System](http://www.freertos.org).
+This project add Slack Stealing (SS) support into the [FreeRTOS Real-Time Operating System](http://www.freertos.org) for developing Mixed Critical Systems in a flexible way.
 
 ### Directories
 * `board`: libraries required for compiling the example programs for multiple boards.
