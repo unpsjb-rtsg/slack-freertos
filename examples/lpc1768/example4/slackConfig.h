@@ -4,7 +4,7 @@
 #define EXAMPLE 4
 
 /* ========================================================================= */
-#define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
+/* Required for integrating the SsTCB into the task TCB. */
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
 
 /* Add functionality to be added to FreeRTOS's tasks.c source file. */
@@ -30,6 +30,8 @@
  * 1 = exact tick count
  */
 #define configTASK_EXEC                 0
+
+#define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 
 /* ========================================================================= */
 

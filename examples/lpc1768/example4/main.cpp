@@ -1,4 +1,19 @@
 /*****************************************************************************
+ *
+ * Example 4
+ *
+ * This program consist of 4 real-time periodic tasks and 2 aperiodic tasks.
+ * Each task write a string with some data to to the serial port, when starting
+ * and finishing each instance.
+ *
+ * This program requires FreeRTOS v10.0.0 or later.
+ *
+ * Created on: 19 jul. 2020
+ *     Author: Francisco E. Páez
+ *
+ *****************************************************************************/
+
+/*****************************************************************************
  * Includes
  ****************************************************************************/
 #include "mbed.h"
@@ -64,7 +79,7 @@ traceString slack_channel;
  ****************************************************************************/
 static void vCommonPrintSlacks( char s, int32_t * slackArray, TickType_t xCur )
 {
-    pc.printf("%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+    pc.printf("%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
             pcTaskGetTaskName(NULL), s,
             slackArray[0], slackArray[2], slackArray[3],
             slackArray[4], slackArray[5], slackArray[6],
@@ -96,11 +111,11 @@ static void vPeriodicTask( void* params )
 
         leds[ pxTaskSsTCB->xId - 1] = 1;
 
-        xRndRun = (UBaseType_t) rand() % ( pxTaskSsTCB->xWcet - 200 );
+
 
         #if ( configTASK_EXEC == 0 )
         {
-            //vUtilsEatCpu( pxTaskSsTCB->xWcet - 200 );
+            xRndRun = (UBaseType_t) rand() % ( pxTaskSsTCB->xWcet - 200 );
             vUtilsEatCpu( xRndRun );
         }
         #endif
@@ -141,21 +156,17 @@ int main(void)
 {
     // Verify that configUSE_SLACK_STEALING is enabled
     configSS_ASSERT_EQUAL( configUSE_SLACK_STEALING, 1 );
-    // Verify that tskKERNEL_VERSION_MAJOR is >= 10
+    // Verify that tskKERNEL_VERSION_MAJOR is >= 9
     configSS_ASSERT_GREATHER_OR_EQUAL( tskKERNEL_VERSION_MAJOR, 9);
 
     // Initializes the trace recorder, but does not start the tracing.
-#ifdef TRACEALYZER_v3_0_2
-    vTraceInitTraceData();
-#endif
-#ifdef TRACEALYZER_v3_1_3
+#if TZ == 1
     vTraceEnable( TRC_INIT );
-    slack_channel = xTraceRegisterString("Slack Events");
 #endif
 
 	pc.baud( BAUDRATE );
-	pc.printf( "Example %d\n", EXAMPLE );
-	pc.printf( "Using FreeRTOS %s\n", tskKERNEL_VERSION_NUMBER );
+	pc.printf( "Example %d\n\r", EXAMPLE );
+	pc.printf( "Using FreeRTOS %s\n\r", tskKERNEL_VERSION_NUMBER );
 
 	// turn off all the on board LEDs.
     leds[0] = 0;
@@ -176,19 +187,20 @@ int main(void)
     vSlackSystemSetup();
 
     // additional parameters needed by the slack stealing framework
-    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
-    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
-    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
-    vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
+    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
+            TASK_1_PERIOD, TASK_1_WCET, 1 );
+    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD,
+            TASK_2_PERIOD, TASK_2_WCET, 2 );
+    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD,
+            TASK_3_PERIOD, TASK_3_WCET, 3 );
+    vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD,
+            TASK_4_PERIOD, TASK_4_WCET, 4 );
 
     vSlackSchedulerSetup();
 #endif
 
     // Start the tracing.
-#ifdef TRACEALYZER_v3_0_2
-    uiTraceStart();
-#endif
-#ifdef TRACEALYZER_v3_1_3
+#if TZ == 1
     vTraceEnable( TRC_START );
 #endif
 
