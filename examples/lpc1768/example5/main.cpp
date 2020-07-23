@@ -1,4 +1,25 @@
 /*****************************************************************************
+ *
+ * Example 5
+ *
+ * This program consist of 4 real-time periodic tasks and 2 aperiodic tasks,
+ * the later only scheduled when there is available slack in the system. All
+ * the tasks write a string with some data to to the serial port, when
+ * starting and finishing each instance.
+ *
+ * Before writing to the serial port, the tasks try to take a shared mutex.
+ * This could lead to the following problem: when an aperiodic task has taken
+ * the mutex and then the available slack depletes, the periodic tasks can't
+ * take the mutex, and a missed deadline will occur.
+ *
+ * This program requires FreeRTOS v10.0.0 or later.
+ *
+ * Created on: 19 jul. 2020
+ *     Author: Francisco E. Páez
+ *
+ *****************************************************************************/
+
+/*****************************************************************************
  * Includes
  ****************************************************************************/
 #include "mbed.h"
@@ -47,7 +68,7 @@
  ****************************************************************************/
 static void vPeriodicTask( void* params );
 static void vAperiodicTask( void* params );
-static void vCommonPrintSlacks( char s, int32_t * slackArray, TickType_t xCur );
+static void vCommonPrintSlacks( char s, int32_t * slackArray, SsTCB_t *pxTaskSsTCB );
 
 /*****************************************************************************
  * Private data
@@ -68,13 +89,13 @@ traceString slack_channel;
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
-static void vCommonPrintSlacks( char s, int32_t * slackArray, TickType_t xCur )
+static void vCommonPrintSlacks( char s, int32_t * slackArray, SsTCB_t *pxTaskSsTCB )
 {
-    pc.printf("%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
-            pcTaskGetTaskName(NULL), s,
+    pc.printf("%s [%d]\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+            pcTaskGetTaskName(NULL), pxTaskSsTCB->uxReleaseCount, s,
             slackArray[0], slackArray[2], slackArray[3],
             slackArray[4], slackArray[5], slackArray[6],
-            xCur);
+            pxTaskSsTCB->xCur);
 }
 
 static void vAperiodicTask( void* params )
@@ -98,7 +119,7 @@ static void vAperiodicTask( void* params )
         vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
-            vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+            vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB );
             xSemaphoreGive( xMutex );
         }
 
@@ -107,7 +128,7 @@ static void vAperiodicTask( void* params )
         vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
-            vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+            vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB );
             xSemaphoreGive( xMutex );
         }
 
@@ -138,17 +159,15 @@ static void vPeriodicTask( void* params )
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
             vTasksGetSlacks( slackArray );
-            vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+            vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB );
             xSemaphoreGive( xMutex );
         }
 
         leds[ pxTaskSsTCB->xId - 1] = 1;
 
-        xRndRun = (UBaseType_t) rand() % ( pxTaskSsTCB->xWcet - 200 );
-
         #if ( configTASK_EXEC == 0 )
         {
-            //vUtilsEatCpu( pxTaskSsTCB->xWcet - 200 );
+            xRndRun = (UBaseType_t) rand() % ( pxTaskSsTCB->xWcet - 300 );
             vUtilsEatCpu( xRndRun );
         }
         #endif
@@ -166,7 +185,7 @@ static void vPeriodicTask( void* params )
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
             vTasksGetSlacks( slackArray );
-            vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+            vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB );
             xSemaphoreGive( xMutex );
         }
 
@@ -209,7 +228,7 @@ int main(void)
     leds[3] = 0;
 
     // Create mutex.
-    xMutex = xSemaphoreCreateMutex();
+    //xMutex = xSemaphoreCreateMutex();
 
     // Periodic tasks.
     xTaskCreate( vPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
@@ -225,13 +244,19 @@ int main(void)
     vSlackSystemSetup();
 
     // additional parameters needed by the slack stealing framework
-    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
-    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
-    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
-    vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
+    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
+            TASK_1_PERIOD, TASK_1_WCET, 1 );
+    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD,
+            TASK_2_PERIOD, TASK_2_WCET, 2 );
+    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD,
+            TASK_3_PERIOD, TASK_3_WCET, 3 );
+    vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD,
+            TASK_4_PERIOD, TASK_4_WCET, 4 );
 
-    vSlackSetTaskParams( xApTaskHandle1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 1 );
-    vSlackSetTaskParams( xApTaskHandle2, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 2 );
+    vSlackSetTaskParams( xApTaskHandle1, APERIODIC_TASK, ATASK_MAX_DELAY, 0,
+            ATASK_WCET, 1 );
+    vSlackSetTaskParams( xApTaskHandle2, APERIODIC_TASK, ATASK_MAX_DELAY, 0,
+            ATASK_WCET, 2 );
 
     vSlackSchedulerSetup();
 #endif
