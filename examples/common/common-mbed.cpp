@@ -36,14 +36,14 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     away as the variables never actually get used.  If the debugger won't show the
     values of the variables, make them global my moving their declaration outside
     of this function. */
-    volatile uint32_t r0;
-    volatile uint32_t r1;
-    volatile uint32_t r2;
-    volatile uint32_t r3;
-    volatile uint32_t r12;
-    volatile uint32_t lr; /* Link register. */
-    volatile uint32_t pc; /* Program counter. */
-    volatile uint32_t psr;/* Program status register. */
+    __attribute__((unused)) volatile uint32_t r0;
+    __attribute__((unused)) volatile uint32_t r1;
+    __attribute__((unused)) volatile uint32_t r2;
+    __attribute__((unused)) volatile uint32_t r3;
+    __attribute__((unused)) volatile uint32_t r12;
+    __attribute__((unused)) volatile uint32_t lr; /* Link register. */
+    __attribute__((unused)) volatile uint32_t pc; /* Program counter. */
+    __attribute__((unused)) volatile uint32_t psr;/* Program status register. */
 
     r0 = pulFaultStackAddress[ 0 ];
     r1 = pulFaultStackAddress[ 1 ];
