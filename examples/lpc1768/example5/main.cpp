@@ -217,18 +217,19 @@ int main(void)
     slack_channel = xTraceRegisterString("Slack Events");
 #endif
 
-	pc.baud( BAUDRATE );
-	pc.printf( "Example %d\n", EXAMPLE );
-	pc.printf( "Using FreeRTOS %s\n", tskKERNEL_VERSION_NUMBER );
+    pc.baud( BAUDRATE );
+    pc.printf( "Example %d\n", EXAMPLE );
+    pc.printf( "Using FreeRTOS %s\n", tskKERNEL_VERSION_NUMBER );
 
-	// turn off all the on board LEDs.
+
+    // turn off all the on board LEDs.
     leds[0] = 0;
     leds[1] = 0;
     leds[2] = 0;
     leds[3] = 0;
 
     // Create mutex.
-    //xMutex = xSemaphoreCreateMutex();
+    xMutex = xSemaphoreCreateMutex();
 
     // Periodic tasks.
     xTaskCreate( vPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
