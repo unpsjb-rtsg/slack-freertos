@@ -8,12 +8,20 @@
 extern "C" {
 #endif
 
+/*****************************************************************************
+ * Macros and definitions
+ ****************************************************************************/
 #define U_CEIL( x, y )    ( ( x / y ) + ( x % y != 0 ) )
 #define U_FLOOR( x, y )   ( x / y )
 #define ONE_TICK 	      ( TickType_t ) 1U
-
 #define getTaskSsTCB( x ) ( ( SsTCB_t * ) pvTaskGetThreadLocalStoragePointer( ( TaskHandle_t ) x, 0 ) )
 
+#define SS_FIXED 0
+#define SS_DAVIS 1
+
+/*****************************************************************************
+ * Public data declaration
+ ****************************************************************************/
 /* Task types. */
 typedef enum
 {
