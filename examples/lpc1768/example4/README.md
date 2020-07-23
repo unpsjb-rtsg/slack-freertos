@@ -1,4 +1,4 @@
-# Example 1
+# Example 4
 This example project implements a *Rate Monotonic Scheduling* (RMS) policy and perform an online slack calculation.
 
 Each task print the following data into the serial port: 
