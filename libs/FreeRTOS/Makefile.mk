@@ -165,15 +165,15 @@ CC_SYMBOLS += -DUSE_SLACK=$(USE_SLACK)
 all: $(PROJECT).a	
 
 clean:
-	+@echo "Cleaning FreeRTOS object files..."
+	+@echo "[FreeRTOS] Cleaning object files..."
 	@rm -f $(PROJECT).bin $(PROJECT).a $(OBJECTS) $(DEPS)	
 
 .c.o:
-	+@echo "Compile: $<"
+	+@echo "[FreeRTOS] Compile: $<"
 	@$(CC) $(CPU) $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
 
 $(PROJECT).a: $(OBJECTS)
-	+@echo "Linking: $@"
+	+@echo "[FreeRTOS] Linking: $@"
 	@$(AR) $(AR_FLAGS) $@ $^ -c
 
 DEPS = $(OBJECTS:.o=.d)
