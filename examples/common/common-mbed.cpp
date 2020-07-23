@@ -290,20 +290,21 @@ void vApplicationNotSchedulable( void )
 	}
 }
 
-void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB, TickType_t xTickCount )
+void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
+        TickType_t xTickCount )
 {
     ( void ) xSsTCB;
 
     taskDISABLE_INTERRUPTS();
 
-    pc.printf( "%s\tdeadline miss at %d\r\n", pcTaskName, xTickCount );
+    pc.printf( "\n%s [%d]\tdeadline miss at %d, c=%d\r\n", pcTaskName, xSsTCB->uxReleaseCount, xTickCount, xSsTCB->xCur );
 
     for( ;; )
     {
-        leds[ 0 ] = 1;
+        /*leds[ 0 ] = 1;
         wait_ms( 1000 );
         leds[ 0 ] = 0;
-        wait_ms( 1000 );
+        wait_ms( 1000 );*/
     }
 }
 #endif
