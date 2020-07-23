@@ -52,10 +52,10 @@ extern List_t xSsTaskList;
  * slack. They need to be stored in a separated list because we don't know
  * in advance when there is enough available slack. The blocked (delayed)
  * list of FreeRTOS stores real-time tasks that are blocked in waiting of
- * a resource -- with a timeout or for an unspecified amount of time. That
- * list could be used to store the slack-blocked tasks, identifying the tasks
- * waiting for slack from the resource-blocked ones by means of the SsTCB.
- * Instead, a separate list was used.
+ * a resource -- with a timeout or for an unspecified amount of time. Although
+ * that list could be used to store the slack-blocked tasks, identifying the
+ * tasks waiting for slack from the resource-blocked ones by means of the SsTCB,
+ * the use of a separate list was used instead.
  */
 extern List_t xSsTaskBlockedList;
 
@@ -72,7 +72,7 @@ struct SsTCB
 	UBaseType_t uxDelayUntil;
 
 	TickType_t xPreviousWakeTime;
-	TickType_t xTimeToWake;         /* Tick time at which the task wants to wake. */
+	TickType_t xTimeToWake;         /* Time at which the task wants to wake. */
 
 	TickType_t xWcrt;				/* Worst case response time. */
 	TickType_t xWcet;				/* Worst case execution time. */
@@ -83,16 +83,16 @@ struct SsTCB
 
 	ListItem_t xSsTaskListItem;    /* Item for the xSsTaskList list */
 	ListItem_t xSsTaskBlockedListItem;
-	ListItem_t xDeadlineTaskListItem;  /* Used to reference the task from the xDeadlineTaskList */
+	ListItem_t xDeadlineTaskListItem;  /* Task reference in xDeadlineTaskList */
 
-	volatile TickType_t xCur;   	/* Accumulated execution time measured in ticks. */
+	volatile TickType_t xCur;   	/* Accumulated execution. */
 
 	BaseType_t xSlack;              /* Task slack */
-	BaseType_t xSlackK;			    /* Task slack value at the critical instant. */
+	BaseType_t xSlackK;			    /* Slack value at the critical instant. */
 
 #if ( configUSE_SLACK_METHOD == 0 )
 	TickType_t xTtma;               /* Maximally delayed completion time */
-	TickType_t xDi;                 /* The absolute deadline of the next release */
+	TickType_t xDi;                 /* Absolute deadline of the next release */
 #endif
 
 	/* Stores the tick at which the task release ended. This a dirty
@@ -105,27 +105,119 @@ struct SsTCB
 
 typedef struct SsTCB SsTCB_t;
 
-void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB, TickType_t xTickCount );
+/*****************************************************************************
+ * Public functions declaration
+ ****************************************************************************/
+
+/**
+ * Application defined hook (or callback) function called when a tasks miss its
+ * deadline.
+ *
+ * @param pcTaskName
+ * @param xSsTCB
+ * @param xTickCount
+ */
+void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
+        TickType_t xTickCount );
+
+/**
+ * Application defined hook (or callback) function called when the task group
+ * is not schedulable.
+ */
 void vApplicationNotSchedulable( void );
 
+/**
+ * Setup the required tasks lists. This function must be called before setting
+ * the tasks parameters with vSlackSetTaskParams().
+ */
 void vSlackSystemSetup( void );
+
+/**
+ * Perform the initialization steps required before the FreeRTOS scheduler is
+ * started. Run the schedulability test and the initial slack calcualtions.
+ */
 void vSlackSchedulerSetup( void );
 
-void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType, const TickType_t xPeriod, const TickType_t xDeadline, const TickType_t xWcet, const BaseType_t xId );
+/**
+ * Set the task parameters.
+ *
+ * @param xTask
+ * @param xTaskType
+ * @param xPeriod
+ * @param xDeadline
+ * @param xWcet
+ * @param xId
+ */
+void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
+        const TickType_t xPeriod, const TickType_t xDeadline,
+        const TickType_t xWcet, const BaseType_t xId );
+
+/**
+ *
+ * @param pxTasksList
+ * @return
+ */
 BaseType_t xSlackCalculateTasksWcrt( List_t * pxTasksList );
 
-void vSlackUpdateAvailableSlack( volatile BaseType_t * xSlackSD, const List_t * pxTasksList );
-void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks, const List_t * pxTasksList );
-void vSlackDecrementAllTasksSlack( const TickType_t xTicks, const TickType_t xTickCount, const List_t * pxTasksList );
-void vSlackDecrementTasksSlack( TaskHandle_t pxTask, const TickType_t xTicks, const TickType_t xTickCount, const List_t * pxTasksList );
+/**
+ *
+ * @param xSlackSD
+ * @param pxTasksList
+ */
+void vSlackUpdateAvailableSlack( volatile BaseType_t * xSlackSD,
+        const List_t * pxTasksList );
 
-TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList );
-void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc, const List_t * pxTasksList );
+/**
+ *
+ * @param xTask
+ * @param xTicks
+ * @param pxTasksList
+ */
+void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks,
+        const List_t * pxTasksList );
 
-#if ( configUSE_SLACK_METHOD == 0 )
-BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask, const TickType_t xTc, const TickType_t xT, const TickType_t xWc, const List_t * pxTasksList );
-#endif
+/**
+ *
+ * @param xTicks
+ * @param xTickCount
+ * @param pxTasksList
+ */
+void vSlackDecrementAllTasksSlack( const TickType_t xTicks,
+        const TickType_t xTickCount, const List_t * pxTasksList );
 
+/**
+ *
+ * @param pxTask
+ * @param xTicks
+ * @param xTickCount
+ * @param pxTasksList
+ */
+void vSlackDecrementTasksSlack( TaskHandle_t pxTask, const TickType_t xTicks,
+        const TickType_t xTickCount, const List_t * pxTasksList );
+
+/**
+ *
+ * @param xTask
+ * @param xTc
+ * @param pxTasksList
+ * @return
+ */
+TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t xTc,
+        const List_t * pxTasksList );
+
+/**
+ *
+ * @param xTask
+ * @param xTc
+ * @param pxTasksList
+ */
+void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc,
+        const List_t * pxTasksList );
+
+/**
+ *
+ * @param taskSlackArray
+ */
 void vTasksGetSlacks( int32_t *taskSlackArray );
 
 #ifdef __cplusplus
