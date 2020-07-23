@@ -6,9 +6,6 @@
 static void prvTaskRecSlack() PRIVILEGED_FUNCTION;
 #endif
 
-static BaseType_t xTaskSlackResume( void );
-static BaseType_t xTaskSlackSuspend( void );
-
 #if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TEST == 1 )
     void vTaskSetParams( TaskHandle_t xTask, const BaseType_t xId )
     {
@@ -27,6 +24,9 @@ static BaseType_t xTaskSlackSuspend( void );
 #endif
 
 #if ( configUSE_SLACK_STEALING == 1 )
+    static BaseType_t xTaskSlackResume( void );
+    static BaseType_t xTaskSlackSuspend( void );
+
     /*
      * Moves all the aperiodic tasks in the xSsTaskBlockedList to the ready
      * list.
