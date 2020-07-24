@@ -138,7 +138,7 @@ void vCommonPeriodicTask( void* params )
 #if( tskKERNEL_VERSION_MAJOR == 8 )
 	pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
 #endif
-#if( tskKERNEL_VERSION_MAJOR == 9 )
+#if( tskKERNEL_VERSION_MAJOR >= 9 )
 	pxTaskSsTCB = getTaskSsTCB( NULL );
 #endif
 

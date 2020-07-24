@@ -117,7 +117,7 @@ int main(void)
     xTaskCreate( vCommonPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
-	#if( tskKERNEL_VERSION_MAJOR == 9 )
+	#if( tskKERNEL_VERSION_MAJOR >= 9 )
 	{
 		vSlackSystemSetup();
 	}
@@ -129,20 +129,15 @@ int main(void)
     vTaskSetParams( task_handles[ 1 ], TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
     vTaskSetParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
 #endif
-#if( tskKERNEL_VERSION_MAJOR == 9 )
+#if( tskKERNEL_VERSION_MAJOR >= 9 )
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
     		TASK_1_PERIOD, TASK_1_WCET, 1 );
     vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD,
     		TASK_2_PERIOD, TASK_2_WCET, 2 );
     vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD,
     		TASK_3_PERIOD, TASK_3_WCET, 3 );
+    vSlackSchedulerSetup();
 #endif
-
-    #if( tskKERNEL_VERSION_MAJOR == 9 )
-	{
-		vSlackSchedulerSetup();
-	}
-	#endif
 #endif
 
     // Start the tracing.

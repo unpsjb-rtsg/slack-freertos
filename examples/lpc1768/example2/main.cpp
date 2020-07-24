@@ -106,7 +106,7 @@ int main(void)
     xTaskCreate( vCommonAperiodicTask, "TA2", 256, NULL, ATASK_2_PRIO, &xApTaskHandle2 );
 
 #if( configUSE_SLACK_STEALING == 1 )
-    #if( tskKERNEL_VERSION_MAJOR == 9 )
+    #if( tskKERNEL_VERSION_MAJOR >= 9 )
     {
         vSlackSystemSetup();
     }
@@ -119,7 +119,7 @@ int main(void)
     vTaskSetParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
     vTaskSetParams( task_handles[ 3 ], TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 #endif
-#if( tskKERNEL_VERSION_MAJOR == 9 )
+#if( tskKERNEL_VERSION_MAJOR >= 9 )
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
     vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
     vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
@@ -128,13 +128,9 @@ int main(void)
     // Aperiodic task.
     vSlackSetTaskParams( xApTaskHandle1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 1 );
     vSlackSetTaskParams( xApTaskHandle2, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 2 );
-#endif
 
-    #if( tskKERNEL_VERSION_MAJOR == 9 )
-    {
-        vSlackSchedulerSetup();
-    }
-    #endif
+    vSlackSchedulerSetup();
+#endif
 #endif
 
     // Start the tracing.
