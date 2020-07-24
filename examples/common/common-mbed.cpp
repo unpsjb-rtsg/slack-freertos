@@ -143,7 +143,9 @@ void vCommonPeriodicTask( void* params )
 #endif
 #endif
 
-		leds[ pxTaskSsTCB->xId - 1] = 1;
+#ifdef TARGET_MBED_LPC1768
+        leds[ pxTaskSsTCB->xId - 1] = 1;
+#endif
 
 #if ( configTASK_EXEC == 0 )
 		vUtilsEatCpu( pxTaskSsTCB->xWcet - 200 );
@@ -153,9 +155,24 @@ void vCommonPeriodicTask( void* params )
 		{
 			asm("nop");
 		}
+#if ( configTASK_EXEC == 2 )
+        while( pxTaskSsTCB->xCur <  ( pxTaskSsTCB->xWcet - 200)  )
+        {
+            TickType_t slack = xSlackGetAvailableSlack();
+            if (slack < 10) {
+                leds[0] = 1;
+                leds[1] = 0;
+            } else {
+                leds[0] = 0;
+                leds[1] = 1;
+            }
+            asm("nop");
+        }
 #endif
 
-		leds[ pxTaskSsTCB->xId - 1] = 0;
+#ifdef TARGET_MBED_LPC1768
+        leds[ pxTaskSsTCB->xId - 1] = 0;
+#endif
 
 #if (configUSE_SLACK_STEALING == 1)
 #if EXAMPLE == 1
