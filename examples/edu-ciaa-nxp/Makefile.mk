@@ -120,18 +120,18 @@ clean:
 	@rm -f $(BUILD_DIR)/$(EXAMPLE).bin $(BUILD_DIR)/$(EXAMPLE).elf $(OBJECTS) $(DEPS)
 
 .c.o:
-	+@echo "Compile: $<"
+	+@echo "[App] Compile: $<"
 	@$(CC) $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
 
 $(BUILD_DIR)/$(EXAMPLE).elf: $(OBJECTS)
 	@$(MAKE) $(MAKE_FLAGS) -C $(LPC_LIBRARY_PATH) -f Makefile.mk
 	@$(MAKE) $(MAKE_FLAGS) -C $(SAPI_LIBRARY_PATH) -f Makefile.mk
 	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ)
-	+@echo "Linking: $@"
-	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES)
+	+@echo "[App] Linking: $@"
+	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(WRAP)
 
 $(BUILD_DIR)/$(EXAMPLE).bin: $(BUILD_DIR)/$(EXAMPLE).elf
-	+@echo "Binary: $@"
+	+@echo "[App] Binary: $@"
 	@$(OBJCOPY) -O binary $< $@
 	
 size: $(BUILD_DIR)/$(EXAMPLE).elf

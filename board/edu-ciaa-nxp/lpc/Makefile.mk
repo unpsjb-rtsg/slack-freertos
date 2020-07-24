@@ -31,15 +31,15 @@ AR_FLAGS = -r
 all: $(PROJECT).a
 
 clean:
-	+@echo "Cleaning LPCopen object files..."
+	+@echo "[LPCOpen] Cleaning LPCopen object files..."
 	@rm -f $(PROJECT).a $(OBJECTS) $(DEPS)
 
 .c.o:
-	+@echo "Compile: $<"
+	+@echo "[LPCOpen] Compile: $<"
 	@$(CC) $(CPU) $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
 
 $(PROJECT).a: $(OBJECTS)
-	+@echo "Linking: $@"
+	+@echo "[LPCOpen] Linking: $@"
 	@$(AR) $(AR_FLAGS) $@ $^ -c
 
 DEPS = $(OBJECTS:.o=.d)

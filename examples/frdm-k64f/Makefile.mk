@@ -125,24 +125,24 @@ all: $(BUILD_DIR)/$(EXAMPLE).bin size
 
 clean:
 	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean APP_DIR=$(APP_NAME) USE_SLACK=$(USE_SLACK) TZ=$(TZ)
-	+@echo "Cleaning $(TARGET) files..."
+	+@echo "-- Cleaning $(TARGET) files..."
 	@rm -f $(BUILD_DIR)/$(EXAMPLE).bin $(BUILD_DIR)/$(EXAMPLE).elf $(OBJECTS) $(DEPS)
 
 .c.o:
-	+@echo "Compile: $<"
+	+@echo "[App] Compile: $<"
 	@$(CC)  $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
 
 .cpp.o:
-	+@echo "Compile: $<"
+	+@echo "[App] Compile: $<"
 	@$(CPP) $(COMMON_FLAGS) $(CPP_COMMON_FLAGS) $(CPP_FLAGS) $(CPP_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
 
 $(BUILD_DIR)/$(EXAMPLE).elf: $(OBJECTS) $(SYS_OBJECTS)
 	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=$(USE_SLACK) TZ=$(TZ)
-	+@echo "Linking: $@"
-	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS)
+	+@echo "[App] Linking: $@"
+	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS) $(WRAP)
 
 $(BUILD_DIR)/$(EXAMPLE).bin: $(BUILD_DIR)/$(EXAMPLE).elf
-	+@echo "Binary: $@"
+	+@echo "[App] Binary: $@"
 	@$(OBJCOPY) -O binary $< $@
 	
 size: $(BUILD_DIR)/$(EXAMPLE).elf

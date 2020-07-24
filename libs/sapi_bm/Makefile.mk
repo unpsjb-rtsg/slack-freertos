@@ -29,15 +29,15 @@ AR_FLAGS = -r
 all: $(PROJECT).a
 
 clean:
-	+@echo "Cleaning sAPI object files..."
+	+@echo "[sAPI] Cleaning sAPI object files..."
 	@rm -f $(PROJECT).a $(OBJECTS) $(DEPS)
 
 .c.o:
-	+@echo "Compile: $<"
+	+@echo "[sAPI] Compile: $<"
 	@$(CC) $(CPU) $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
 
 $(PROJECT).a: $(OBJECTS)
-	+@echo "Linking: $@"
+	+@echo "[sAPI] Linking: $@"
 	@$(AR) $(AR_FLAGS) $@ $^ -c
 
 DEPS = $(OBJECTS:.o=.d)
