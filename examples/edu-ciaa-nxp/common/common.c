@@ -146,7 +146,7 @@ void vCommonPeriodicTask( void* params )
 
 	for(;;)
     {
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 
@@ -168,7 +168,7 @@ void vCommonPeriodicTask( void* params )
 
 		gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
 
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
 		vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 

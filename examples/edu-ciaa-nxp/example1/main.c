@@ -80,7 +80,7 @@ static TaskHandle_t task_handles[ TASK_CNT ];
  * Public data
  ****************************************************************************/
 gpioMap_t leds[] = { LED1, LED2, LED3 };
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
 traceString slack_channel;
 #endif
 
@@ -104,7 +104,7 @@ int main(void)
 #ifdef TRACEALYZER_v3_0_2
     vTraceInitTraceData();
 #endif
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
     vTraceEnable( TRC_INIT );
     slack_channel = xTraceRegisterString("Slack Events");
 #endif
@@ -149,7 +149,7 @@ int main(void)
 #ifdef TRACEALYZER_v3_0_2
     uiTraceStart();
 #endif
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
     vTraceEnable( TRC_START );
 #endif
 

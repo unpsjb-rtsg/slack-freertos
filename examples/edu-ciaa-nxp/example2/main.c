@@ -91,7 +91,7 @@ static TaskHandle_t atask_handles[ ATASK_CNT ];
  ****************************************************************************/
 gpioMap_t leds[] = { LED1, LED2, LED3 };
 gpioMap_t aleds[] = { LEDR, LEDG, LEDB };
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
 traceString slack_channel;
 #endif
 
@@ -119,7 +119,7 @@ static void vAperiodicTask( void* params )
 
     for(;;)
     {
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 
@@ -135,7 +135,7 @@ static void vAperiodicTask( void* params )
 
         gpioWrite( aleds[ pxTaskSsTCB->xId - 1], OFF );
 
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 
@@ -158,7 +158,7 @@ int main(void)
 #ifdef TRACEALYZER_v3_0_2
     vTraceInitTraceData();
 #endif
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
     vTraceEnable( TRC_INIT );
     slack_channel = xTraceRegisterString("Slack Events");
 #endif
@@ -216,7 +216,7 @@ int main(void)
 #ifdef TRACEALYZER_v3_0_2
     uiTraceStart();
 #endif
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
     vTraceEnable( TRC_START );
 #endif
 

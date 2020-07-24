@@ -63,7 +63,7 @@ xType2 *sdArray2;
 volatile int count = 0;
 volatile int count2 = 0;
 volatile int count3 = 0;
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
 traceString slack_channel;
 #endif
 
@@ -81,7 +81,7 @@ int main(void)
 #ifdef TRACEALYZER_v3_0_2
     vTraceInitTraceData();
 #endif
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
     vTraceEnable( TRC_INIT );
     slack_channel = xTraceRegisterString("Slack Events");
 #endif
@@ -159,7 +159,7 @@ int main(void)
 #ifdef TRACEALYZER_v3_0_2
     uiTraceStart();
 #endif
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
     vTraceEnable( TRC_START );
 #endif
 

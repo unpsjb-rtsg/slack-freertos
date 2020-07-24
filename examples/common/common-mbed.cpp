@@ -129,7 +129,7 @@ void vCommonPeriodicTask( void* params )
 	    }
 #endif
 
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 
@@ -167,7 +167,7 @@ void vCommonPeriodicTask( void* params )
 		}
 #endif
 
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 #endif
@@ -193,7 +193,7 @@ void vCommonAperiodicTask( void* params )
 
     for(;;)
     {
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 
@@ -215,7 +215,7 @@ void vCommonAperiodicTask( void* params )
             xSemaphoreGive( xMutex );
         }
 
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 

@@ -60,7 +60,7 @@ static TaskHandle_t xApTaskHandle1, xApTaskHandle2;
 Serial pc( USBTX, USBRX );
 DigitalOut leds[] = { LED_RED, LED_GREEN, LED_BLUE, LED_RED };
 SemaphoreHandle_t xMutex = NULL;
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
 traceString slack_channel;
 #endif
 
@@ -78,7 +78,7 @@ int main()
 #ifdef TRACEALYZER_v3_0_2
     vTraceInitTraceData();
 #endif
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
     vTraceEnable( TRC_INIT );
     slack_channel = xTraceRegisterString("Slack Events");
 #endif
@@ -142,7 +142,7 @@ int main()
 #ifdef TRACEALYZER_v3_0_2
     uiTraceStart();
 #endif
-#ifdef TRACEALYZER_v3_1_3
+#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
     vTraceEnable( TRC_START );
 #endif
 
