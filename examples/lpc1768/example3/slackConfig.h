@@ -4,13 +4,19 @@
 #define EXAMPLE 3
 
 /* ========================================================================= */
-#undef  configUSE_TICK_HOOK
-#define configUSE_TICK_HOOK             1
-
-#define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
+/* Required for integrating the SsTCB into the task TCB. */
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
 
-#define INCLUDE_xTaskGetIdleTaskHandle  1 /* Required for identify the IDLE task in slacks methods and deadline check */
+/* Add functionality to be added to FreeRTOS's tasks.c source file. */
+#define configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H 1
+
+/* Required for identify the IDLE task in slacks methods and deadline check. */
+#define INCLUDE_xTaskGetIdleTaskHandle  1
+
+#define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
+
+#undef  configUSE_TICK_HOOK
+#define configUSE_TICK_HOOK 1
 
 /*
  * Slack methods available:
