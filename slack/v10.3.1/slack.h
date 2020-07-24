@@ -215,6 +215,12 @@ void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc,
         const List_t * pxTasksList );
 
 /**
+ * Return the available slack.
+ * @return
+ */
+TickType_t xSlackGetAvailableSlack( void );
+
+/**
  *
  * @param taskSlackArray
  */
