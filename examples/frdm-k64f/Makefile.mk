@@ -117,11 +117,19 @@ CPP_FLAGS += -DUSE_SLACK=$(USE_SLACK)
 LD_FLAGS += $(CPU) -Wl,--gc-sections -Wl,--wrap,main 
 LD_SYS_LIBS += -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
+# Replace these functions
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.3.1)
+WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.2.1)
+WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
+
 ###############################################################################
 #
 # Export variables to be used by others Makefile.mk files.
 #
-export CPU MBED_INCLUDE_PATHS
+export CPU CC_SYMBOLS MBED_INCLUDE_PATHS
 
 ###############################################################################
 #
