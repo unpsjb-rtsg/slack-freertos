@@ -181,6 +181,9 @@ standard names - or at least those used in the unmodified vector table. */
 #endif
 #endif
 
+#define configSS_ASSERT_EQUAL( x, y ) if( ( x ) != ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
+#define configSS_ASSERT_GREATHER_OR_EQUAL( x, y ) if( ( x ) < ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
+
 /* Slack Stealing configuration. */
 #include "slackConfig.h"
 
