@@ -82,7 +82,7 @@ void vCommonPeriodicTask( void* params )
 {
     ( void ) params;
 
-	SsTCB_t *pxTaskSsTCB;
+    SsTCB_t *pxTaskSsTCB;
 
 #if(configUSE_SLACK_STEALING == 1)
 #if( tskKERNEL_VERSION_MAJOR == 8 )
@@ -97,26 +97,26 @@ void vCommonPeriodicTask( void* params )
 #endif
 #endif
 
-	for(;;)
+    for(;;)
     {
 #if (configUSE_SLACK_STEALING == 1)
 #if EXAMPLE == 3
-	    if (pxTaskSsTCB->xId == 1) {
-	        if (xTaskGetTickCount() > 24900) {
-	            vTaskSuspendAll();
-	            int i;
-	            for(i=0; i<250; i++) {
-	                pc.printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
-	                        (*sdArray)[i][0],
-	                        (*sdArray)[i][1],
-	                        (*sdArray)[i][2],
-	                        (*sdArray)[i][3],
-	                        (*sdArray)[i][4],
-	                        (*sdArray)[i][5],
-	                        (*sdArray)[i][6]);
-	            }
-	            for(i=0; i<50; i++) {
-	               pc.printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+        if (pxTaskSsTCB->xId == 1) {
+            if (xTaskGetTickCount() > 24900) {
+                vTaskSuspendAll();
+                int i;
+                for(i=0; i<250; i++) {
+                    pc.printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+                            (*sdArray)[i][0],
+                            (*sdArray)[i][1],
+                            (*sdArray)[i][2],
+                            (*sdArray)[i][3],
+                            (*sdArray)[i][4],
+                            (*sdArray)[i][5],
+                            (*sdArray)[i][6]);
+                }
+                for(i=0; i<50; i++) {
+                    pc.printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
                             (*sdArray2)[i][0],
                             (*sdArray2)[i][1],
                             (*sdArray2)[i][2],
@@ -148,13 +148,14 @@ void vCommonPeriodicTask( void* params )
 #endif
 
 #if ( configTASK_EXEC == 0 )
-		vUtilsEatCpu( pxTaskSsTCB->xWcet - 200 );
+        vUtilsEatCpu( pxTaskSsTCB->xWcet - 200 );
 #endif
 #if ( configTASK_EXEC == 1 )
-		while( pxTaskSsTCB->xCur <  pxTaskSsTCB->xWcet )
-		{
-			asm("nop");
-		}
+        while( pxTaskSsTCB->xCur <  pxTaskSsTCB->xWcet )
+        {
+            asm("nop");
+        }
+#endif
 #if ( configTASK_EXEC == 2 )
         while( pxTaskSsTCB->xCur <  ( pxTaskSsTCB->xWcet - 200)  )
         {
@@ -176,12 +177,12 @@ void vCommonPeriodicTask( void* params )
 
 #if (configUSE_SLACK_STEALING == 1)
 #if EXAMPLE == 1
-	    if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
-		{
-	        vTasksGetSlacks( slackArray );
-		    vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
-		    xSemaphoreGive( xMutex );
-		}
+        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        {
+            vTasksGetSlacks( slackArray );
+            vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+            xSemaphoreGive( xMutex );
+        }
 #endif
 
 #if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
