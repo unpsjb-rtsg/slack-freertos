@@ -68,11 +68,11 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
  ****************************************************************************/
 static void vCommonPrintSlacks( char s, int32_t * slackArray, TickType_t xCur )
 {
-	pc.printf("%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
-			pcTaskGetTaskName(NULL), s,
-			slackArray[0], slackArray[2], slackArray[3],
-			slackArray[4], slackArray[5], slackArray[6],
-			xCur);
+    pc.printf("%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
+            pcTaskGetTaskName(NULL), s,
+            slackArray[0], slackArray[2], slackArray[3],
+            slackArray[4], slackArray[5], slackArray[6],
+            xCur);
 }
 
 /*****************************************************************************

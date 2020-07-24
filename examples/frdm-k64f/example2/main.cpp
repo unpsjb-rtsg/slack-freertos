@@ -83,8 +83,10 @@ int main()
     slack_channel = xTraceRegisterString("Slack Events");
 #endif
 
-	pc.baud( BAUDRATE );
-    pc.printf( "Example 2\n" );
+    pc.baud( BAUDRATE );
+    pc.baud( BAUDRATE );
+    pc.printf( "Example %d\n\r", EXAMPLE );
+    pc.printf( "Using FreeRTOS %s\n\r", tskKERNEL_VERSION_NUMBER );
 
 	// Turn off all the on board LEDs.
 	leds[0] = 1;
