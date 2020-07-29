@@ -18,9 +18,9 @@ OBJECTS = $(SRC:.c=.o)
 # Paths to the required headers.
 #
 # lpc
-LPC_INCLUDE_PATH += -I../../board/edu-ciaa-nxp/lpc/lpc_chip_43xx/inc
-LPC_INCLUDE_PATH += -I../../board/edu-ciaa-nxp/lpc/lpc_board_ciaa_edu_4337/inc
-LPC_INCLUDE_PATH += -I../../board/edu-ciaa-nxp/lpc/lpc_chip_43xx/inc/usbd/ 
+LPC_INCLUDE_PATH += -I../../libs/LPCOpen/v2.16/lpc_chip_43xx/inc
+LPC_INCLUDE_PATH += -I../../libs/LPCOpen/v2.16/lpc_board_ciaa_edu_4337/inc
+LPC_INCLUDE_PATH += -I../../libs/LPCOpen/v2.16/lpc_chip_43xx/inc/usbd/ 
 
 # freertos
 FREERTOS_INCLUDE_PATH += -I../../libs/FreeRTOS/$(FREERTOS_KERNEL_VERSION_NUMBER)/include
@@ -45,7 +45,7 @@ INCLUDE_PATHS += $(FREERTOS_INCLUDE_PATH)
 #
 SAPI_LIBRARY_PATH = ../../libs/sapi_bm
 FREERTOS_LIBRARY_PATH = ../../libs/FreeRTOS
-LPC_LIBRARY_PATH = ../../board/edu-ciaa-nxp/lpc/
+LPC_LIBRARY_PATH = ../../libs/LPCOpen/v2.16/
 LIBRARY_PATHS += -L$(FREERTOS_LIBRARY_PATH)
 LIBRARY_PATHS += -L$(LPC_LIBRARY_PATH)
 LIBRARY_PATHS += -L$(SAPI_LIBRARY_PATH)
