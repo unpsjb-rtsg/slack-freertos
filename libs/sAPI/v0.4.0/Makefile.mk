@@ -14,6 +14,9 @@ OBJECTS = $(SRC:.c=.o)
 # Paths to the required headers.
 #
 INCLUDE_PATHS += -I./inc/
+LPC_INCLUDE_PATH += -I../../LPCOpen/v2.16/lpc_chip_43xx/inc
+LPC_INCLUDE_PATH += -I../../LPCOpen/v2.16/lpc_board_ciaa_edu_4337/inc
+LPC_INCLUDE_PATH += -I../../LPCOpen/v2.16/lpc_chip_43xx/inc/usbd/
 INCLUDE_PATHS += $(LPC_INCLUDE_PATH)
 
 ###############################################################################
