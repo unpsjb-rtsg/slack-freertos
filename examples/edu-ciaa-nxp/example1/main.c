@@ -1,33 +1,15 @@
-/*
- * @brief FreeRTOS Blinky example
+/*****************************************************************************
  *
- * @note
- * Copyright(C) NXP Semiconductors, 2013
- * All rights reserved.
+ * Example 1 for EDU-CIAA-NXP
  *
- * @par
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * LPC products.  This software is supplied "AS IS" without any warranties of
- * any kind, and NXP Semiconductors and its licensor disclaim any and
- * all warranties, express or implied, including all implied warranties of
- * merchantability, fitness for a particular purpose and non-infringement of
- * intellectual property rights.  NXP Semiconductors assumes no responsibility
- * or liability for the use of the software, conveys no license or rights under any
- * patent, copyright, mask work right, or any other intellectual property rights in
- * or to any products. NXP Semiconductors reserves the right to make changes
- * in the software without notification. NXP Semiconductors also makes no
- * representation or warranty that such application will be suitable for the
- * specified use without further testing or modification.
+ * This program consist of 4 real-time periodic tasks. Each task write a string
+ * with some data to the serial port, when starting and finishing each instance.
+ * Before writing to the serial port, the tasks try to take a shared mutex.
  *
- * @par
- * Permission to use, copy, modify, and distribute this software and its
- * documentation is hereby granted, under NXP Semiconductors' and its
- * licensor's relevant copyrights in the software, without fee, provided that it
- * is used in conjunction with NXP Semiconductors microcontrollers.  This
- * copyright, permission, and disclaimer notice must appear in all copies of
- * this code.
- */
+ * Author: Francisco E. Páez
+ *
+ *****************************************************************************/
+
 /*****************************************************************************
  * Includes
  ****************************************************************************/
@@ -117,13 +99,13 @@ int main(void)
     xTaskCreate( vCommonPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
-	#if( tskKERNEL_VERSION_MAJOR >= 9 )
-	{
-		vSlackSystemSetup();
-	}
-	#endif
+    #if( tskKERNEL_VERSION_MAJOR >= 9 )
+    {
+        vSlackSystemSetup();
+    }
+    #endif
 
-	// Configure additional parameters needed by the slack stealing framework.
+    // Configure additional parameters needed by the slack stealing framework.
 #if( tskKERNEL_VERSION_MAJOR == 8 )
     vTaskSetParams( task_handles[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
     vTaskSetParams( task_handles[ 1 ], TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
@@ -131,11 +113,11 @@ int main(void)
 #endif
 #if( tskKERNEL_VERSION_MAJOR >= 9 )
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
-    		TASK_1_PERIOD, TASK_1_WCET, 1 );
+            TASK_1_PERIOD, TASK_1_WCET, 1 );
     vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD,
-    		TASK_2_PERIOD, TASK_2_WCET, 2 );
+            TASK_2_PERIOD, TASK_2_WCET, 2 );
     vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD,
-    		TASK_3_PERIOD, TASK_3_WCET, 3 );
+            TASK_3_PERIOD, TASK_3_WCET, 3 );
     vSlackSchedulerSetup();
 #endif
 #endif
@@ -148,9 +130,9 @@ int main(void)
     vTraceEnable( TRC_START );
 #endif
 
-	// Start the scheduler.
-	vTaskStartScheduler();
+    // Start the scheduler.
+    vTaskStartScheduler();
 
-	// Should never arrive here.
-	for(;;);
+    // Should never arrive here.
+    for(;;);
 }

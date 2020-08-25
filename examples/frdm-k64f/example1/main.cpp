@@ -1,4 +1,17 @@
 /*****************************************************************************
+ *
+ * Example 1 for FRDM-K64F
+ *
+ * This program consist of 4 real-time periodic tasks. Each task write a string
+ * with some data to the serial port, when starting and finishing each instance.
+ * Before writing to the serial port, the tasks try to take a shared mutex.
+ *
+ * Created on: 24 Jun. 2017
+ *     Author: Francisco E. Páez
+ *
+ *****************************************************************************/
+
+/*****************************************************************************
  * Includes
  ****************************************************************************/
 #include "mbed.h"
@@ -76,14 +89,14 @@ int main()
     slack_channel = xTraceRegisterString("Slack Events");
 #endif
 
-	pc.baud( BAUDRATE );
+    pc.baud( BAUDRATE );
     pc.printf( "Example 1\n" );
 
 	// turn off all the on board LEDs.
-	leds[0] = 1;
-	leds[1] = 1;
-	leds[2] = 1;
-	leds[3] = 1;
+    leds[0] = 1;
+    leds[1] = 1;
+    leds[2] = 1;
+    leds[3] = 1;
 
     // Create mutex.
     xMutex = xSemaphoreCreateMutex();
@@ -110,10 +123,14 @@ int main()
     vTaskSetParams( task_handles[ 3 ], TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
 #endif
 #if( tskKERNEL_VERSION_MAJOR >= 9 )
-    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
-    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
-    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
-    vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
+    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
+            TASK_1_PERIOD, TASK_1_WCET, 1 );
+    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD,
+            TASK_2_PERIOD, TASK_2_WCET, 2 );
+    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD,
+            TASK_3_PERIOD, TASK_3_WCET, 3 );
+    vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD,
+            TASK_4_PERIOD, TASK_4_WCET, 4 );
   	vSlackSchedulerSetup();
 #endif
 #endif

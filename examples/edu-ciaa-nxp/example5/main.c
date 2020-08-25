@@ -2,15 +2,9 @@
  *
  * Example 5 for EDU-CIAA-NXP
  *
- * This program consist of 4 real-time periodic tasks and 2 aperiodic tasks,
- * the later only scheduled when there is available slack in the system. All
- * the tasks write a string with some data to to the serial port, when
- * starting and finishing each instance.
- *
+ * This program consist of 4 real-time periodic tasks. Each task write a string
+ * with some data to the serial port, when starting and finishing each instance.
  * Before writing to the serial port, the tasks try to take a shared mutex.
- * This could lead to the following problem: when an aperiodic task has taken
- * the mutex and then the available slack depletes, the periodic tasks can't
- * take the mutex, and a missed deadline will occur.
  *
  * This program requires FreeRTOS v10.0.0 or later.
  *
