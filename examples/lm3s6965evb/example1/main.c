@@ -174,9 +174,6 @@ static void prvPrintString( const char * pcString );
 
 /*-----------------------------------------------------------*/
 
-/* The queue used to send messages to the OLED task. */
-static QueueHandle_t xOLEDQueue;
-
 /* The welcome text. */
 const char * const pcWelcomeMessage = "   www.FreeRTOS.org";
 
@@ -296,7 +293,7 @@ void prvTask( void *pvParameters )
 
     for( ;; )
     {
-        sprintf( cMessage, "Task %d - %d", id, pxTaskSsTCB->uxReleaseCount );
+        sprintf( cMessage, "Task %d - %lu", id, pxTaskSsTCB->uxReleaseCount );
         vOLEDStringDraw( cMessage, 0, (mainCHARACTER_HEIGHT+1)*id, mainFULL_SCALE );
         prvPrintString( cMessage );
         prvPrintString( "\r\n" );
@@ -370,7 +367,7 @@ char * _sbrk_r (struct _reent *r, int incr)
     return NULL;
 }
 
-__error__(char *pcFilename, unsigned long ulLine) {
+int __error__(char *pcFilename, unsigned long ulLine) {
     return 0;
 }
 
