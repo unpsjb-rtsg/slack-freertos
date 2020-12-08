@@ -17,6 +17,11 @@
             "label": "Clean",
             "type": "shell",
             "command": "make clean"
+        },
+        {
+            "label": "VNC",
+            "type": "shell",
+            "command": "qemu-system-arm -kernel build/lm3s6965evb-example1.elf -s -machine lm3s6965evb -vnc :1"
         }
     ]
 }
