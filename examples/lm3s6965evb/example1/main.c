@@ -148,7 +148,7 @@ the jitter time in nano seconds. */
  * access the display directly.  Other tasks wanting to display a message send
  * the message to the gatekeeper.
  */
-static void prvOLEDTask( void *pvParameters );
+static void prvTask( void *pvParameters );
 
 /*
  * Configure the hardware for the demo.
@@ -159,7 +159,7 @@ static void prvSetupHardware( void );
  * Configures the high frequency timers - those used to measure the timing
  * jitter while the real time kernel is executing.
  */
-extern void vSetupHighFrequencyTimer( void );
+//extern void vSetupHighFrequencyTimer( void );
 
 /*
  * Hook functions that can get called by the kernel.
@@ -182,6 +182,13 @@ const char * const pcWelcomeMessage = "   www.FreeRTOS.org";
 
 /*-----------------------------------------------------------*/
 
+/* Functions to access the OLED.  The one used depends on the dev kit
+being used. */
+void ( *vOLEDInit )( uint32_t ) = NULL;
+void ( *vOLEDStringDraw )( const char *, uint32_t, uint32_t, unsigned char ) = NULL;
+void ( *vOLEDImageDraw )( const unsigned char *, uint32_t, uint32_t, uint32_t, uint32_t ) = NULL;
+void ( *vOLEDClear )( void ) = NULL;
+
 /*************************************************************************
  * Please ensure to read http://www.freertos.org/portlm3sx965.html
  * which provides information on configuring and running this demo for the
@@ -196,42 +203,41 @@ int main( void )
 
     prvSetupHardware();
 
-    /* Create the queue used by the OLED task.  Messages for display on the OLED
-    are received via this queue. */
-    xOLEDQueue = xQueueCreate( mainOLED_QUEUE_SIZE, sizeof( char * ) );
-
-    /* Start the standard demo tasks.
-    vStartRecursiveMutexTasks();
-    vCreateBlockTimeTasks();
-    vStartSemaphoreTasks( mainSEM_TEST_PRIORITY );
-    vStartQueuePeekTasks();
-    vStartQueueSetTasks();
-    vStartEventGroupTasks();
-    vStartMessageBufferTasks( mainMESSAGE_BUFFER_TASKS_STACK_SIZE );
-    vStartStreamBufferTasks();
-    */
-
-    TaskHandle_t task;
+    TaskHandle_t task1;
+    TaskHandle_t task2;
+    TaskHandle_t task3;
 
     /* Start the tasks defined within this file/specific to this demo. */
-    xTaskCreate( prvOLEDTask, "OLED", mainOLED_TASK_STACK_SIZE, NULL, configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1, &task );
-
-    /* The suicide tasks must be created last as they need to know how many
-    tasks were running prior to their creation in order to ascertain whether
-    or not the correct/expected number of tasks are running at any given time. */
-    //vCreateSuicidalTasks( mainCREATOR_TASK_PRIORITY );
+    xTaskCreate( prvTask, "T1", mainOLED_TASK_STACK_SIZE, (void*) 1, configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1, &task1 );
+    xTaskCreate( prvTask, "T2", mainOLED_TASK_STACK_SIZE, (void*) 2, configMAX_PRIORITIES - configMAX_SLACK_PRIO - 2, &task2 );
+    xTaskCreate( prvTask, "T3", mainOLED_TASK_STACK_SIZE, (void*) 3, configMAX_PRIORITIES - configMAX_SLACK_PRIO - 3, &task3 );
 
     /* Uncomment the following line to configure the high frequency interrupt
-    used to measure the interrupt jitter time.
-    vSetupHighFrequencyTimer(); */
+    used to measure the interrupt jitter time. */
+    //vSetupHighFrequencyTimer();
 
     vSlackSystemSetup();
 
     // Configure additional parameters needed by the slack stealing framework.
-    vSlackSetTaskParams( task, PERIODIC_TASK, 1000, 1000, 100, 1 );
+    vSlackSetTaskParams( task1, PERIODIC_TASK, 3000, 3000, 100, 1 );
+    vSlackSetTaskParams( task2, PERIODIC_TASK, 4000, 4000, 100, 2 );
+    vSlackSetTaskParams( task3, PERIODIC_TASK, 6000, 6000, 100, 3 );
 
     vSlackSchedulerSetup();
 
+    /* Map the OLED access functions to the driver functions that are appropriate
+    for the evaluation kit being used. */
+    configASSERT( ( HWREG( SYSCTL_DID1 ) & SYSCTL_DID1_PRTNO_MASK ) == SYSCTL_DID1_PRTNO_6965 );
+    vOLEDInit = OSRAM128x64x4Init;
+    vOLEDStringDraw = OSRAM128x64x4StringDraw;
+    vOLEDImageDraw = OSRAM128x64x4ImageDraw;
+    vOLEDClear = OSRAM128x64x4Clear;
+    //ulMaxY = mainMAX_ROWS_64;
+    //pucImage = pucBasicBitmap;
+    //ulY = ulMaxY;
+
+    /* Initialise the OLED and display a startup message. */
+    vOLEDInit( ulSSI_FREQUENCY );
 
     /* Start the scheduler. */
     vTaskStartScheduler();
@@ -277,45 +283,21 @@ static void prvPrintString( const char * pcString )
 }
 /*-----------------------------------------------------------*/
 
-void prvOLEDTask( void *pvParameters )
+void prvTask( void *pvParameters )
 {
-const char *pcMessage;
-uint32_t ulY, ulMaxY;
-static char cMessage[ mainMAX_MSG_LEN ];
-const unsigned char *pucImage;
+    static char cMessage[ mainMAX_MSG_LEN ];
 
-/* Functions to access the OLED.  The one used depends on the dev kit
-being used. */
-void ( *vOLEDInit )( uint32_t ) = NULL;
-void ( *vOLEDStringDraw )( const char *, uint32_t, uint32_t, unsigned char ) = NULL;
-void ( *vOLEDImageDraw )( const unsigned char *, uint32_t, uint32_t, uint32_t, uint32_t ) = NULL;
-void ( *vOLEDClear )( void ) = NULL;
+    int id = ( int ) pvParameters;
 
-    /* Prevent warnings about unused parameters. */
-    ( void ) pvParameters;
-
-    /* Map the OLED access functions to the driver functions that are appropriate
-    for the evaluation kit being used. */
-    configASSERT( ( HWREG( SYSCTL_DID1 ) & SYSCTL_DID1_PRTNO_MASK ) == SYSCTL_DID1_PRTNO_6965 );
-    vOLEDInit = OSRAM128x64x4Init;
-    vOLEDStringDraw = OSRAM128x64x4StringDraw;
-    vOLEDImageDraw = OSRAM128x64x4ImageDraw;
-    vOLEDClear = OSRAM128x64x4Clear;
-    ulMaxY = mainMAX_ROWS_64;
-    pucImage = pucBasicBitmap;
-    ulY = ulMaxY;
-
-    /* Initialise the OLED and display a startup message. */
-    vOLEDInit( ulSSI_FREQUENCY );
-    vOLEDStringDraw( "POWERED BY FreeRTOS", 0, 0, mainFULL_SCALE );
-    //vOLEDImageDraw( pucImage, 0, mainCHARACTER_HEIGHT + 1, bmpBITMAP_WIDTH, bmpBITMAP_HEIGHT );
+    sprintf(cMessage, "FreeRTOS %s + SS", tskKERNEL_VERSION_NUMBER);
+    vOLEDStringDraw( cMessage, 0, 0, mainFULL_SCALE );
 
     SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
 
     for( ;; )
     {
-        sprintf( cMessage, "Task %u", ( unsigned int ) xTaskGetTickCount() );
-        vOLEDStringDraw( cMessage, 0, mainCHARACTER_HEIGHT+1, mainFULL_SCALE );
+        sprintf( cMessage, "Task %d - %d", id, pxTaskSsTCB->uxReleaseCount );
+        vOLEDStringDraw( cMessage, 0, (mainCHARACTER_HEIGHT+1)*id, mainFULL_SCALE );
         prvPrintString( cMessage );
         prvPrintString( "\r\n" );
         vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
@@ -373,31 +355,6 @@ static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
     Note that, as the array is necessarily of type StackType_t,
     configMINIMAL_STACK_SIZE is specified in words, not bytes. */
     *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
-}
-/*-----------------------------------------------------------*/
-
-/* configUSE_STATIC_ALLOCATION and configUSE_TIMERS are both set to 1, so the
-application must provide an implementation of vApplicationGetTimerTaskMemory()
-to provide the memory that is used by the Timer service task. */
-void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer, StackType_t **ppxTimerTaskStackBuffer, uint32_t *pulTimerTaskStackSize )
-{
-/* If the buffers to be provided to the Timer task are declared inside this
-function then they must be declared static - otherwise they will be allocated on
-the stack and so not exists after this function exits. */
-static StaticTask_t xTimerTaskTCB;
-static StackType_t uxTimerTaskStack[ configTIMER_TASK_STACK_DEPTH ];
-
-    /* Pass out a pointer to the StaticTask_t structure in which the Timer
-    task's state will be stored. */
-    *ppxTimerTaskTCBBuffer = &xTimerTaskTCB;
-
-    /* Pass out the array that will be used as the Timer task's stack. */
-    *ppxTimerTaskStackBuffer = uxTimerTaskStack;
-
-    /* Pass out the size of the array pointed to by *ppxTimerTaskStackBuffer.
-    Note that, as the array is necessarily of type StackType_t,
-    configMINIMAL_STACK_SIZE is specified in words, not bytes. */
-    *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
 }
 /*-----------------------------------------------------------*/
 

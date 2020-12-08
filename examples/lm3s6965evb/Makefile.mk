@@ -24,7 +24,7 @@ FREERTOS_INCLUDE_PATH += -I../../libs/FreeRTOS/$(FREERTOS_KERNEL_VERSION_NUMBER)
 # applicaton
 INCLUDE_PATHS += -I.
 INCLUDE_PATHS += -I./$(APP_NAME)
-INCLUDE_PATHS += -I./common
+#INCLUDE_PATHS += -I./common
 INCLUDE_PATHS += -I./../utils
 INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += $(FREERTOS_INCLUDE_PATH)
@@ -89,6 +89,9 @@ LD_FLAGS += -Wl,-gc-sections
 LD_FLAGS += $(foreach l, $(LIBS), -l$(l))
 
 # Replace these functions
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.4.1)
+WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
 ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.3.1)
 WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
 endif

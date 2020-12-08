@@ -64,10 +64,10 @@
 #define configSUPPORT_STATIC_ALLOCATION	1
 
 /* Timer related defines. */
-#define configUSE_TIMERS				1
-#define configTIMER_TASK_PRIORITY		2
+#define configUSE_TIMERS				0
+/*#define configTIMER_TASK_PRIORITY		2
 #define configTIMER_QUEUE_LENGTH		20
-#define configTIMER_TASK_STACK_DEPTH	( configMINIMAL_STACK_SIZE )
+#define configTIMER_TASK_STACK_DEPTH	( configMINIMAL_STACK_SIZE )*/
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
@@ -85,7 +85,7 @@ to exclude the API function. */
 #define INCLUDE_xTaskGetIdleTaskHandle			1
 #define INCLUDE_xSemaphoreGetMutexHolder		1
 #define INCLUDE_eTaskGetState					1
-#define INCLUDE_xTimerPendFunctionCall			1
+#define INCLUDE_xTimerPendFunctionCall			0
 
 /* This demo makes use of one or more example stats formatting functions.  These
 format the raw data provided by the uxTaskGetSystemState() function in to human
@@ -122,6 +122,15 @@ at the top of main.c for enabling the trace recorder.
 
 #define configSS_ASSERT_EQUAL( x, y ) if( ( x ) != ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
 #define configSS_ASSERT_GREATHER_OR_EQUAL( x, y ) if( ( x ) < ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
+
+#define configUSE_HEAP_SCHEME 1
+#define configRECORD_STACK_HIGH_ADDRESS 1
+//#define configGENERATE_RUN_TIME_STATS             0 /* 1: generate runtime statistics; 0: no runtime statistics */
+
+ /* Defined in FreeRTOSConfig.h. */
+ //extern void vConfigureTimerForRunTimeStats( void );
+ //#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() vConfigureTimerForRunTimeStats()
+ //#define portGET_RUN_TIME_COUNTER_VALUE() LPC_TIM1->TC
 
 /* Slack Stealing configuration. */
 #include "slackConfig.h"
