@@ -83,6 +83,7 @@ $(APP_NAME):
 	+@echo "-- Building: $(APP_NAME)"
 	+@echo "-- DEBUG: $(DEBUG)"
 	@$(MAKE) $(MAKE_FLAGS) -C examples/$(TARGET)/ -f Makefile.mk APP_NAME=$(APP_NAME)
+	+@echo "Done!"
 
 $(APP_NAME)_clean:
 	+@echo "-- Target: $(TARGET)"
