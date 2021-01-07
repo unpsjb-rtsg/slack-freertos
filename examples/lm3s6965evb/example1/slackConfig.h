@@ -1,5 +1,5 @@
-#ifndef EXAMPLES_EDU_CIAA_NXP_EXAMPLE1_SLACKCONFIG_H_
-#define EXAMPLES_EDU_CIAA_NXP_EXAMPLE1_SLACKCONFIG_H_
+#ifndef EXAMPLES_LM3S6965EVB_EXAMPLE1_SLACKCONFIG_H_
+#define EXAMPLES_LM3S6965EVB_EXAMPLE1_SLACKCONFIG_H_
 
 #define EXAMPLE 1
 
@@ -12,8 +12,6 @@
 
 /* Required for identify the IDLE task in slacks methods and deadline check. */
 #define INCLUDE_xTaskGetIdleTaskHandle  1
-
-#define INCLUDE_xTaskGetIdleTaskHandle  1 /* Required for identify the IDLE task in slacks methods and deadline check */
 
 /*
  * Slack methods available:
@@ -34,4 +32,4 @@
 #define configTASK_EXEC                 0
 /* ========================================================================= */
 
-#endif /* EXAMPLES_EDU_CIAA_NXP_EXAMPLE1_SLACKCONFIG_H_ */
+#endif /* EXAMPLES_LM3S6965EVB_EXAMPLE1_SLACKCONFIG_H_ */

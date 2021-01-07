@@ -256,11 +256,6 @@ void prvSetupHardware( void )
 
     /* Set the clocking to run from the PLL at 50 MHz */
     SysCtlClockSet( SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_8MHZ );
-
-    /* Initialise the UART - QEMU usage does not seem to require this
-    initialisation. */
-    SysCtlPeripheralEnable( SYSCTL_PERIPH_UART0 );
-    UARTEnable( UART0_BASE );
 }
 /*-----------------------------------------------------------*/
 
@@ -293,7 +288,7 @@ void prvTask( void *pvParameters )
 
     for( ;; )
     {
-        sprintf( cMessage, "Task %d - %lu", id, pxTaskSsTCB->uxReleaseCount );
+        sprintf( cMessage, "%s - %u", pcTaskGetTaskName( NULL ), pxTaskSsTCB->uxReleaseCount );
         vOLEDStringDraw( cMessage, 0, (mainCHARACTER_HEIGHT+1)*id, mainFULL_SCALE );
         prvPrintString( cMessage );
         prvPrintString( "\r\n" );

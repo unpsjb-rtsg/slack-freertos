@@ -116,10 +116,6 @@ demo. */
 void vAssertCalled( const char *pcFile, unsigned long ulLine );
 #define configASSERT( x ) if( ( x ) == 0 ) vAssertCalled( __FILE__, __LINE__ );
 
-/* Include the FreeRTOS+Trace FreeRTOS trace macro definitions.  See the comments
-at the top of main.c for enabling the trace recorder.
-#include "trcRecorder.h" */
-
 #define configSS_ASSERT_EQUAL( x, y ) if( ( x ) != ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
 #define configSS_ASSERT_GREATHER_OR_EQUAL( x, y ) if( ( x ) < ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
 
@@ -127,10 +123,10 @@ at the top of main.c for enabling the trace recorder.
 #define configRECORD_STACK_HIGH_ADDRESS 1
 //#define configGENERATE_RUN_TIME_STATS             0 /* 1: generate runtime statistics; 0: no runtime statistics */
 
- /* Defined in FreeRTOSConfig.h. */
- //extern void vConfigureTimerForRunTimeStats( void );
- //#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() vConfigureTimerForRunTimeStats()
- //#define portGET_RUN_TIME_COUNTER_VALUE() LPC_TIM1->TC
+/* Defined in FreeRTOSConfig.h. */
+//extern void vConfigureTimerForRunTimeStats( void );
+//#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() vConfigureTimerForRunTimeStats()
+//#define portGET_RUN_TIME_COUNTER_VALUE() LPC_TIM1->TC
 
 /* Slack Stealing configuration. */
 #include "slackConfig.h"
