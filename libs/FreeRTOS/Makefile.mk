@@ -15,6 +15,9 @@ OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/MemMang/heap_1.o
 ifeq ($(TARGET), lpc1768)
   OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM3/port.o
 endif
+ifeq ($(TARGET), lm3s6965evb)
+  OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM3/port.o
+endif
 ifeq ($(TARGET), edu-ciaa-nxp)
   OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM4F/port.o
 endif
@@ -31,6 +34,9 @@ INCLUDE_PATHS += -I../../examples/$(TARGET)/$(APP_NAME)
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/include
 ifeq ($(TARGET), lpc1768)
+  INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM3
+endif
+ifeq ($(TARGET), lm3s6965evb)
   INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM3
 endif
 ifeq ($(TARGET), edu-ciaa-nxp)
@@ -58,6 +64,13 @@ ifeq ($(USE_SLACK), 1)
     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
   endif
   ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.3.1)
+    OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
+    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
+    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_davis.o
+    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_fixed.o
+    CC_SYMBOLS += -DSS_ALGORITHM=$(SS_ALGORITHM)
+  endif
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.4.1)
     OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_davis.o
