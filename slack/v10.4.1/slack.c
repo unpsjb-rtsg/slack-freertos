@@ -126,11 +126,6 @@ void vSlackSchedulerSetup( void )
 }
 /*-----------------------------------------------------------*/
 
-/**
- * RTA - Worst Case Response Time calculation.
- * "Improved Response-Time Analysis Calculations"
- * http://doi.ieeecomputersociety.org/10.1109/REAL.1998.739773
- */
 BaseType_t xSlackCalculateTasksWcrt( List_t * pxTasksList )
 {
 	TickType_t xW = 0U;
@@ -251,7 +246,7 @@ inline void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks,
 /*-----------------------------------------------------------*/
 
 inline void vSlackDecrementAllTasksSlack( const TickType_t xTicks,
-        const TickType_t xTickCount, const List_t * pxTasksList )
+        const List_t * pxTasksList )
 {
 	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxTasksList );
 
@@ -269,10 +264,10 @@ inline void vSlackDecrementAllTasksSlack( const TickType_t xTicks,
 }
 /*-----------------------------------------------------------*/
 
-inline void vSlackDecrementTasksSlack( TaskHandle_t pxTask, const TickType_t xTicks,
-        const TickType_t xTickCount, const List_t * pxTasksList )
+inline void vSlackDecrementTasksSlack( TaskHandle_t xTask, const TickType_t xTicks,
+        const List_t * pxTasksList )
 {
-	const ListItem_t * pxAppTasksListEndMarker = &( getTaskSsTCB( pxTask )->xSsTaskListItem );
+	const ListItem_t * pxAppTasksListEndMarker = &( getTaskSsTCB( xTask )->xSsTaskListItem );
     ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxTasksList );
 
     while( pxAppTasksListEndMarker != pxAppTasksListItem )
