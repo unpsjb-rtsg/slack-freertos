@@ -542,7 +542,7 @@ BaseType_t xSwitchRequired = pdFALSE;
             }
             else
             {
-                vSlackDecrementTasksSlack( pxCurrentTCB, ONE_TICK, &xSsTaskList );
+                vSlackDecrementTasksSlack( pxCurrentTCB, ONE_TICK );
             }
 
             // Update available slack

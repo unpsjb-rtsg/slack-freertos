@@ -260,11 +260,10 @@ inline void vSlackDecrementAllTasksSlack( const TickType_t xTicks )
 }
 /*-----------------------------------------------------------*/
 
-inline void vSlackDecrementTasksSlack( TaskHandle_t xTask, const TickType_t xTicks,
-        const List_t * pxTasksList )
+inline void vSlackDecrementTasksSlack( TaskHandle_t xTask, const TickType_t xTicks )
 {
 	const ListItem_t * pxAppTasksListEndMarker = &( getTaskSsTCB( xTask )->xSsTaskListItem );
-    ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxTasksList );
+    ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( &xSsTaskList );
 
     while( pxAppTasksListEndMarker != pxAppTasksListItem )
     {

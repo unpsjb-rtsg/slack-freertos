@@ -219,10 +219,8 @@ void vSlackDecrementAllTasksSlack( const TickType_t xTicks );
  *
  * @param pxTask The task currently running.
  * @param xTicks Amount of ticks to subtract from the slack counters of higher priority tasks.
- * @param pxTasksList List of tasks. It should be a pointer to \ref xSsTaskList.
  */
-void vSlackDecrementTasksSlack( TaskHandle_t xTask, const TickType_t xTicks,
-        const List_t * pxTasksList );
+void vSlackDecrementTasksSlack( TaskHandle_t xTask, const TickType_t xTicks );
 
 /**
  * \brief Calculates the system workload at the instant \p xTc
