@@ -227,13 +227,12 @@ inline void vSlackUpdateAvailableSlack()
 }
 /*-----------------------------------------------------------*/
 
-inline void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks,
-        const List_t * pxTasksList )
+inline void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks )
 {
     SsTCB_t * ssTCB = getTaskSsTCB( xTask );
     ListItem_t * pxAppTasksListItem = listGET_NEXT( &( ssTCB->xSsTaskListItem ) );
 
-    while( listGET_END_MARKER( pxTasksList ) != pxAppTasksListItem )
+    while( listGET_END_MARKER( *xSsTaskList ) != pxAppTasksListItem )
     {
         ssTCB = getTaskSsTCB( listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) );
         ssTCB->xSlack += ( BaseType_t ) xTicks;

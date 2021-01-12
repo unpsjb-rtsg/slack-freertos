@@ -199,10 +199,8 @@ void vSlackUpdateAvailableSlack();
  *
  * @param xTask Task which has gained slack.
  * @param xTicks Amount of ticks to add to the slack counters.
- * @param pxTasksList List of tasks. It should be a pointer to \ref xSsTaskList.
  */
-void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks,
-        const List_t * pxTasksList );
+void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks );
 
 /**
  * \brief Decrement the slack counter of all the tasks.

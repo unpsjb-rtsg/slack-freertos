@@ -238,7 +238,7 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
 
             if( pxCurrentSsTCB->xWcet > pxCurrentSsTCB->xCur )
             {
-                vSlackGainSlack( pxCurrentTCB, pxCurrentSsTCB->xWcet - pxCurrentSsTCB->xCur, &xSsTaskList );
+                vSlackGainSlack( pxCurrentTCB, pxCurrentSsTCB->xWcet - pxCurrentSsTCB->xCur );
             }
             vSlackUpdateAvailableSlack( &xSlackSD );
         }
