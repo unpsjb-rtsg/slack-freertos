@@ -232,7 +232,7 @@ inline void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks )
     SsTCB_t * ssTCB = getTaskSsTCB( xTask );
     ListItem_t * pxAppTasksListItem = listGET_NEXT( &( ssTCB->xSsTaskListItem ) );
 
-    while( listGET_END_MARKER( *xSsTaskList ) != pxAppTasksListItem )
+    while( listGET_END_MARKER( &xSsTaskList ) != pxAppTasksListItem )
     {
         ssTCB = getTaskSsTCB( listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) );
         ssTCB->xSlack += ( BaseType_t ) xTicks;
@@ -242,12 +242,11 @@ inline void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks )
 }
 /*-----------------------------------------------------------*/
 
-inline void vSlackDecrementAllTasksSlack( const TickType_t xTicks,
-        const List_t * pxTasksList )
+inline void vSlackDecrementAllTasksSlack( const TickType_t xTicks )
 {
-	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxTasksList );
+	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( &xSsTaskList );
 
-	while( listGET_END_MARKER( pxTasksList ) != pxAppTasksListItem )
+	while( listGET_END_MARKER( &xSsTaskList ) != pxAppTasksListItem )
 	{
 		SsTCB_t * xTask = getTaskSsTCB( listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) );
 

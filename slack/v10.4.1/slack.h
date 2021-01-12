@@ -209,10 +209,8 @@ void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks );
  * The available slack of a task is stored in \ref SsTCB.xSlack.
  *
  * @param xTicks Amount of ticks to subtract from the available slack of the tasks.
- * @param pxTasksList The list of tasks. It should be a pointer to \ref xSsTaskList.
  */
-void vSlackDecrementAllTasksSlack( const TickType_t xTicks,
-        const List_t * pxTasksList );
+void vSlackDecrementAllTasksSlack( const TickType_t xTicks );
 
 /**
  * \brief Reduce \p xTicks to all higher priority tasks than \p pxTask.
