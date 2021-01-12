@@ -122,15 +122,15 @@ void vSlackSchedulerSetup( void )
     	pxTaskListItem = listGET_NEXT( pxTaskListItem );
     }
 
-    vSlackUpdateAvailableSlack( &xSlackSD, &xSsTaskList );
+    vSlackUpdateAvailableSlack();
 }
 /*-----------------------------------------------------------*/
 
-BaseType_t xSlackCalculateTasksWcrt( List_t * pxTasksList )
+BaseType_t xSlackCalculateTasksWcrt()
 {
 	TickType_t xW = 0U;
 
-	ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( pxTasksList );
+	ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
 
 	TaskHandle_t xTask = ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
 	SsTCB_t *pxTask = pvTaskGetThreadLocalStoragePointer( xTask, 0 );
@@ -149,7 +149,7 @@ BaseType_t xSlackCalculateTasksWcrt( List_t * pxTasksList )
 	pxTaskListItem = listGET_NEXT( pxTaskListItem );
 
 	/* Process all the periodic tasks in xTasks. */
-	while( listGET_END_MARKER( pxTasksList ) != pxTaskListItem )
+	while( listGET_END_MARKER( &xSsTaskList ) != pxTaskListItem )
 	{
 		xTask = ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
 		pxTask = pvTaskGetThreadLocalStoragePointer( xTask, 0 );
@@ -161,7 +161,7 @@ BaseType_t xSlackCalculateTasksWcrt( List_t * pxTasksList )
 			xW = 0;
 
 			/* Calculates the workload of the higher priority tasks than pxTask. */
-			ListItem_t * pxHigherPrioTaskListItem = listGET_HEAD_ENTRY( pxTasksList );
+			ListItem_t * pxHigherPrioTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
 			do
 			{
 				SsTCB_t *pxHigherPrioTask = pvTaskGetThreadLocalStoragePointer(
@@ -206,21 +206,20 @@ TickType_t xSlackGetAvailableSlack( void )
 }
 /*-----------------------------------------------------------*/
 
-inline void vSlackUpdateAvailableSlack( volatile BaseType_t * xSlackSD,
-        const List_t * pxTasksList )
+inline void vSlackUpdateAvailableSlack()
 {
-	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxTasksList );
+	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( &xSsTaskList );
 
 	SsTCB_t * ssTCB = getTaskSsTCB( listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) );
-	*xSlackSD = ssTCB->xSlack;
+	xSlackSD = ssTCB->xSlack;
 
-	while( listGET_END_MARKER( pxTasksList ) != pxAppTasksListItem )
+	while( listGET_END_MARKER( &xSsTaskList ) != pxAppTasksListItem )
 	{
 		ssTCB = getTaskSsTCB( listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) );
 
-		if( ssTCB->xSlack < *xSlackSD )
+		if( ssTCB->xSlack < xSlackSD )
 		{
-			*xSlackSD = ssTCB->xSlack;
+			xSlackSD = ssTCB->xSlack;
 		}
 
 		pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );

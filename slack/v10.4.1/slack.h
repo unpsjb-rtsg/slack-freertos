@@ -191,12 +191,8 @@ BaseType_t xSlackCalculateTasksWcrt();
  *
  * The system available slack is calculated as the minimum value of all the
  * tasks available slacks.
- *
- * @param xSlackSD Pointer to \ref xSlackSD.
- * @param pxTasksList List of tasks. It should be a pointer to \ref xSsTaskList.
  */
-void vSlackUpdateAvailableSlack( volatile BaseType_t * xSlackSD,
-        const List_t * pxTasksList );
+void vSlackUpdateAvailableSlack();
 
 /**
  * \brief Add \p xTicks to all lower priority tasks than \p xTask .
