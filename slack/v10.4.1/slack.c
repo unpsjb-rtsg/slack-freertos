@@ -200,7 +200,6 @@ BaseType_t xSlackCalculateTasksWcrt( List_t * pxTasksList )
 }
 /*-----------------------------------------------------------*/
 
-/* Return the available slack. */
 TickType_t xSlackGetAvailableSlack( void )
 {
     return xSlackSD;
