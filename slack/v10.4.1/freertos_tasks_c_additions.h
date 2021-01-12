@@ -538,11 +538,11 @@ BaseType_t xSwitchRequired = pdFALSE;
             // Decrement real-time tasks slack counter by one tick
             if( ( pxCurrentTCB->uxPriority == tskIDLE_PRIORITY ) || ( pxCurrentTCB->uxPriority >= ( ( UBaseType_t ) ( configMAX_PRIORITIES - configMAX_SLACK_PRIO ) ) ) )
             {
-                vSlackDecrementAllTasksSlack( ONE_TICK, xTickCount, &xSsTaskList );
+                vSlackDecrementAllTasksSlack( ONE_TICK, &xSsTaskList );
             }
             else
             {
-                vSlackDecrementTasksSlack( pxCurrentTCB, ONE_TICK, xTickCount, &xSsTaskList );
+                vSlackDecrementTasksSlack( pxCurrentTCB, ONE_TICK, &xSsTaskList );
             }
 
             // Update available slack
