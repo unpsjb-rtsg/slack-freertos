@@ -120,7 +120,7 @@ static void prvTaskRecSlack() PRIVILEGED_FUNCTION;
     {
         pxArray[ 0 ] = xTickCount;
         pxArray[ 1 ] = getSsTCB( pxCurrentTCB )->xId; //getSsTCB( pxCurrentTCB )->xCur;
-        pxArray[ 2 ] = xSlackSD;
+        pxArray[ 2 ] = xSlackGetAvailableSlack();
 
         ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
 
@@ -240,7 +240,7 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
             {
                 vSlackGainSlack( pxCurrentTCB, pxCurrentSsTCB->xWcet - pxCurrentSsTCB->xCur );
             }
-            vSlackUpdateAvailableSlack( &xSlackSD );
+            vSlackUpdateAvailableSlack();
         }
 
         if( xShouldDelay != pdFALSE )
@@ -264,7 +264,7 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
 
     #if( configUSE_SLACK_STEALING == 1 )
     {
-        if( xSlackSD > configMIN_SLACK_SD )
+        if( xSlackGetAvailableSlack() > configMIN_SLACK_SD )
         {
             /* Resume slack-delayed tasks if there is enough
             available slack. */
@@ -546,9 +546,9 @@ BaseType_t xSwitchRequired = pdFALSE;
             }
 
             // Update available slack
-            vSlackUpdateAvailableSlack( &xSlackSD );
+            vSlackUpdateAvailableSlack();
 
-            if( xSlackSD <= configMIN_SLACK_SD )
+            if( xSlackGetAvailableSlack() <= configMIN_SLACK_SD )
             {
                 UBaseType_t x;
 

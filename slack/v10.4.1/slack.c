@@ -11,7 +11,12 @@ static BaseType_t xLoopCost = 0;
 #endif
 #endif
 
-volatile BaseType_t xSlackSD;
+/**
+ * \brief The system available slack.
+ *
+ * The system available slack is the minimum value of all the task's slacks.
+ */
+volatile static BaseType_t xSlackSD;
 
 List_t xDeadlineTaskList;
 

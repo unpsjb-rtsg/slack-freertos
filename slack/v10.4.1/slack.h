@@ -30,13 +30,6 @@ typedef enum
 } SsTaskType_t;
 
 /**
- * \brief The system available slack.
- *
- * The system available slack is the minimum value of all the task's slacks.
- */
-extern volatile BaseType_t xSlackSD;
-
-/**
  * \brief Task's deadlines list.
  *
  * This list contains references to all the ready tasks, ordered by their
