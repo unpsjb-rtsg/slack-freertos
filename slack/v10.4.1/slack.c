@@ -431,3 +431,23 @@ void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc )
 
 }
 /*-----------------------------------------------------------*/
+
+/* Record available slack of each task. */
+void vTasksGetSlacks( int32_t *pxArray )
+{
+    pxArray[ 0 ] = xTaskGetTickCount();
+    pxArray[ 1 ] = getTaskSsTCB( xTaskGetCurrentTaskHandle() )->xId; //getSsTCB( pxCurrentTCB )->xCur;
+    pxArray[ 2 ] = xSlackGetAvailableSlack();
+
+    ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
+
+    BaseType_t xI = 3U;
+
+    while( listGET_END_MARKER( &( xSsTaskList ) ) != pxTaskListItem )
+    {
+        pxArray[ xI ] = getTaskSsTCB( listGET_LIST_ITEM_OWNER( pxTaskListItem ) )->xSlack;
+        xI = xI + 1;
+        pxTaskListItem = listGET_NEXT( pxTaskListItem );
+    }
+}
+/*-----------------------------------------------------------*/
