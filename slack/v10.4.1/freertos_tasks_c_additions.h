@@ -222,7 +222,7 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
             /* SS: The current tick is considered as consumed. */
             #if ( configUSE_SLACK_K == 0 )
             {
-                vTaskCalculateSlack( pxCurrentTCB, xConstTickCount, &xSsTaskList );
+                vTaskCalculateSlack( pxCurrentTCB, xConstTickCount );
             }
             #else
             {

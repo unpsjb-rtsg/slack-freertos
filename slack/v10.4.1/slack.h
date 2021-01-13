@@ -30,15 +30,6 @@ typedef enum
 } SsTaskType_t;
 
 /**
- * \brief List containing all the RTT of the system.
- *
- * This list contains references to all the tasks that account for the
- * available slack of the system. Tasks at the idle priority level are not
- * accounted.
- */
-extern List_t xSsTaskList;
-
-/**
  * \brief List of tasks blocked by insufficient available slack.
  *
  * This list stores tasks that have been blocked by insufficient available
@@ -246,10 +237,8 @@ TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t xTc,
  *
  * @param xTask The task which available slack should be calculated.
  * @param xTc The time at which the slack calculation should be done.
- * @param pxTasksList List of tasks. It should be a pointer to \ref xSsTaskList.
  */
-void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc,
-        const List_t * pxTasksList );
+void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc );
 
 /**
  * \brief Return the system available slack.

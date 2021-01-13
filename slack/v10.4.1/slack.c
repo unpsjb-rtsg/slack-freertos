@@ -26,7 +26,14 @@ volatile static BaseType_t xSlackSD;
  */
 static List_t xDeadlineTaskList;
 
-List_t xSsTaskList;
+/**
+ * \brief List containing all the RTT of the system.
+ *
+ * This list contains references to all the tasks that account for the
+ * available slack of the system. Tasks at the idle priority level are not
+ * accounted.
+ */
+static List_t xSsTaskList;
 
 List_t xSsTaskBlockedList;
 
@@ -118,7 +125,7 @@ void vSlackSchedulerSetup( void )
     	TaskHandle_t xTask = ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
     	SsTCB_t *pxTaskSs = getTaskSsTCB( xTask );
 
-    	vTaskCalculateSlack( xTask, (TickType_t) 0U, &xSsTaskList );
+    	vTaskCalculateSlack( xTask, (TickType_t) 0U );
     	pxTaskSs->xSlackK = pxTaskSs->xSlack;
 
     	/* Deadline */
@@ -388,8 +395,7 @@ inline TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t xTc,
 }
 /*-----------------------------------------------------------*/
 
-void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc,
-        const List_t * pxTasksList )
+void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc )
 {
 #if ( configKERNEL_TEST == 2 )
 	xCeilFloorCost = 0;
@@ -401,7 +407,7 @@ void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc,
 	xLoopCost = 0;
 #endif
 
-	vTaskCalculateSlack_alg( xTask, xTc, pxTasksList );
+	vTaskCalculateSlack_alg( xTask, xTc, &xSsTaskList );
 
 #if ( configKERNEL_TEST == 2 )
 	if (xTc > 0)
