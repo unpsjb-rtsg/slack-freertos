@@ -29,21 +29,6 @@ typedef enum
 	APERIODIC_TASK
 } SsTaskType_t;
 
-/**
- * \brief List of tasks blocked by insufficient available slack.
- *
- * This list stores tasks that have been blocked by insufficient available
- * slack. They need to be stored in a separated list because we don't know
- * in advance when there is enough available slack.
- *
- * The blocked (delayed) list of FreeRTOS stores real-time tasks that are
- * blocked in waiting of a resource, with a timeout or for an unspecified
- * amount of time. Although that list could be used to store the slack-blocked
- * tasks, identifying the tasks waiting for slack from the resource-blocked ones
- * by means of the \ref SsTCB could be time consuming.
- */
-extern List_t xSsTaskBlockedList;
-
 struct SsTCB
 {
 	SsTaskType_t xTaskType;         /**< Task type (RTT o NRTT). */
@@ -91,6 +76,21 @@ struct SsTCB
 };
 
 typedef struct SsTCB SsTCB_t;
+
+/**
+ * \brief List of tasks blocked by insufficient available slack.
+ *
+ * This list stores tasks that have been blocked by insufficient available
+ * slack. They need to be stored in a separated list because we don't know
+ * in advance when there is enough available slack.
+ *
+ * The blocked (delayed) list of FreeRTOS stores real-time tasks that are
+ * blocked in waiting of a resource, with a timeout or for an unspecified
+ * amount of time. Although that list could be used to store the slack-blocked
+ * tasks, identifying the tasks waiting for slack from the resource-blocked ones
+ * by means of the \ref SsTCB could be time consuming.
+ */
+extern List_t xSsTaskBlockedList;
 
 /*****************************************************************************
  * Public functions declaration
@@ -248,10 +248,11 @@ void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc );
 TickType_t xSlackGetAvailableSlack( void );
 
 /**
+ * \brief Record the available slack of each task in \p pxArray.
  *
- * @param taskSlackArray
+ * @param pxArray a pointer to an array where the counters are copied.
  */
-void vTasksGetSlacks( int32_t *taskSlackArray );
+void vTasksGetSlacks( int32_t *pxArray );
 
 #ifdef __cplusplus
 }

@@ -35,7 +35,7 @@ static List_t xDeadlineTaskList;
  */
 static List_t xSsTaskList;
 
-List_t xSsTaskBlockedList;
+List_t xSsTaskBlockedList; // defined here for initialization
 
 void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
         const TickType_t xPeriod, const TickType_t xDeadline,
@@ -432,7 +432,11 @@ void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc )
 }
 /*-----------------------------------------------------------*/
 
-/* Record available slack of each task. */
+/**
+ * \brief Record the available slack of each task in \p pxArray.
+ *
+ * @param pxArray a pointer to an array where the counters are copied.
+ */
 void vTasksGetSlacks( int32_t *pxArray )
 {
     pxArray[ 0 ] = xTaskGetTickCount();
