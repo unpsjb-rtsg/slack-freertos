@@ -18,7 +18,13 @@ static BaseType_t xLoopCost = 0;
  */
 volatile static BaseType_t xSlackSD;
 
-List_t xDeadlineTaskList;
+/**
+ * \brief Task's deadlines list.
+ *
+ * This list contains references to all the ready tasks, ordered by their
+ * absolute deadlines.
+ */
+static List_t xDeadlineTaskList;
 
 List_t xSsTaskList;
 
@@ -130,6 +136,50 @@ void vSlackSchedulerSetup( void )
     vSlackUpdateAvailableSlack();
 }
 /*-----------------------------------------------------------*/
+
+void vSlackDeadlineCheck()
+{
+    TickType_t xTickCount = xTaskGetTickCountFromISR();
+
+    if( listLIST_IS_EMPTY( &xDeadlineTaskList ) == pdFALSE )
+    {
+        ListItem_t *pxDeadlineListItem = listGET_HEAD_ENTRY( &xDeadlineTaskList );
+
+        while( listGET_END_MARKER( &( xDeadlineTaskList ) ) != pxDeadlineListItem )
+        {
+            TickType_t xTaskReleaseDeadline = listGET_LIST_ITEM_VALUE( pxDeadlineListItem );
+            if( xTickCount >= xTaskReleaseDeadline )
+            {
+                TaskHandle_t pxTask = listGET_LIST_ITEM_OWNER( pxDeadlineListItem );
+                SsTCB_t *pxTaskSs = getTaskSsTCB( pxTask );
+                /* The current release of task pxTCB has missed its deadline.
+                 * Invoke the application missed-deadline hook function. */
+                vApplicationDeadlineMissedHook( pcTaskGetName(pxTask), pxTaskSs, xTickCount );
+            }
+            else
+            {
+                /* As xDeadlineTaskList is deadline-ordered if the current
+                 * xTaskReleaseDeadline is greater than the tick count, then the
+                 * remaining tasks has not missed their deadlines. */
+                break;
+            }
+            /* Get the next task list item. */
+            pxDeadlineListItem = listGET_NEXT( pxDeadlineListItem );
+        }
+    }
+}
+/*-----------------------------------------------------------*/
+
+void vSlackUpdateDeadline( SsTCB_t *pxTask, TickType_t xTimeToWake )
+{
+    /* Remove the current release deadline and insert the deadline for the next
+     * release of pxCurrentTCB. */
+    ListItem_t *pxDeadlineTaskListItem = &( pxTask->xDeadlineTaskListItem );
+    uxListRemove( pxDeadlineTaskListItem );
+    listSET_LIST_ITEM_VALUE( pxDeadlineTaskListItem, xTimeToWake + pxTask->xDeadline );
+    vListInsert( &xDeadlineTaskList, pxDeadlineTaskListItem );
+    pxTask->xTimeToWake = xTimeToWake;
+}
 
 BaseType_t xSlackCalculateTasksWcrt()
 {

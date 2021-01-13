@@ -200,13 +200,7 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
 
         #if ( configUSE_SLACK_STEALING == 1 )
         {
-            /* SS: Remove the current release deadline and insert the deadline
-                        for the next release of pxCurrentTCB. */
-            ListItem_t *pxDeadlineTaskListItem = &( pxCurrentSsTCB->xDeadlineTaskListItem );
-            uxListRemove( pxDeadlineTaskListItem );
-            listSET_LIST_ITEM_VALUE( pxDeadlineTaskListItem, xTimeToWake + pxCurrentSsTCB->xDeadline );
-            vListInsert( &xDeadlineTaskList, pxDeadlineTaskListItem );
-            pxCurrentSsTCB->xTimeToWake = xTimeToWake;
+            vSlackUpdateDeadline( pxCurrentSsTCB, xTimeToWake );
         }
         #endif
 
@@ -465,35 +459,7 @@ BaseType_t xSwitchRequired = pdFALSE;
 
         #if ( configUSE_SLACK_STEALING == 1 )
         {
-            /* deadline check. */
-            if( listLIST_IS_EMPTY( &xDeadlineTaskList ) == pdFALSE )
-            {
-                ListItem_t *pxDeadlineListItem = listGET_HEAD_ENTRY( &xDeadlineTaskList );
-
-                while( listGET_END_MARKER( &( xDeadlineTaskList ) ) != pxDeadlineListItem )
-                {
-                    TickType_t xTaskReleaseDeadline = listGET_LIST_ITEM_VALUE( pxDeadlineListItem );
-                    if( xTickCount >= xTaskReleaseDeadline )
-                    {
-                        TCB_t *pxTask = listGET_LIST_ITEM_OWNER( pxDeadlineListItem );
-                        SsTCB_t *pxTaskSs = getSsTCB( pxTask );
-                        /* The current release of task pxTCB has missed its
-                        deadline. Invoke the application missed-deadline
-                        hook function. */
-                        vApplicationDeadlineMissedHook( pxTask->pcTaskName, pxTaskSs, xTickCount );
-                    }
-                    else
-                    {
-                        /* As xDeadlineTaskList is deadline-ordered if the
-                        current xTaskReleaseDeadline is greater than the
-                        tick count, then the remaining tasks has not missed
-                        their deadlines. */
-                        break;
-                    }
-                    /* Get the next task list item. */
-                    pxDeadlineListItem = listGET_NEXT( pxDeadlineListItem );
-                }
-            }
+            vSlackDeadlineCheck();
         }
         #endif
 

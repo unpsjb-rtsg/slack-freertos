@@ -30,14 +30,6 @@ typedef enum
 } SsTaskType_t;
 
 /**
- * \brief Task's deadlines list.
- *
- * This list contains references to all the ready tasks, ordered by their
- * absolute deadlines.
- */
-extern List_t xDeadlineTaskList;
-
-/**
  * \brief List containing all the RTT of the system.
  *
  * This list contains references to all the tasks that account for the
@@ -152,6 +144,23 @@ void vSlackSystemSetup( void );
  * This function must be called **before** \ref vTaskStartScheduler().
  */
 void vSlackSchedulerSetup( void );
+
+/**
+ * \brief Perform the deadline check of the RTTs.
+ *
+ * If a deadline miss is detected \ref vApplicationDeadlineMissedHook() is called.
+ */
+void vSlackDeadlineCheck( void );
+
+/**
+ * \brief Updates the absolute deadline of \p pxTask.
+ *
+ * Remove the current release deadline and insert the deadline for the next release of \p pxTask.
+ *
+ * @param pxTask The task to which update its deadline.
+ * @param xTimeToWake The task release time from which calculate the absolute deadline.
+ */
+void vSlackUpdateDeadline( SsTCB_t *pxTask, TickType_t xTimeToWake );
 
 /**
  * \brief Set additional task parameters.
