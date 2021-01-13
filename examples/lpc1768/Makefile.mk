@@ -110,6 +110,9 @@ LD_FLAGS = $(CPU) -Wl,--gc-sections -u _printf_float -u _scanf_float
 LD_SYS_LIBS = -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
 # Replace these functions
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.4.1)
+WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
 ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.3.1)
 WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
 endif
