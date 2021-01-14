@@ -16,6 +16,8 @@ static BaseType_t xLoopCost = 0;
  ****************************************************************************/
 List_t xSsTaskBlockedList; // defined here for initialization
 
+static UBaseType_t uxListInitializeFlag = pdTRUE;
+
 /*****************************************************************************
  * Private data
  ****************************************************************************/
@@ -54,6 +56,14 @@ static List_t xSsTaskList;
  */
 static void vSlackUpdateAvailableSlack();
 
+/**
+ * \brief Perform the setup of the required tasks lists.
+ *
+ * This function must be called **before** setting the tasks parameters with
+ * \ref vSlackSetTaskParams().
+ */
+static void vSlackSystemSetup( void );
+
 /*****************************************************************************
  * Private functions implementation
  ****************************************************************************/
@@ -76,6 +86,14 @@ inline void vSlackUpdateAvailableSlack()
         pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
     }
 }
+/*-----------------------------------------------------------*/
+
+static void vSlackSystemSetup( void )
+{
+    vListInitialise( &xSsTaskList );
+    vListInitialise( &xDeadlineTaskList );
+    vListInitialise( &xSsTaskBlockedList );
+}
 
 /*****************************************************************************
  * Public functions implementation
@@ -92,6 +110,11 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
 	        ( uxTaskPriority == configMAX_PRIORITIES - 1 ) )
 	{
 		// error?
+	}
+
+	if ( uxListInitializeFlag == pdTRUE ) {
+		vSlackSystemSetup();
+		uxListInitializeFlag = pdFALSE;
 	}
 
 	pxNewSsTCB->xTaskType = xTaskType;
@@ -138,14 +161,6 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
 	}
 
 	vTaskSetThreadLocalStoragePointer( xTask, 0, ( void * ) pxNewSsTCB );
-}
-/*-----------------------------------------------------------*/
-
-void vSlackSystemSetup( void )
-{
-    vListInitialise( &xSsTaskList );
-    vListInitialise( &xDeadlineTaskList );
-    vListInitialise( &xSsTaskBlockedList );
 }
 /*-----------------------------------------------------------*/
 

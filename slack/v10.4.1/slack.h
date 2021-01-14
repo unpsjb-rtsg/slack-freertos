@@ -124,14 +124,6 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
 void vApplicationNotSchedulable( void );
 
 /**
- * \brief Perform the setup of the required tasks lists.
- *
- * This function must be called **before** setting the tasks parameters with
- * \ref vSlackSetTaskParams().
- */
-void vSlackSystemSetup( void );
-
-/**
  * \brief Perform the initialization steps required before the scheduler starts.
  *
  * This function perform the initialization required before the FreeRTOS scheduler

@@ -242,8 +242,6 @@ int main(void)
     xTaskCreate( vAperiodicTask, "TA2", 256, NULL, ATASK_2_PRIO, &xApTaskHandle2 );
 
 #if configUSE_SLACK_STEALING == 1
-    vSlackSystemSetup();
-
     // additional parameters needed by the slack stealing framework
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
             TASK_1_PERIOD, TASK_1_WCET, 1 );
