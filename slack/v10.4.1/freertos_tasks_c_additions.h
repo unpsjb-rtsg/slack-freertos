@@ -33,9 +33,8 @@ static void prvTaskRecSlack() PRIVILEGED_FUNCTION;
     static BaseType_t xTaskSlackResume( void );
     static BaseType_t xTaskSlackSuspend( void );
 
-    /*
-     * Moves all the aperiodic tasks in the xSsTaskBlockedList to the ready
-     * list.
+    /**
+     * \brief Moves all the aperiodic tasks in the xSsTaskBlockedList to the ready list.
      */
     static BaseType_t xTaskSlackResume( void )
     {
@@ -65,9 +64,9 @@ static void prvTaskRecSlack() PRIVILEGED_FUNCTION;
     }
     /*-----------------------------------------------------------*/
 
-    /*
-     * Moves all the ready-to-execute aperiodic tasks from the ready list to
-     * the slack suspended list.
+    /**
+     * \brief Moves all the ready-to-execute aperiodic tasks from the ready list
+     * to the slack suspended list.
      */
     static BaseType_t xTaskSlackSuspend( void )
     {
