@@ -222,7 +222,7 @@ TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t xTc,
 /**
  * \brief Calculates the available slack of task \p xTask at \p xTc .
  *
- * This is a wrapper function that call the appropiate slack method.
+ * This is a wrapper function that call the appropriate slack method.
  *
  * @param xTask The task which available slack should be calculated.
  * @param xTc The time at which the slack calculation should be done.
