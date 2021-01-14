@@ -215,7 +215,6 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
             {
                 vSlackGainSlack( pxCurrentTCB, pxCurrentSsTCB->xWcet - pxCurrentSsTCB->xCur );
             }
-            vSlackUpdateAvailableSlack();
         }
 
         if( xShouldDelay != pdFALSE )
@@ -491,9 +490,6 @@ BaseType_t xSwitchRequired = pdFALSE;
             {
                 vSlackDecrementTasksSlack( pxCurrentTCB, ONE_TICK );
             }
-
-            // Update available slack
-            vSlackUpdateAvailableSlack();
 
             if( xSlackGetAvailableSlack() <= configMIN_SLACK_SD )
             {

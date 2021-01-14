@@ -180,14 +180,6 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
 BaseType_t xSlackCalculateTasksWcrt();
 
 /**
- * \brief Updates the system available slack.
- *
- * The system available slack is calculated as the minimum value of all the
- * tasks available slacks.
- */
-void vSlackUpdateAvailableSlack();
-
-/**
  * \brief Add \p xTicks to all lower priority tasks than \p xTask .
  *
  * @param xTask Task which has gained slack.

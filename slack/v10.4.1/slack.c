@@ -11,6 +11,14 @@ static BaseType_t xLoopCost = 0;
 #endif
 #endif
 
+/*****************************************************************************
+ * Private data declaration
+ ****************************************************************************/
+List_t xSsTaskBlockedList; // defined here for initialization
+
+/*****************************************************************************
+ * Private data
+ ****************************************************************************/
 /**
  * \brief The system available slack.
  *
@@ -35,7 +43,43 @@ static List_t xDeadlineTaskList;
  */
 static List_t xSsTaskList;
 
-List_t xSsTaskBlockedList; // defined here for initialization
+/*****************************************************************************
+ * Private functions declarations
+ ****************************************************************************/
+/**
+ * \brief Updates the system available slack.
+ *
+ * The system available slack is calculated as the minimum value of all the
+ * tasks available slacks.
+ */
+static void vSlackUpdateAvailableSlack();
+
+/*****************************************************************************
+ * Private functions implementation
+ ****************************************************************************/
+inline void vSlackUpdateAvailableSlack()
+{
+    ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( &xSsTaskList );
+
+    SsTCB_t * ssTCB = getTaskSsTCB( listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) );
+    xSlackSD = ssTCB->xSlack;
+
+    while( listGET_END_MARKER( &xSsTaskList ) != pxAppTasksListItem )
+    {
+        ssTCB = getTaskSsTCB( listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) );
+
+        if( ssTCB->xSlack < xSlackSD )
+        {
+            xSlackSD = ssTCB->xSlack;
+        }
+
+        pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
+    }
+}
+
+/*****************************************************************************
+ * Public functions implementation
+ ****************************************************************************/
 
 void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
         const TickType_t xPeriod, const TickType_t xDeadline,
@@ -268,27 +312,6 @@ TickType_t xSlackGetAvailableSlack( void )
 }
 /*-----------------------------------------------------------*/
 
-inline void vSlackUpdateAvailableSlack()
-{
-	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( &xSsTaskList );
-
-	SsTCB_t * ssTCB = getTaskSsTCB( listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) );
-	xSlackSD = ssTCB->xSlack;
-
-	while( listGET_END_MARKER( &xSsTaskList ) != pxAppTasksListItem )
-	{
-		ssTCB = getTaskSsTCB( listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) );
-
-		if( ssTCB->xSlack < xSlackSD )
-		{
-			xSlackSD = ssTCB->xSlack;
-		}
-
-		pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
-	}
-}
-/*-----------------------------------------------------------*/
-
 inline void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks )
 {
     SsTCB_t * ssTCB = getTaskSsTCB( xTask );
@@ -301,6 +324,8 @@ inline void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks )
 
         pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
     }
+
+    vSlackUpdateAvailableSlack();
 }
 /*-----------------------------------------------------------*/
 
@@ -319,6 +344,8 @@ inline void vSlackDecrementAllTasksSlack( const TickType_t xTicks )
 
 		pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
 	}
+
+	vSlackUpdateAvailableSlack();
 }
 /*-----------------------------------------------------------*/
 
@@ -338,6 +365,8 @@ inline void vSlackDecrementTasksSlack( TaskHandle_t xTask, const TickType_t xTic
 
         pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
     }
+
+    vSlackUpdateAvailableSlack();
 }
 /*-----------------------------------------------------------*/
 
