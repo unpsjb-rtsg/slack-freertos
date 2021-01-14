@@ -1,5 +1,11 @@
 #include "slack.h"
 
+/**
+ * \brief Return a pointer to the `SsTCB` associated to the task.
+ *
+ * This macro does not use `pvTaskGetThreadLocalStoragePointer()`. Instead it
+ * uses the TCB_t structure directly.
+ */
 #define getSsTCB( x ) ( ( SsTCB_t * )( ( TCB_t * ) x )->pvThreadLocalStoragePointers[ 0 ] )
 
 #if ( configDO_SLACK_TRACE == 1 )
