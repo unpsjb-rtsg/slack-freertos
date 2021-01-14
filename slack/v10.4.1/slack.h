@@ -22,13 +22,18 @@ extern "C" {
 /*****************************************************************************
  * Public data declaration
  ****************************************************************************/
-/** Task types. */
+/**
+ * Task types.
+ */
 typedef enum
 {
 	PERIODIC_TASK,
 	APERIODIC_TASK
 } SsTaskType_t;
 
+/**
+ * Extended Task Control Block
+ */
 struct SsTCB
 {
 	SsTaskType_t xTaskType;         /**< Task type (RTT o NRTT). */
