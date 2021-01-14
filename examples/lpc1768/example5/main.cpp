@@ -258,8 +258,6 @@ int main(void)
             ATASK_WCET, 1 );
     vSlackSetTaskParams( xApTaskHandle2, APERIODIC_TASK, ATASK_MAX_DELAY, 0,
             ATASK_WCET, 2 );
-
-    vSlackSchedulerSetup();
 #endif
 
     // Start the tracing.
