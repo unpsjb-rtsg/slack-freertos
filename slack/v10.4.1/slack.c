@@ -98,7 +98,6 @@ static void vSlackSystemSetup( void )
 /*****************************************************************************
  * Public functions implementation
  ****************************************************************************/
-
 void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
         const TickType_t xPeriod, const TickType_t xDeadline,
         const TickType_t xWcet, const BaseType_t xId )
@@ -112,6 +111,7 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
 		// error?
 	}
 
+	// Initialize the list of tasks if required.
 	if ( uxListInitializeFlag == pdTRUE ) {
 		vSlackSystemSetup();
 		uxListInitializeFlag = pdFALSE;
