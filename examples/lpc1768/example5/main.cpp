@@ -91,7 +91,7 @@ traceString slack_channel;
  ****************************************************************************/
 static void vCommonPrintSlacks( char s, int32_t * slackArray, SsTCB_t *pxTaskSsTCB )
 {
-    pc.printf("%s [%d]\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+    pc.printf("%s [%d]\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
             pcTaskGetTaskName(NULL), pxTaskSsTCB->uxReleaseCount, s,
             slackArray[0], slackArray[2], slackArray[3],
             slackArray[4], slackArray[5], slackArray[6],
