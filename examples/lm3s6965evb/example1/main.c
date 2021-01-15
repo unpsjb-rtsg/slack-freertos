@@ -1,3 +1,23 @@
+/*****************************************************************************
+ *
+ * Example 1 - lm3s6965evb
+ *
+ * This program consist of 4 real-time periodic tasks and 2 aperiodic tasks,
+ * the later only scheduled when there is available slack in the system. All
+ * the tasks write a string with some data to to the serial port, when
+ * starting and finishing each instance.
+ *
+ * Before writing to the serial port, the tasks try to take a shared mutex.
+ * This could lead to the following problem: when an aperiodic task has taken
+ * the mutex and then the available slack depletes, the periodic tasks can't
+ * take the mutex, and a missed deadline will occur.
+ *
+ * This program requires FreeRTOS v10.0.0 or later.
+ *
+ * Created on: 12 dec. 2020
+ *     Author: Francisco E. Páez
+ *
+ *****************************************************************************/
 /*
  * FreeRTOS Kernel V10.4.1
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
@@ -124,7 +144,7 @@ time. */
 #define mainOLED_QUEUE_SIZE                 ( 3 )
 
 /* Dimensions the buffer into which the jitter time is written. */
-#define mainMAX_MSG_LEN                     25
+#define mainMAX_MSG_LEN                     100
 
 /* The period of the system clock in nano seconds.  This is used to calculate
 the jitter time in nano seconds. */
@@ -139,6 +159,14 @@ the jitter time in nano seconds. */
 #define ulSSI_FREQUENCY                     ( 3500000UL )
 
 #define TASK_1_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1
+#define TASK_2_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 2
+#define TASK_3_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 3
+#define TASK_4_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 4
+
+#define ATASK_1_PRIO configMAX_PRIORITIES - 1
+#define ATASK_2_PRIO configMAX_PRIORITIES - 2
+#define ATASK_WCET 2000
+#define ATASK_MAX_DELAY 4000
 
 /*-----------------------------------------------------------*/
 
@@ -149,6 +177,8 @@ the jitter time in nano seconds. */
  * the message to the gatekeeper.
  */
 static void prvTask( void *pvParameters );
+
+static void prvAperiodicTask( void* params );
 
 /*
  * Configure the hardware for the demo.
@@ -177,6 +207,8 @@ static void prvPrintString( const char * pcString );
 /* The welcome text. */
 const char * const pcWelcomeMessage = "   www.FreeRTOS.org";
 
+static SemaphoreHandle_t xMutex = NULL;
+
 /*-----------------------------------------------------------*/
 
 /* Functions to access the OLED.  The one used depends on the dev kit
@@ -200,27 +232,36 @@ int main( void )
 
     prvSetupHardware();
 
+    // Create the mutex.
+    xMutex = xSemaphoreCreateMutex();
+
     TaskHandle_t task1;
     TaskHandle_t task2;
     TaskHandle_t task3;
+    TaskHandle_t task4;
+    TaskHandle_t atask1;
 
     /* Start the tasks defined within this file/specific to this demo. */
-    xTaskCreate( prvTask, "T1", mainOLED_TASK_STACK_SIZE, (void*) 1, configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1, &task1 );
-    xTaskCreate( prvTask, "T2", mainOLED_TASK_STACK_SIZE, (void*) 2, configMAX_PRIORITIES - configMAX_SLACK_PRIO - 2, &task2 );
-    xTaskCreate( prvTask, "T3", mainOLED_TASK_STACK_SIZE, (void*) 3, configMAX_PRIORITIES - configMAX_SLACK_PRIO - 3, &task3 );
+    xTaskCreate( prvTask, "T1", mainOLED_TASK_STACK_SIZE, (void*) 1, TASK_1_PRIO, &task1 );
+    xTaskCreate( prvTask, "T2", mainOLED_TASK_STACK_SIZE, (void*) 2, TASK_2_PRIO, &task2 );
+    xTaskCreate( prvTask, "T3", mainOLED_TASK_STACK_SIZE, (void*) 3, TASK_3_PRIO, &task3 );
+    xTaskCreate( prvTask, "T4", mainOLED_TASK_STACK_SIZE, (void*) 4, TASK_4_PRIO, &task4 );
+
+    xTaskCreate( prvAperiodicTask, "TA1", 256, NULL, ATASK_1_PRIO, &atask1 );
+    xTaskCreate( prvAperiodicTask, "TA1", 256, NULL, ATASK_2_PRIO, &atask1 );
 
     /* Uncomment the following line to configure the high frequency interrupt
     used to measure the interrupt jitter time. */
     //vSetupHighFrequencyTimer();
 
-    vSlackSystemSetup();
-
     // Configure additional parameters needed by the slack stealing framework.
-    vSlackSetTaskParams( task1, PERIODIC_TASK, 3000, 3000, 100, 1 );
-    vSlackSetTaskParams( task2, PERIODIC_TASK, 4000, 4000, 100, 2 );
-    vSlackSetTaskParams( task3, PERIODIC_TASK, 6000, 6000, 100, 3 );
+    vSlackSetTaskParams( task1, PERIODIC_TASK, 3000,  3000,  1000, 1 );
+    vSlackSetTaskParams( task2, PERIODIC_TASK, 4000,  4000,  1000, 2 );
+    vSlackSetTaskParams( task3, PERIODIC_TASK, 6000,  6000,  1000, 3 );
+    vSlackSetTaskParams( task4, PERIODIC_TASK, 12000, 12000, 1000, 4 );
 
-    vSlackSchedulerSetup();
+    vSlackSetTaskParams( atask1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 1 );
+    vSlackSetTaskParams( atask1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 1 );
 
     /* Map the OLED access functions to the driver functions that are appropriate
     for the evaluation kit being used. */
@@ -275,11 +316,38 @@ static void prvPrintString( const char * pcString )
 }
 /*-----------------------------------------------------------*/
 
+static void vPrintSlacks( char *buf, char s, int32_t * slackArray, TickType_t xCur )
+{
+    sprintf(buf, "%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
+            pcTaskGetTaskName(NULL), s,
+            slackArray[0], slackArray[2], slackArray[3],
+            slackArray[4], slackArray[5], slackArray[6],
+            xCur);
+    prvPrintString( buf );
+}
+/*-----------------------------------------------------------*/
+
+void vBusyWait( TickType_t ticks )
+{
+    TickType_t elapsedTicks = 0;
+    TickType_t currentTick = 0;
+    while ( elapsedTicks < ticks ) {
+        currentTick = xTaskGetTickCount();
+        while ( currentTick == xTaskGetTickCount() ) {
+            asm("nop");
+        }
+        elapsedTicks++;
+    }
+}
+/*-----------------------------------------------------------*/
+
 void prvTask( void *pvParameters )
 {
     static char cMessage[ mainMAX_MSG_LEN ];
 
     int id = ( int ) pvParameters;
+
+    int32_t slackArray[ 7 ];
 
     sprintf(cMessage, "FreeRTOS %s + SS", tskKERNEL_VERSION_NUMBER);
     vOLEDStringDraw( cMessage, 0, 0, mainFULL_SCALE );
@@ -288,11 +356,63 @@ void prvTask( void *pvParameters )
 
     for( ;; )
     {
+        vTasksGetSlacks( slackArray );
+        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        {
+            vPrintSlacks( cMessage, 'S', slackArray, pxTaskSsTCB->xCur );
+            xSemaphoreGive( xMutex );
+        }
+
         sprintf( cMessage, "%s - %u", pcTaskGetTaskName( NULL ), pxTaskSsTCB->uxReleaseCount );
         vOLEDStringDraw( cMessage, 0, (mainCHARACTER_HEIGHT+1)*id, mainFULL_SCALE );
-        prvPrintString( cMessage );
-        prvPrintString( "\r\n" );
+
+        vBusyWait( pxTaskSsTCB->xWcet - 200 );
+
+        vTasksGetSlacks( slackArray );
+        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        {
+            vPrintSlacks( cMessage, 'E', slackArray, pxTaskSsTCB->xCur );
+            xSemaphoreGive( xMutex );
+        }
+
         vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
+    }
+}
+/*-----------------------------------------------------------*/
+
+static void prvAperiodicTask( void* params )
+{
+    static char cMessage[ mainMAX_MSG_LEN ];
+
+    int32_t slackArray[ 7 ];
+
+    SsTCB_t *pxTaskSsTCB;
+
+    pxTaskSsTCB = getTaskSsTCB( NULL );
+
+    vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
+
+    for(;;)
+    {
+        pxTaskSsTCB->xCur = ( TickType_t ) 0;
+
+        vTasksGetSlacks( slackArray );
+        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        {
+            vPrintSlacks( cMessage, 'S', slackArray, pxTaskSsTCB->xCur );
+            xSemaphoreGive( xMutex );
+        }
+
+        vBusyWait( rand() % pxTaskSsTCB->xWcet );
+
+        vTasksGetSlacks( slackArray );
+        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        {
+            vPrintSlacks( cMessage, 'E', slackArray, pxTaskSsTCB->xCur );
+            xSemaphoreGive( xMutex );
+        }
+
+        vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
     }
 }
 /*-----------------------------------------------------------*/
