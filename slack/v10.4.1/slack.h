@@ -167,16 +167,6 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
         const TickType_t xWcet, const BaseType_t xId );
 
 /**
- * \brief Calculates the worst case response time of the RTT tasks.
- *
- * It uses the algorithm described in [Improved Response-Time Analysis
- * Calculations](http://doi.ieeecomputersociety.org/10.1109/REAL.1998.739773).
- *
- * @return pdTRUE if the task set is schedulable or pdFALSE if it's not.
- */
-BaseType_t xSlackCalculateTasksWcrt();
-
-/**
  * \brief Add \p xTicks to all lower priority tasks than \p xTask .
  *
  * @param xTask Task which has gained slack.
