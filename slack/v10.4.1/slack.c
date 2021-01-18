@@ -215,10 +215,8 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
 	pxNewSsTCB->xWcrt = 0U;
 	pxNewSsTCB->xEndTick = ( TickType_t ) 0U;
 	pxNewSsTCB->xSlack = 0U;
-#if ( configUSE_SLACK_METHOD == 0 )
 	pxNewSsTCB->xTtma = 0U;
 	pxNewSsTCB->xDi = 0U;
-#endif
 	pxNewSsTCB->xCur = ( TickType_t ) 0U;
 
 	if( xTaskType == PERIODIC_TASK )

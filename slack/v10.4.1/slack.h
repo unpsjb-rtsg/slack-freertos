@@ -68,10 +68,8 @@ struct SsTCB
 	BaseType_t xSlack;              /**< Task slack. */
 	BaseType_t xSlackK;			    /**< Slack value at the critical instant. */
 
-#if ( configUSE_SLACK_METHOD == 0 )
 	TickType_t xTtma;               /**< Maximally delayed completion time. */
 	TickType_t xDi;                 /**< Absolute deadline of the next release. */
-#endif
 
 	TickType_t  xEndTick;
 	/**< Stores the tick at which the task release ended. This a dirty way to
