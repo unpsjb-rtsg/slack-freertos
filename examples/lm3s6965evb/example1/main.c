@@ -150,7 +150,6 @@ static void prvSetupHardware( void );
  * Hook functions that can get called by the kernel.
  */
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
-void vApplicationTickHook( void );
 
 /*
  * Basic polling UART write function.
@@ -253,12 +252,6 @@ void prvSetupHardware( void )
 
     /* Set the clocking to run from the PLL at 50 MHz */
     SysCtlClockSet( SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_8MHZ );
-}
-/*-----------------------------------------------------------*/
-
-void vApplicationTickHook( void )
-{
-    return;
 }
 /*-----------------------------------------------------------*/
 
