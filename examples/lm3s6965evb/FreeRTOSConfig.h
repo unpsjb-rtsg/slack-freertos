@@ -61,7 +61,7 @@
 #define configMAX_PRIORITIES			( 10UL )
 #define configMAX_CO_ROUTINE_PRIORITIES ( 2 )
 #define configQUEUE_REGISTRY_SIZE		10
-#define configSUPPORT_STATIC_ALLOCATION	1
+#define configSUPPORT_STATIC_ALLOCATION	0
 
 /* Timer related defines. */
 #define configUSE_TIMERS				0
