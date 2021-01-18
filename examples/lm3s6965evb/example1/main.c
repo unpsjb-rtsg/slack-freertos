@@ -240,6 +240,7 @@ int main( void )
     TaskHandle_t task3;
     TaskHandle_t task4;
     TaskHandle_t atask1;
+    TaskHandle_t atask2;
 
     /* Start the tasks defined within this file/specific to this demo. */
     xTaskCreate( prvTask, "T1", mainOLED_TASK_STACK_SIZE, (void*) 1, TASK_1_PRIO, &task1 );
@@ -248,7 +249,7 @@ int main( void )
     xTaskCreate( prvTask, "T4", mainOLED_TASK_STACK_SIZE, (void*) 4, TASK_4_PRIO, &task4 );
 
     xTaskCreate( prvAperiodicTask, "TA1", 256, NULL, ATASK_1_PRIO, &atask1 );
-    xTaskCreate( prvAperiodicTask, "TA1", 256, NULL, ATASK_2_PRIO, &atask1 );
+    xTaskCreate( prvAperiodicTask, "TA2", 256, NULL, ATASK_2_PRIO, &atask2 );
 
     /* Uncomment the following line to configure the high frequency interrupt
     used to measure the interrupt jitter time. */
@@ -261,7 +262,7 @@ int main( void )
     vSlackSetTaskParams( task4, PERIODIC_TASK, 12000, 12000, 1000, 4 );
 
     vSlackSetTaskParams( atask1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 1 );
-    vSlackSetTaskParams( atask1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 1 );
+    vSlackSetTaskParams( atask2, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 2 );
 
     /* Map the OLED access functions to the driver functions that are appropriate
     for the evaluation kit being used. */
@@ -380,7 +381,7 @@ void prvTask( void *pvParameters )
 }
 /*-----------------------------------------------------------*/
 
-static void prvAperiodicTask( void* params )
+static void prvAperiodicTask( void *pvParameters )
 {
     static char cMessage[ mainMAX_MSG_LEN ];
 
