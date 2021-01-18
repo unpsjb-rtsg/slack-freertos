@@ -165,6 +165,11 @@ void ( *vOLEDClear )( void ) = NULL;
  *************************************************************************/
 int main( void )
 {
+    // Verify that configUSE_SLACK_STEALING is enabled
+    configSS_ASSERT_EQUAL( configUSE_SLACK_STEALING, 1 );
+    // Verify that tskKERNEL_VERSION_MAJOR is >= 10
+    configSS_ASSERT_GREATHER_OR_EQUAL( tskKERNEL_VERSION_MAJOR, 10);
+
     /* Initialise the trace recorder.  Use of the trace recorder is optional.
     See http://www.FreeRTOS.org/trace for more information and the comments at
     the top of this file regarding enabling trace in this demo.
