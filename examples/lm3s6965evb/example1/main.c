@@ -16,7 +16,7 @@
  *
  * Use the following command to start running the application in QEMU, pausing
  * to wait for a debugger connection:
- * "qemu-system-arm -machine lm3s6965evb -s -S -kernel [pat_to]\RTOSDemo.elf"
+ * "qemu-system-arm -machine lm3s6965evb -s -S -kernel build\lm3s6965evb-example1.elf"
  *
  * To enable FreeRTOS+Trace:
  *  1) Add #include "trcRecorder.h" to the bottom of FreeRTOSConfig.h.
@@ -140,26 +140,12 @@ static void prvAperiodicTask( void* params );
  */
 static void prvSetupHardware( void );
 
-/*
- * Configures the high frequency timers - those used to measure the timing
- * jitter while the real time kernel is executing.
- */
-//extern void vSetupHighFrequencyTimer( void );
-
-/*
- * Hook functions that can get called by the kernel.
- */
-void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
-
-/*
+/**
  * Basic polling UART write function.
  */
 static void prvPrintString( const char * pcString );
 
 /*-----------------------------------------------------------*/
-
-/* The welcome text. */
-const char * const pcWelcomeMessage = "   www.FreeRTOS.org";
 
 static SemaphoreHandle_t xMutex = NULL;
 
@@ -196,25 +182,19 @@ int main( void )
     TaskHandle_t atask1;
     TaskHandle_t atask2;
 
-    /* Start the tasks defined within this file/specific to this demo. */
+    // Create the tasks
     xTaskCreate( prvPeriodicTask, "T1", taskDEFAULT_STACK, (void*) 1, TASK_1_PRIO, &task1 );
     xTaskCreate( prvPeriodicTask, "T2", taskDEFAULT_STACK, (void*) 2, TASK_2_PRIO, &task2 );
     xTaskCreate( prvPeriodicTask, "T3", taskDEFAULT_STACK, (void*) 3, TASK_3_PRIO, &task3 );
     xTaskCreate( prvPeriodicTask, "T4", taskDEFAULT_STACK, (void*) 4, TASK_4_PRIO, &task4 );
-
     xTaskCreate( prvAperiodicTask, "TA1", 256, NULL, ATASK_1_PRIO, &atask1 );
     xTaskCreate( prvAperiodicTask, "TA2", 256, NULL, ATASK_2_PRIO, &atask2 );
-
-    /* Uncomment the following line to configure the high frequency interrupt
-    used to measure the interrupt jitter time. */
-    //vSetupHighFrequencyTimer();
 
     // Configure additional parameters needed by the slack stealing framework.
     vSlackSetTaskParams( task1, PERIODIC_TASK, 3000,  3000,  1000, 1 );
     vSlackSetTaskParams( task2, PERIODIC_TASK, 4000,  4000,  1000, 2 );
     vSlackSetTaskParams( task3, PERIODIC_TASK, 6000,  6000,  1000, 3 );
     vSlackSetTaskParams( task4, PERIODIC_TASK, 12000, 12000, 1000, 4 );
-
     vSlackSetTaskParams( atask1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 1 );
     vSlackSetTaskParams( atask2, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 2 );
 
@@ -366,6 +346,21 @@ static void prvAperiodicTask( void *pvParameters )
 }
 /*-----------------------------------------------------------*/
 
+void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
+        TickType_t xTickCount )
+{
+    taskDISABLE_INTERRUPTS();
+    for (;; ) {}
+}
+/*-----------------------------------------------------------*/
+
+void vApplicationNotSchedulable( void )
+{
+    taskDISABLE_INTERRUPTS();
+    for (;; ) {}
+}
+/*-----------------------------------------------------------*/
+
 volatile char *pcOverflowedTask = NULL; /* Prevent task name being optimised away. */
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
 {
@@ -406,20 +401,9 @@ char * _sbrk_r (struct _reent *r, int incr)
 
     return NULL;
 }
+/*-----------------------------------------------------------*/
 
 int __error__(char *pcFilename, unsigned long ulLine) {
     return 0;
 }
-
-void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
-        TickType_t xTickCount )
-{
-    taskDISABLE_INTERRUPTS();
-    for (;; ) {}
-}
-
-void vApplicationNotSchedulable( void )
-{
-    taskDISABLE_INTERRUPTS();
-    for (;; ) {}
-}
+/*-----------------------------------------------------------*/

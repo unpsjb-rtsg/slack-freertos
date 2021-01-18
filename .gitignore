@@ -54,3 +54,5 @@ Makefile.mine
 !board/frdm-k64f/TARGET_K64F/TOOLCHAIN_GCC_ARM/*.o
 !board/frdm-k64f/TARGET_K64F/TOOLCHAIN_GCC_ARM/*.a
 
+doxygen/**
+!doxygen/.keep
