@@ -17,7 +17,7 @@
  * @param pxTasksList
  * @return
  */
-BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask, const TickType_t xTc,
+static BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask, const TickType_t xTc,
         const TickType_t xT, const TickType_t xWc, const List_t * pxTasksList );
 
 /* from "Low Cost Slack Stealing Method for RM/DM" paper. */
@@ -151,7 +151,7 @@ void vTaskCalculateSlack_alg( TaskHandle_t xTask, const TickType_t xTc,
 }
 /*-----------------------------------------------------------*/
 
-inline BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask,
+static inline BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask,
         const TickType_t xTc, const TickType_t xT, const TickType_t xWc,
         const List_t * pxTasksList )
 {
