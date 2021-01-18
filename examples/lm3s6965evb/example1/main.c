@@ -276,7 +276,7 @@ static void vPrintSlacks( char *buf, char s, int32_t * slackArray, TickType_t xC
 }
 /*-----------------------------------------------------------*/
 
-void vBusyWait( TickType_t ticks )
+static void vBusyWait( TickType_t ticks )
 {
     TickType_t elapsedTicks = 0;
     TickType_t currentTick = 0;
