@@ -64,10 +64,20 @@ static void vSlackUpdateAvailableSlack();
  */
 static void vSlackSystemSetup( void );
 
+/**
+ * \brief Calculates the worst case response time of the RTT tasks.
+ *
+ * It uses the algorithm described in [Improved Response-Time Analysis
+ * Calculations](http://doi.ieeecomputersociety.org/10.1109/REAL.1998.739773).
+ *
+ * @return pdTRUE if the task set is schedulable or pdFALSE if it's not.
+ */
+static BaseType_t xSlackCalculateTasksWcrt();
+
 /*****************************************************************************
  * Private functions implementation
  ****************************************************************************/
-inline void vSlackUpdateAvailableSlack()
+static inline void vSlackUpdateAvailableSlack()
 {
     ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( &xSsTaskList );
 
@@ -93,6 +103,80 @@ static void vSlackSystemSetup( void )
     vListInitialise( &xSsTaskList );
     vListInitialise( &xDeadlineTaskList );
     vListInitialise( &xSsTaskBlockedList );
+}
+/*-----------------------------------------------------------*/
+
+static BaseType_t xSlackCalculateTasksWcrt()
+{
+    TickType_t xW = 0U;
+
+    ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
+
+    TaskHandle_t xTask = ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+    SsTCB_t *pxTask = pvTaskGetThreadLocalStoragePointer( xTask, 0 );
+
+    /* First task WCRT. */
+    TickType_t xT = pxTask->xWcet;
+    pxTask->xWcrt = xT;
+
+    /* Check first task deadline. */
+    if( pxTask->xWcrt > pxTask->xPeriod )
+    {
+        return pdFALSE;
+    }
+
+    // Next task
+    pxTaskListItem = listGET_NEXT( pxTaskListItem );
+
+    /* Process all the periodic tasks in xTasks. */
+    while( listGET_END_MARKER( &xSsTaskList ) != pxTaskListItem )
+    {
+        xTask = ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
+        pxTask = pvTaskGetThreadLocalStoragePointer( xTask, 0 );
+
+        xT = xT + pxTask->xWcet;
+
+        while( xT <= pxTask->xDeadline )
+        {
+            xW = 0;
+
+            /* Calculates the workload of the higher priority tasks than pxTask. */
+            ListItem_t * pxHigherPrioTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
+            do
+            {
+                SsTCB_t *pxHigherPrioTask = pvTaskGetThreadLocalStoragePointer(
+                        ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem ), 0 );
+
+                xW = xW + ( U_CEIL( xT, pxHigherPrioTask->xPeriod ) *
+                        pxHigherPrioTask->xWcet );
+
+                pxHigherPrioTaskListItem = listGET_NEXT( pxHigherPrioTaskListItem );
+            }
+            while( pxHigherPrioTaskListItem != pxTaskListItem );
+
+            xW = xW + pxTask->xWcet;
+
+            if( xT == xW )
+            {
+                break;
+            }
+            else
+            {
+                xT = xW;
+            }
+        }
+
+        if( xT > pxTask->xDeadline )
+        {
+            return pdFALSE;
+        }
+
+        pxTask->xWcrt = xT;
+
+        pxTaskListItem = listGET_NEXT( pxTaskListItem );
+    }
+
+    return pdTRUE;
 }
 
 /*****************************************************************************
@@ -132,10 +216,8 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
 	pxNewSsTCB->xWcrt = 0U;
 	pxNewSsTCB->xEndTick = ( TickType_t ) 0U;
 	pxNewSsTCB->xSlack = 0U;
-#if ( configUSE_SLACK_METHOD == 0 )
 	pxNewSsTCB->xTtma = 0U;
 	pxNewSsTCB->xDi = 0U;
-#endif
 	pxNewSsTCB->xCur = ( TickType_t ) 0U;
 
 	if( xTaskType == PERIODIC_TASK )
@@ -245,79 +327,6 @@ void vSlackUpdateDeadline( SsTCB_t *pxTask, TickType_t xTimeToWake )
     listSET_LIST_ITEM_VALUE( pxDeadlineTaskListItem, xTimeToWake + pxTask->xDeadline );
     vListInsert( &xDeadlineTaskList, pxDeadlineTaskListItem );
     pxTask->xTimeToWake = xTimeToWake;
-}
-
-BaseType_t xSlackCalculateTasksWcrt()
-{
-	TickType_t xW = 0U;
-
-	ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
-
-	TaskHandle_t xTask = ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
-	SsTCB_t *pxTask = pvTaskGetThreadLocalStoragePointer( xTask, 0 );
-
-	/* First task WCRT. */
-	TickType_t xT = pxTask->xWcet;
-	pxTask->xWcrt = xT;
-
-	/* Check first task deadline. */
-	if( pxTask->xWcrt > pxTask->xPeriod )
-	{
-		return pdFALSE;
-	}
-
-	// Next task
-	pxTaskListItem = listGET_NEXT( pxTaskListItem );
-
-	/* Process all the periodic tasks in xTasks. */
-	while( listGET_END_MARKER( &xSsTaskList ) != pxTaskListItem )
-	{
-		xTask = ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
-		pxTask = pvTaskGetThreadLocalStoragePointer( xTask, 0 );
-
-		xT = xT + pxTask->xWcet;
-
-		while( xT <= pxTask->xDeadline )
-		{
-			xW = 0;
-
-			/* Calculates the workload of the higher priority tasks than pxTask. */
-			ListItem_t * pxHigherPrioTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
-			do
-			{
-				SsTCB_t *pxHigherPrioTask = pvTaskGetThreadLocalStoragePointer(
-				        ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem ), 0 );
-
-				xW = xW + ( U_CEIL( xT, pxHigherPrioTask->xPeriod ) *
-				        pxHigherPrioTask->xWcet );
-
-				pxHigherPrioTaskListItem = listGET_NEXT( pxHigherPrioTaskListItem );
-			}
-			while( pxHigherPrioTaskListItem != pxTaskListItem );
-
-			xW = xW + pxTask->xWcet;
-
-			if( xT == xW )
-			{
-				break;
-			}
-			else
-			{
-				xT = xW;
-			}
-		}
-
-		if( xT > pxTask->xDeadline )
-		{
-			return pdFALSE;
-		}
-
-		pxTask->xWcrt = xT;
-
-		pxTaskListItem = listGET_NEXT( pxTaskListItem );
-	}
-
-	return pdTRUE;
 }
 /*-----------------------------------------------------------*/
 
@@ -484,7 +493,7 @@ void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc )
 void vTasksGetSlacks( int32_t *pxArray )
 {
     pxArray[ 0 ] = xTaskGetTickCount();
-    pxArray[ 1 ] = getTaskSsTCB( xTaskGetCurrentTaskHandle() )->xId; //getSsTCB( pxCurrentTCB )->xCur;
+    pxArray[ 1 ] = getTaskSsTCB( xTaskGetCurrentTaskHandle() )->xId;
     pxArray[ 2 ] = xSlackGetAvailableSlack();
 
     ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );

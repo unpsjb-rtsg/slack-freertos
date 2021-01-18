@@ -68,10 +68,8 @@ struct SsTCB
 	BaseType_t xSlack;              /**< Task slack. */
 	BaseType_t xSlackK;			    /**< Slack value at the critical instant. */
 
-#if ( configUSE_SLACK_METHOD == 0 )
 	TickType_t xTtma;               /**< Maximally delayed completion time. */
 	TickType_t xDi;                 /**< Absolute deadline of the next release. */
-#endif
 
 	TickType_t  xEndTick;
 	/**< Stores the tick at which the task release ended. This a dirty way to
@@ -129,7 +127,7 @@ void vApplicationNotSchedulable( void );
  * This function perform the initialization required before the FreeRTOS scheduler
  * is started: executes the schedulability test and the initial slack calculations.
  *
- * This function must be called **before** \ref vTaskStartScheduler().
+ * This function is called with the FREERTOS_TASKS_C_ADDITIONS_INIT() macro.
  */
 void vSlackSchedulerSetup( void );
 
@@ -165,16 +163,6 @@ void vSlackUpdateDeadline( SsTCB_t *pxTask, TickType_t xTimeToWake );
 void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
         const TickType_t xPeriod, const TickType_t xDeadline,
         const TickType_t xWcet, const BaseType_t xId );
-
-/**
- * \brief Calculates the worst case response time of the RTT tasks.
- *
- * It uses the algorithm described in [Improved Response-Time Analysis
- * Calculations](http://doi.ieeecomputersociety.org/10.1109/REAL.1998.739773).
- *
- * @return pdTRUE if the task set is schedulable or pdFALSE if it's not.
- */
-BaseType_t xSlackCalculateTasksWcrt();
 
 /**
  * \brief Add \p xTicks to all lower priority tasks than \p xTask .

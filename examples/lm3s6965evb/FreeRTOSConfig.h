@@ -42,7 +42,7 @@
 
 #define configUSE_PREEMPTION			1
 #define configUSE_IDLE_HOOK				0
-#define configUSE_TICK_HOOK				1
+#define configUSE_TICK_HOOK				0
 #define configCPU_CLOCK_HZ				( ( unsigned long ) 50000000 )
 #define configTICK_RATE_HZ				( ( TickType_t ) 1000 )
 #define configMINIMAL_STACK_SIZE		( ( unsigned short ) 90 )
@@ -58,10 +58,10 @@
 #define configUSE_QUEUE_SETS			1
 #define configUSE_COUNTING_SEMAPHORES	1
 
-#define configMAX_PRIORITIES			( 6UL )
+#define configMAX_PRIORITIES			( 10UL )
 #define configMAX_CO_ROUTINE_PRIORITIES ( 2 )
 #define configQUEUE_REGISTRY_SIZE		10
-#define configSUPPORT_STATIC_ALLOCATION	1
+#define configSUPPORT_STATIC_ALLOCATION	0
 
 /* Timer related defines. */
 #define configUSE_TIMERS				0
