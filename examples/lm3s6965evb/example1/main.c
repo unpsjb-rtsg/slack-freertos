@@ -14,6 +14,24 @@
  *
  * This program requires FreeRTOS v10.0.0 or later.
  *
+ * Use the following command to start running the application in QEMU, pausing
+ * to wait for a debugger connection:
+ * "qemu-system-arm -machine lm3s6965evb -s -S -kernel [pat_to]\RTOSDemo.elf"
+ *
+ * To enable FreeRTOS+Trace:
+ *  1) Add #include "trcRecorder.h" to the bottom of FreeRTOSConfig.h.
+ *  2) Call vTraceEnable( TRC_START ); at the top of main.
+ *  3) Ensure the "FreeRTOS+Trace Recorder" folder in the Project Explorer
+ *     window is not excluded from the build.
+ *
+ * To retrieve the trace files:
+ *  1) Use the Memory windows in the Debug perspective to dump RAM from the
+ *     RecorderData variable.
+ *
+ * Based on the FreeRTOS demo app for QEMU.
+ * See: https://www.freertos.org/cortex-m3-qemu-lm3S6965-demo.html
+ *      http://www.freertos.org/portlm3sx965.html
+ *
  * Created on: 12 dec. 2020
  *     Author: Francisco E. Páez
  *
@@ -45,41 +63,6 @@
  * 1 tab == 4 spaces!
  */
 
-
-/*
- * Creates all the demo application tasks, then starts the scheduler.  The WEB
- * documentation provides more details of the standard demo application tasks.
- * In addition to the standard demo tasks, the following tasks and tests are
- * defined and/or created within this file:
- *
- * "OLED" task - the OLED task is a 'gatekeeper' task.  It is the only task that
- * is permitted to access the display directly.  Other tasks wishing to write a
- * message to the OLED send the message on a queue to the OLED task instead of
- * accessing the OLED themselves.  The OLED task just blocks on the queue waiting
- * for messages - waking and displaying the messages as they arrive.
- *
- * "Check" hook -  This only executes every five seconds from the tick hook.
- * Its main function is to check that all the standard demo tasks are still
- * operational.  Should any unexpected behaviour within a demo task be discovered
- * the tick hook will write an error to the OLED (via the OLED task).  If all the
- * demo tasks are executing with their expected behaviour then the check task
- * writes PASS to the OLED (again via the OLED task), as described above.
- *
- * Use the following command to start running the application in QEMU, pausing
- * to wait for a debugger connection:
- * "qemu-system-arm -machine lm3s6965evb -s -S -kernel [pat_to]\RTOSDemo.elf"
- *
- * To enable FreeRTOS+Trace:
- *  1) Add #include "trcRecorder.h" to the bottom of FreeRTOSConfig.h.
- *  2) Call vTraceEnable( TRC_START ); at the top of main.
- *  3) Ensure the "FreeRTOS+Trace Recorder" folder in the Project Explorer
- *     window is not excluded from the build.
- *
- * To retrieve the trace files:
- *  1) Use the Memory windows in the Debug perspective to dump RAM from the
- *     RecorderData variable.
- */
-
 /*************************************************************************
  * Please ensure to read http://www.freertos.org/portlm3sx965.html
  * which provides information on configuring and running this demo for the
@@ -95,6 +78,7 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
+#include "slack.h"
 
 /* Hardware library includes. */
 #include "hw_memmap.h"
@@ -106,45 +90,24 @@
 #include "grlib.h"
 #include "osram128x64x4.h"
 #include "uart.h"
-
 #include "bitmap.h"
-/* Demo app includes.
-#include "death.h"
-#include "blocktim.h"
-#include "semtest.h"
-#include "bitmap.h"
-#include "QPeek.h"
-#include "recmutex.h"
-#include "QueueSet.h"
-#include "EventGroupsDemo.h"
-#include "MessageBufferDemo.h"
-#include "StreamBufferDemo.h"
-*/
-
-#include "slack.h"
 
 /*-----------------------------------------------------------*/
 
-/* The time between cycles of the 'check' functionality (defined within the
-tick hook. */
-#define mainCHECK_DELAY                     ( ( TickType_t ) 5000 / portTICK_PERIOD_MS )
-
 /* Task stack sizes. */
-#define mainOLED_TASK_STACK_SIZE            ( configMINIMAL_STACK_SIZE + 40 )
-#define mainMESSAGE_BUFFER_TASKS_STACK_SIZE ( 100 )
+#define taskDEFAULT_STACK   ( configMINIMAL_STACK_SIZE + 40 )
 
 /* Task priorities. */
-#define mainCHECK_TASK_PRIORITY             ( tskIDLE_PRIORITY + 3 )
-#define mainSEM_TEST_PRIORITY               ( tskIDLE_PRIORITY + 1 )
-#define mainCREATOR_TASK_PRIORITY           ( tskIDLE_PRIORITY + 3 )
-#define mainGEN_QUEUE_TASK_PRIORITY         ( tskIDLE_PRIORITY )
+#define TASK_1_PRIO     ( configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1 )
+#define TASK_2_PRIO     ( configMAX_PRIORITIES - configMAX_SLACK_PRIO - 2 )
+#define TASK_3_PRIO     ( configMAX_PRIORITIES - configMAX_SLACK_PRIO - 3 )
+#define TASK_4_PRIO     ( configMAX_PRIORITIES - configMAX_SLACK_PRIO - 4 )
+#define ATASK_1_PRIO    ( configMAX_PRIORITIES - 1 )
+#define ATASK_2_PRIO    ( configMAX_PRIORITIES - 2 )
+#define ATASK_WCET 2000
+#define ATASK_MAX_DELAY 4000
 
-/* The maximum number of message that can be waiting for display at any one
-time. */
-#define mainOLED_QUEUE_SIZE                 ( 3 )
-
-/* Dimensions the buffer into which the jitter time is written. */
-#define mainMAX_MSG_LEN                     100
+#define mainMAX_MSG_LEN ( 150 )
 
 /* The period of the system clock in nano seconds.  This is used to calculate
 the jitter time in nano seconds. */
@@ -158,30 +121,22 @@ the jitter time in nano seconds. */
 #define mainFULL_SCALE                      ( 15 )
 #define ulSSI_FREQUENCY                     ( 3500000UL )
 
-#define TASK_1_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1
-#define TASK_2_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 2
-#define TASK_3_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 3
-#define TASK_4_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 4
-
-#define ATASK_1_PRIO configMAX_PRIORITIES - 1
-#define ATASK_2_PRIO configMAX_PRIORITIES - 2
-#define ATASK_WCET 2000
-#define ATASK_MAX_DELAY 4000
-
 /*-----------------------------------------------------------*/
 
-/*
- * The display is written two by more than one task so is controlled by a
- * 'gatekeeper' task.  This is the only task that is actually permitted to
- * access the display directly.  Other tasks wanting to display a message send
- * the message to the gatekeeper.
+/**
+ *
+ * @param pvParameters
  */
-static void prvTask( void *pvParameters );
+static void prvPeriodicTask( void *pvParameters );
 
+/**
+ *
+ * @param params
+ */
 static void prvAperiodicTask( void* params );
 
-/*
- * Configure the hardware for the demo.
+/**
+ * Configure the hardware.
  */
 static void prvSetupHardware( void );
 
@@ -243,10 +198,10 @@ int main( void )
     TaskHandle_t atask2;
 
     /* Start the tasks defined within this file/specific to this demo. */
-    xTaskCreate( prvTask, "T1", mainOLED_TASK_STACK_SIZE, (void*) 1, TASK_1_PRIO, &task1 );
-    xTaskCreate( prvTask, "T2", mainOLED_TASK_STACK_SIZE, (void*) 2, TASK_2_PRIO, &task2 );
-    xTaskCreate( prvTask, "T3", mainOLED_TASK_STACK_SIZE, (void*) 3, TASK_3_PRIO, &task3 );
-    xTaskCreate( prvTask, "T4", mainOLED_TASK_STACK_SIZE, (void*) 4, TASK_4_PRIO, &task4 );
+    xTaskCreate( prvPeriodicTask, "T1", taskDEFAULT_STACK, (void*) 1, TASK_1_PRIO, &task1 );
+    xTaskCreate( prvPeriodicTask, "T2", taskDEFAULT_STACK, (void*) 2, TASK_2_PRIO, &task2 );
+    xTaskCreate( prvPeriodicTask, "T3", taskDEFAULT_STACK, (void*) 3, TASK_3_PRIO, &task3 );
+    xTaskCreate( prvPeriodicTask, "T4", taskDEFAULT_STACK, (void*) 4, TASK_4_PRIO, &task4 );
 
     xTaskCreate( prvAperiodicTask, "TA1", 256, NULL, ATASK_1_PRIO, &atask1 );
     xTaskCreate( prvAperiodicTask, "TA2", 256, NULL, ATASK_2_PRIO, &atask2 );
@@ -342,7 +297,7 @@ void vBusyWait( TickType_t ticks )
 }
 /*-----------------------------------------------------------*/
 
-void prvTask( void *pvParameters )
+static void prvPeriodicTask( void *pvParameters )
 {
     static char cMessage[ mainMAX_MSG_LEN ];
 
