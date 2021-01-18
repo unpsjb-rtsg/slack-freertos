@@ -124,16 +124,16 @@ the jitter time in nano seconds. */
 /*-----------------------------------------------------------*/
 
 /**
- *
- * @param pvParameters
+ * Entry function for the periodic tasks.
+ * @param pvParameters Should be a numerical id.
  */
 static void prvPeriodicTask( void *pvParameters );
 
 /**
- *
- * @param params
+ * Entry function for the aperiodic tasks.
+ * @param pvParameters Should be a numerical id.
  */
-static void prvAperiodicTask( void* params );
+static void prvAperiodicTask( void* pvParameters );
 
 /**
  * Configure the hardware.
@@ -205,9 +205,6 @@ int main( void )
     vOLEDStringDraw = OSRAM128x64x4StringDraw;
     vOLEDImageDraw = OSRAM128x64x4ImageDraw;
     vOLEDClear = OSRAM128x64x4Clear;
-    //ulMaxY = mainMAX_ROWS_64;
-    //pucImage = pucBasicBitmap;
-    //ulY = ulMaxY;
 
     /* Initialise the OLED and display a startup message. */
     vOLEDInit( ulSSI_FREQUENCY );
