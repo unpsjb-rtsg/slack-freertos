@@ -104,6 +104,7 @@ static void vSlackSystemSetup( void )
     vListInitialise( &xDeadlineTaskList );
     vListInitialise( &xSsTaskBlockedList );
 }
+/*-----------------------------------------------------------*/
 
 static BaseType_t xSlackCalculateTasksWcrt()
 {

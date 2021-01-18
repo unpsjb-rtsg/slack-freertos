@@ -127,7 +127,7 @@ void vApplicationNotSchedulable( void );
  * This function perform the initialization required before the FreeRTOS scheduler
  * is started: executes the schedulability test and the initial slack calculations.
  *
- * This function must be called **before** \ref vTaskStartScheduler().
+ * This function is called with the FREERTOS_TASKS_C_ADDITIONS_INIT() macro.
  */
 void vSlackSchedulerSetup( void );
 
