@@ -71,6 +71,7 @@
 
 /* Standard includes. */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Scheduler includes. */
@@ -104,14 +105,10 @@
 #define TASK_4_PRIO     ( configMAX_PRIORITIES - configMAX_SLACK_PRIO - 4 )
 #define ATASK_1_PRIO    ( configMAX_PRIORITIES - 1 )
 #define ATASK_2_PRIO    ( configMAX_PRIORITIES - 2 )
-#define ATASK_WCET 2000
-#define ATASK_MAX_DELAY 4000
+#define ATASK_WCET      ( 2000 )
+#define ATASK_MAX_DELAY ( 4000 )
 
 #define mainMAX_MSG_LEN ( 150 )
-
-/* The period of the system clock in nano seconds.  This is used to calculate
-the jitter time in nano seconds. */
-#define mainNS_PER_CLOCK                    ( ( uint32_t ) ( ( 1.0 / ( double ) configCPU_CLOCK_HZ ) * 1000000000.0 ) )
 
 /* Constants used when writing strings to the display. */
 #define mainCHARACTER_HEIGHT                ( 9 )
