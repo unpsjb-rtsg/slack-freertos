@@ -72,7 +72,7 @@ void vCommonPeriodicTask( void* params )
 #endif
 
 #if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+        vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
 #endif
 
 #if EXAMPLE == 1
@@ -128,7 +128,7 @@ void vCommonPeriodicTask( void* params )
 #endif
 
 #if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+        vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
 #endif
 #endif
 
@@ -154,7 +154,7 @@ void vCommonAperiodicTask( void* params )
     for(;;)
     {
 #if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+        vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
 #endif
 
         pxTaskSsTCB->xCur = ( TickType_t ) 0;
@@ -176,7 +176,7 @@ void vCommonAperiodicTask( void* params )
         }
 
 #if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+        vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
 #endif
 
         vTaskDelay( rand() % pxTaskSsTCB->xPeriod );

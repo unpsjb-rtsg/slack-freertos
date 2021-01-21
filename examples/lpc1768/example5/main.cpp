@@ -111,7 +111,7 @@ static void vAperiodicTask( void* params )
     for(;;)
     {
         #if TZ == 1
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+        vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
         #endif
 
         pxTaskSsTCB->xCur = ( TickType_t ) 0;
@@ -133,7 +133,7 @@ static void vAperiodicTask( void* params )
         }
 
         #if TZ == 1
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+        vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
         #endif
 
         vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
@@ -153,7 +153,7 @@ static void vPeriodicTask( void* params )
     for(;;)
     {
         #if TZ == 1
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+        vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
         #endif
 
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
@@ -190,7 +190,7 @@ static void vPeriodicTask( void* params )
         }
 
         #if TZ == 1
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
+        vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
         #endif
 
         vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
