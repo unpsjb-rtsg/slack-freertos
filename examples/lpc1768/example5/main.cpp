@@ -10,7 +10,8 @@
  * Before writing to the serial port, the tasks try to take a shared mutex.
  * This could lead to the following problem: when an aperiodic task has taken
  * the mutex and then the available slack depletes, the periodic tasks can't
- * take the mutex, and a missed deadline will occur.
+ * take the mutex, and a missed deadline will occur. To avoid this situation,
+ * a timeout is used when the periodic tasks is waiting to obtain the mutex.
  *
  * This program requires FreeRTOS v10.0.0 or later.
  *
@@ -50,6 +51,7 @@
 #define ATASK_MAX_DELAY 4000
 #define ATASK_1_PRIO configMAX_PRIORITIES - 1
 #define ATASK_2_PRIO configMAX_PRIORITIES - 2
+#define MUTEX_TIMEOUT 10
 
 #define BAUDRATE 9600
 
@@ -156,7 +158,7 @@ static void vPeriodicTask( void* params )
         vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
         #endif
 
-        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        if ( xSemaphoreTake( xMutex, MUTEX_TIMEOUT ) )
         {
             vTasksGetSlacks( slackArray );
             vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB );
@@ -182,7 +184,7 @@ static void vPeriodicTask( void* params )
 
         leds[ pxTaskSsTCB->xId - 1] = 0;
 
-        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        if ( xSemaphoreTake( xMutex, MUTEX_TIMEOUT ) )
         {
             vTasksGetSlacks( slackArray );
             vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB );
@@ -220,7 +222,6 @@ int main(void)
     pc.baud( BAUDRATE );
     pc.printf( "Example %d\n", EXAMPLE );
     pc.printf( "Using FreeRTOS %s\n", tskKERNEL_VERSION_NUMBER );
-
 
     // turn off all the on board LEDs.
     leds[0] = 0;
@@ -262,6 +263,10 @@ int main(void)
 #if TZ == 1
     vTraceEnable( TRC_START );
 #endif
+
+    /* Initialize random number generator with seed zero to have a reproducible
+     * trace. */
+    srand((unsigned) 0);
 
     // Start the scheduler.
     vTaskStartScheduler();
