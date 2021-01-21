@@ -10,7 +10,8 @@
  * Before writing to the serial port, the tasks try to take a shared mutex.
  * This could lead to the following problem: when an aperiodic task has taken
  * the mutex and then the available slack depletes, the periodic tasks can't
- * take the mutex, and a missed deadline will occur.
+ * take the mutex, and a missed deadline will occur. To avoid this situation,
+ * a timeout is used when the periodic tasks is waiting to obtain the mutex.
  *
  * This program requires FreeRTOS v10.0.0 or later.
  *
@@ -69,6 +70,9 @@
  * various Luminary Micro EKs.
  *************************************************************************/
 
+/*****************************************************************************
+ * Includes
+ ****************************************************************************/
 /* Standard includes. */
 #include <stdio.h>
 #include <stdlib.h>
@@ -93,8 +97,9 @@
 #include "uart.h"
 #include "bitmap.h"
 
-/*-----------------------------------------------------------*/
-
+/*****************************************************************************
+ * Macros and definitions
+ ****************************************************************************/
 /* Task stack sizes. */
 #define taskDEFAULT_STACK   ( configMINIMAL_STACK_SIZE + 40 )
 
@@ -108,6 +113,7 @@
 #define ATASK_WCET      ( 200 )
 #define ATASK_MAX_DELAY ( 400 )
 
+#define MUTEX_TIMEOUT 10
 #define mainMAX_MSG_LEN ( 150 )
 
 /* Constants used when writing strings to the display. */
@@ -118,8 +124,19 @@
 #define mainFULL_SCALE                      ( 15 )
 #define ulSSI_FREQUENCY                     ( 3500000UL )
 
-/*-----------------------------------------------------------*/
+/*****************************************************************************
+ * Private data declaration
+ ****************************************************************************/
+/* None */
 
+/*****************************************************************************
+ * Public data declaration
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private functions declaration
+ ****************************************************************************/
 /**
  * Entry function for the periodic tasks.
  * @param pvParameters Should be a numerical id.
@@ -142,24 +159,160 @@ static void prvSetupHardware( void );
  */
 static void prvPrintString( const char * pcString );
 
-/*-----------------------------------------------------------*/
+/* Functions to access the OLED.  The one used depends on the dev kit being used. */
+static void ( *vOLEDInit )( uint32_t ) = NULL;
+static void ( *vOLEDStringDraw )( const char *, uint32_t, uint32_t, unsigned char ) = NULL;
+static void ( *vOLEDImageDraw )( const unsigned char *, uint32_t, uint32_t, uint32_t, uint32_t ) = NULL;
+static void ( *vOLEDClear )( void ) = NULL;
 
+/*****************************************************************************
+ * Private data
+ ****************************************************************************/
 static SemaphoreHandle_t xMutex = NULL;
 
+/*****************************************************************************
+ * Public data
+ ****************************************************************************/
+/* None */
+
+/*****************************************************************************
+ * Private functions
+ ****************************************************************************/
+static void prvSetupHardware( void )
+{
+    /* If running on Rev A2 silicon, turn the LDO voltage up to 2.75V.  This is
+    a workaround to allow the PLL to operate reliably. */
+    if( DEVICE_IS_REVA2 )
+    {
+        SysCtlLDOSet( SYSCTL_LDO_2_75V );
+    }
+
+    /* Set the clocking to run from the PLL at 50 MHz */
+    SysCtlClockSet( SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_8MHZ );
+}
 /*-----------------------------------------------------------*/
 
-/* Functions to access the OLED.  The one used depends on the dev kit
-being used. */
-void ( *vOLEDInit )( uint32_t ) = NULL;
-void ( *vOLEDStringDraw )( const char *, uint32_t, uint32_t, unsigned char ) = NULL;
-void ( *vOLEDImageDraw )( const unsigned char *, uint32_t, uint32_t, uint32_t, uint32_t ) = NULL;
-void ( *vOLEDClear )( void ) = NULL;
+static void prvPrintString( const char * pcString )
+{
+    while( *pcString != 0x00 )
+    {
+        UARTCharPut( UART0_BASE, *pcString );
+        pcString++;
+    }
+}
+/*-----------------------------------------------------------*/
 
-/*************************************************************************
- * Please ensure to read http://www.freertos.org/portlm3sx965.html
- * which provides information on configuring and running this demo for the
- * various Luminary Micro EKs.
- *************************************************************************/
+static void vPrintSlacks( char *buf, char s, int32_t * slackArray, TickType_t xCur )
+{
+    sprintf(buf, "%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
+            pcTaskGetTaskName(NULL), s,
+            slackArray[0], slackArray[2], slackArray[3],
+            slackArray[4], slackArray[5], slackArray[6],
+            xCur);
+    prvPrintString( buf );
+}
+/*-----------------------------------------------------------*/
+
+static void vBusyWait( TickType_t ticks )
+{
+    TickType_t elapsedTicks = 0;
+    TickType_t currentTick = 0;
+    while ( elapsedTicks < ticks ) {
+        currentTick = xTaskGetTickCount();
+        while ( currentTick == xTaskGetTickCount() ) {
+            asm("nop");
+        }
+        elapsedTicks++;
+    }
+}
+/*-----------------------------------------------------------*/
+
+static void prvPeriodicTask( void *pvParameters )
+{
+    static char cMessage[ mainMAX_MSG_LEN ];
+
+    int id = ( int ) pvParameters;
+
+    // tick, task id, system available slack, 4 periodic tasks slacks
+    int32_t slackArray[ 7 ];
+
+    SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
+
+    for( ;; )
+    {
+        vTasksGetSlacks( slackArray );
+        if ( xSemaphoreTake( xMutex, MUTEX_TIMEOUT ) )
+        {
+            vPrintSlacks( cMessage, 'S', slackArray, pxTaskSsTCB->xCur );
+            xSemaphoreGive( xMutex );
+        }
+        else
+        {
+            prvPrintString("!");
+        }
+
+        sprintf( cMessage, "%s - %u", pcTaskGetTaskName( NULL ), pxTaskSsTCB->uxReleaseCount );
+        vOLEDStringDraw( cMessage, 0, (mainCHARACTER_HEIGHT+1)*(id-1), mainFULL_SCALE );
+
+        vBusyWait( pxTaskSsTCB->xWcet - 10 );
+
+        vTasksGetSlacks( slackArray );
+        if ( xSemaphoreTake( xMutex, MUTEX_TIMEOUT ) )
+        {
+            vPrintSlacks( cMessage, 'E', slackArray, pxTaskSsTCB->xCur );
+            xSemaphoreGive( xMutex );
+        }
+        else
+        {
+            prvPrintString("!");
+        }
+
+        vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
+    }
+}
+/*-----------------------------------------------------------*/
+
+static void prvAperiodicTask( void *pvParameters )
+{
+    static char cMessage[ mainMAX_MSG_LEN ];
+
+    // tick, task id, system available slack, 4 periodic tasks slacks
+    int32_t slackArray[ 7 ];
+
+    SsTCB_t *pxTaskSsTCB;
+
+    pxTaskSsTCB = getTaskSsTCB( NULL );
+
+    vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
+
+    for(;;)
+    {
+        pxTaskSsTCB->xCur = ( TickType_t ) 0;
+
+        vTasksGetSlacks( slackArray );
+        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        {
+            vPrintSlacks( cMessage, 'S', slackArray, pxTaskSsTCB->xCur );
+            xSemaphoreGive( xMutex );
+        }
+
+        vBusyWait( rand() % pxTaskSsTCB->xWcet );
+
+        vTasksGetSlacks( slackArray );
+        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        {
+            vPrintSlacks( cMessage, 'E', slackArray, pxTaskSsTCB->xCur );
+            xSemaphoreGive( xMutex );
+        }
+
+        vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
+    }
+}
+/*-----------------------------------------------------------*/
+
+/*****************************************************************************
+ * Public functions
+ ****************************************************************************/
 int main( void )
 {
     // Verify that configUSE_SLACK_STEALING is enabled
@@ -223,138 +376,6 @@ int main( void )
     /* Will only get here if there was insufficient memory to create the idle
     task. */
     for( ;; );
-}
-/*-----------------------------------------------------------*/
-
-void prvSetupHardware( void )
-{
-    /* If running on Rev A2 silicon, turn the LDO voltage up to 2.75V.  This is
-    a workaround to allow the PLL to operate reliably. */
-    if( DEVICE_IS_REVA2 )
-    {
-        SysCtlLDOSet( SYSCTL_LDO_2_75V );
-    }
-
-    /* Set the clocking to run from the PLL at 50 MHz */
-    SysCtlClockSet( SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_8MHZ );
-}
-/*-----------------------------------------------------------*/
-
-static void prvPrintString( const char * pcString )
-{
-    while( *pcString != 0x00 )
-    {
-        UARTCharPut( UART0_BASE, *pcString );
-        pcString++;
-    }
-}
-/*-----------------------------------------------------------*/
-
-static void vPrintSlacks( char *buf, char s, int32_t * slackArray, TickType_t xCur )
-{
-    sprintf(buf, "%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
-            pcTaskGetTaskName(NULL), s,
-            slackArray[0], slackArray[2], slackArray[3],
-            slackArray[4], slackArray[5], slackArray[6],
-            xCur);
-    prvPrintString( buf );
-}
-/*-----------------------------------------------------------*/
-
-static void vBusyWait( TickType_t ticks )
-{
-    TickType_t elapsedTicks = 0;
-    TickType_t currentTick = 0;
-    while ( elapsedTicks < ticks ) {
-        currentTick = xTaskGetTickCount();
-        while ( currentTick == xTaskGetTickCount() ) {
-            asm("nop");
-        }
-        elapsedTicks++;
-    }
-}
-/*-----------------------------------------------------------*/
-
-static void prvPeriodicTask( void *pvParameters )
-{
-    static char cMessage[ mainMAX_MSG_LEN ];
-
-    int id = ( int ) pvParameters;
-
-    // tick, task id, system available slack, 4 periodic tasks slacks
-    int32_t slackArray[ 7 ];
-
-    SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
-
-    for( ;; )
-    {
-        vTasksGetSlacks( slackArray );
-        if ( xSemaphoreTake( xMutex, 10 ) )
-        {
-            vPrintSlacks( cMessage, 'S', slackArray, pxTaskSsTCB->xCur );
-            xSemaphoreGive( xMutex );
-        }
-        else
-        {
-            prvPrintString("!");
-        }
-
-        sprintf( cMessage, "%s - %u", pcTaskGetTaskName( NULL ), pxTaskSsTCB->uxReleaseCount );
-        vOLEDStringDraw( cMessage, 0, (mainCHARACTER_HEIGHT+1)*(id-1), mainFULL_SCALE );
-
-        vBusyWait( pxTaskSsTCB->xWcet - 10 );
-
-        vTasksGetSlacks( slackArray );
-        if ( xSemaphoreTake( xMutex, 10 ) )
-        {
-            vPrintSlacks( cMessage, 'E', slackArray, pxTaskSsTCB->xCur );
-            xSemaphoreGive( xMutex );
-        }
-        else
-        {
-            prvPrintString("!");
-        }
-
-        vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
-    }
-}
-/*-----------------------------------------------------------*/
-
-static void prvAperiodicTask( void *pvParameters )
-{
-    static char cMessage[ mainMAX_MSG_LEN ];
-
-    // tick, task id, system available slack, 4 periodic tasks slacks
-    int32_t slackArray[ 7 ];
-
-    SsTCB_t *pxTaskSsTCB;
-
-    pxTaskSsTCB = getTaskSsTCB( NULL );
-
-    vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
-
-    for(;;)
-    {
-        pxTaskSsTCB->xCur = ( TickType_t ) 0;
-
-        vTasksGetSlacks( slackArray );
-        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
-        {
-            vPrintSlacks( cMessage, 'S', slackArray, pxTaskSsTCB->xCur );
-            xSemaphoreGive( xMutex );
-        }
-
-        vBusyWait( rand() % pxTaskSsTCB->xWcet );
-
-        vTasksGetSlacks( slackArray );
-        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
-        {
-            vPrintSlacks( cMessage, 'E', slackArray, pxTaskSsTCB->xCur );
-            xSemaphoreGive( xMutex );
-        }
-
-        vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
-    }
 }
 /*-----------------------------------------------------------*/
 
