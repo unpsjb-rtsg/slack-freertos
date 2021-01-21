@@ -78,6 +78,8 @@ CPU += -mcpu=cortex-m3
 CPU += -mthumb
 
 CC_FLAGS += $(CPU)
+CC_SYMBOLS += -DTARGET_LM3S6965EVB
+CC_SYMBOLS += -DTARGET_M3
 
 ###############################################################################
 #

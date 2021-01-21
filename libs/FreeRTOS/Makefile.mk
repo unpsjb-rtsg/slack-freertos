@@ -160,6 +160,9 @@ ifeq ($(TZ), 1)
   endif
   ifeq ($(TARGET), edu-ciaa-nxp)
     #CC_FLAGS = $(CFLAGS)
+  endif
+  ifeq ($(TARGET), lm3s6965evb)
+  	CC_SYMBOLS += -DTARGET_LM3S6965EVB
   endif    
 endif
 

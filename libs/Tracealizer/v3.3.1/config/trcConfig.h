@@ -70,6 +70,9 @@ extern "C" {
 #ifdef TARGET_EDU_CIAA_NXP
 #include "chip.h"
 #endif
+#ifdef TARGET_LM3S6965EVB
+#include "chip.h"
+#endif
 
 /*******************************************************************************
  * Configuration Macro: TRC_CFG_HARDWARE_PORT
@@ -90,6 +93,9 @@ extern "C" {
  * define your own port, if not already present.
  ******************************************************************************/
 #define TRC_CFG_HARDWARE_PORT TRC_HARDWARE_PORT_ARM_Cortex_M
+#ifdef TARGET_LM3S6965EVB
+#define TRC_CFG_ARM_CM_USE_SYSTICK
+#endif
 
 /*******************************************************************************
  * Configuration Macro: TRC_CFG_RECORDER_MODE

@@ -128,6 +128,19 @@ void vAssertCalled( const char *pcFile, unsigned long ulLine );
 //#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() vConfigureTimerForRunTimeStats()
 //#define portGET_RUN_TIME_COUNTER_VALUE() LPC_TIM1->TC
 
+ /* Integrates the Tracealyzer recorder with FreeRTOS */
+ #if ( configUSE_TRACE_FACILITY == 1 )
+ #ifdef TRACEALYZER_v3_0_2
+ #include "trcKernelPort.h"
+ #endif
+ #ifdef TRACEALYZER_v3_1_3
+ #include "trcRecorder.h"
+ #endif
+ #ifdef TRACEALYZER_v3_3_1
+ #include "trcRecorder.h"
+ #endif
+ #endif
+
 /* Slack Stealing configuration. */
 #include "slackConfig.h"
 

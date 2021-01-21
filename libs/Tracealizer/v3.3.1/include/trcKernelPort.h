@@ -1,3 +1,8 @@
+/**
+ * Parcheado para que funcione con FreeRTOS v10.4: se modificaron #defines para
+ * que acepten un parámetro x.
+ */
+
 /*******************************************************************************
  * Trace Recorder Library for Tracealyzer v3.3.1
  * Percepio AB, www.percepio.com
@@ -1216,7 +1221,7 @@ extern void vTraceStoreMemMangEvent(uint32_t ecode, uint32_t address, int32_t si
 		trcKERNEL_HOOKS_KERNEL_SERVICE_WITH_PARAM(TRACE_TASK_NOTIFY_TAKE_FAILED, TASK, pxCurrentTCB, xTicksToWait); \
 	}
 #else /* TRC_CFG_FREERTOS_VERSION < TRC_FREERTOS_VERSION_9_0_0 */
-#define traceTASK_NOTIFY_TAKE() \
+#define traceTASK_NOTIFY_TAKE(x) \
 	if (pxCurrentTCB->ucNotifyState == taskNOTIFICATION_RECEIVED){ \
 		trcKERNEL_HOOKS_KERNEL_SERVICE_WITH_PARAM(TRACE_TASK_NOTIFY_TAKE, TASK, pxCurrentTCB, xTicksToWait); \
 	}else{ \
@@ -1224,19 +1229,19 @@ extern void vTraceStoreMemMangEvent(uint32_t ecode, uint32_t address, int32_t si
 #endif /* TRC_CFG_FREERTOS_VERSION < TRC_FREERTOS_VERSION_9_0_0 */
 
 #undef traceTASK_NOTIFY_TAKE_BLOCK
-#define traceTASK_NOTIFY_TAKE_BLOCK() \
+#define traceTASK_NOTIFY_TAKE_BLOCK(x) \
 	trcKERNEL_HOOKS_KERNEL_SERVICE_WITH_PARAM(TRACE_TASK_NOTIFY_TAKE_BLOCK, TASK, pxCurrentTCB, xTicksToWait); \
 	trcKERNEL_HOOKS_SET_TASK_INSTANCE_FINISHED();
 
 #undef traceTASK_NOTIFY_WAIT
 #if (TRC_CFG_FREERTOS_VERSION < TRC_FREERTOS_VERSION_9_0_0)
-#define traceTASK_NOTIFY_WAIT() \
+#define traceTASK_NOTIFY_WAIT(x) \
 	if (pxCurrentTCB->eNotifyState == eNotified){ \
 		prvTraceStoreKernelCallWithParam(TRACE_TASK_NOTIFY_WAIT, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(pxCurrentTCB), xTicksToWait); \
 	}else{ \
 		prvTraceStoreKernelCallWithParam(TRACE_TASK_NOTIFY_WAIT_FAILED, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(pxCurrentTCB), xTicksToWait);}
 #else /* TRC_CFG_FREERTOS_VERSION < TRC_FREERTOS_VERSION_9_0_0 */
-#define traceTASK_NOTIFY_WAIT() \
+#define traceTASK_NOTIFY_WAIT(x) \
 	if (pxCurrentTCB->ucNotifyState == taskNOTIFICATION_RECEIVED){ \
 		prvTraceStoreKernelCallWithParam(TRACE_TASK_NOTIFY_WAIT, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(pxCurrentTCB), xTicksToWait); \
 	}else{ \
@@ -1244,21 +1249,21 @@ extern void vTraceStoreMemMangEvent(uint32_t ecode, uint32_t address, int32_t si
 #endif /* TRC_CFG_FREERTOS_VERSION < TRC_FREERTOS_VERSION_9_0_0 */
 
 #undef traceTASK_NOTIFY_WAIT_BLOCK
-#define traceTASK_NOTIFY_WAIT_BLOCK() \
+#define traceTASK_NOTIFY_WAIT_BLOCK(x) \
 	prvTraceStoreKernelCallWithParam(TRACE_TASK_NOTIFY_WAIT_BLOCK, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(pxCurrentTCB), xTicksToWait); \
 	trcKERNEL_HOOKS_SET_TASK_INSTANCE_FINISHED();
 
 #undef traceTASK_NOTIFY
-#define traceTASK_NOTIFY() \
+#define traceTASK_NOTIFY(x) \
 	if (TRACE_GET_TASK_FILTER(TRACE_GET_CURRENT_TASK()) & CurrentFilterMask) \
 		prvTraceStoreKernelCall(TRACE_TASK_NOTIFY, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(xTaskToNotify));
 
 #undef traceTASK_NOTIFY_FROM_ISR
-#define traceTASK_NOTIFY_FROM_ISR() \
+#define traceTASK_NOTIFY_FROM_ISR(x) \
 	prvTraceStoreKernelCall(TRACE_TASK_NOTIFY_FROM_ISR, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(xTaskToNotify));
 	
 #undef traceTASK_NOTIFY_GIVE_FROM_ISR
-#define traceTASK_NOTIFY_GIVE_FROM_ISR() \
+#define traceTASK_NOTIFY_GIVE_FROM_ISR(x) \
 	prvTraceStoreKernelCall(TRACE_TASK_NOTIFY_GIVE_FROM_ISR, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(xTaskToNotify));
 
 #endif /* (TRC_CFG_SCHEDULING_ONLY == 0) */
@@ -2289,7 +2294,7 @@ BaseType_t MyWrapper(__a, __b, const BaseType_t xCopyPosition)
 
 #undef traceTASK_NOTIFY_TAKE
 #if (TRC_CFG_FREERTOS_VERSION >= TRC_FREERTOS_VERSION_9_0_0)
-#define traceTASK_NOTIFY_TAKE() \
+#define traceTASK_NOTIFY_TAKE(x) \
 	if (TRACE_GET_TASK_FILTER(TRACE_GET_CURRENT_TASK()) & CurrentFilterMask){ \
 		if (pxCurrentTCB->ucNotifyState == taskNOTIFICATION_RECEIVED) \
 			prvTraceStoreEvent2(PSF_EVENT_TASK_NOTIFY_TAKE, (uint32_t)pxCurrentTCB, xTicksToWait); \
@@ -2311,7 +2316,7 @@ BaseType_t MyWrapper(__a, __b, const BaseType_t xCopyPosition)
 
 #undef traceTASK_NOTIFY_WAIT
 #if (TRC_CFG_FREERTOS_VERSION >= TRC_FREERTOS_VERSION_9_0_0)
-#define traceTASK_NOTIFY_WAIT() \
+#define traceTASK_NOTIFY_WAIT(x) \
 	if (TRACE_GET_TASK_FILTER(TRACE_GET_CURRENT_TASK()) & CurrentFilterMask){ \
 		if (pxCurrentTCB->ucNotifyState == taskNOTIFICATION_RECEIVED) \
 			prvTraceStoreEvent2(PSF_EVENT_TASK_NOTIFY_WAIT, (uint32_t)pxCurrentTCB, xTicksToWait); \
@@ -2327,21 +2332,21 @@ BaseType_t MyWrapper(__a, __b, const BaseType_t xCopyPosition)
 #endif /* TRC_CFG_FREERTOS_VERSION >= TRC_FREERTOS_VERSION_9_0_0 */
 
 #undef traceTASK_NOTIFY_WAIT_BLOCK
-#define traceTASK_NOTIFY_WAIT_BLOCK() \
+#define traceTASK_NOTIFY_WAIT_BLOCK(x) \
 	if (TRACE_GET_TASK_FILTER(TRACE_GET_CURRENT_TASK()) & CurrentFilterMask) \
 		prvTraceStoreEvent2(PSF_EVENT_TASK_NOTIFY_WAIT_BLOCK, (uint32_t)pxCurrentTCB, xTicksToWait);
 
 #undef traceTASK_NOTIFY
-#define traceTASK_NOTIFY() \
+#define traceTASK_NOTIFY(x) \
 	if (TRACE_GET_TASK_FILTER(TRACE_GET_CURRENT_TASK()) & CurrentFilterMask) \
 		prvTraceStoreEvent1(PSF_EVENT_TASK_NOTIFY, (uint32_t)xTaskToNotify);
 
 #undef traceTASK_NOTIFY_FROM_ISR
-#define traceTASK_NOTIFY_FROM_ISR() \
+#define traceTASK_NOTIFY_FROM_ISR(x) \
 	prvTraceStoreEvent1(PSF_EVENT_TASK_NOTIFY_FROM_ISR, (uint32_t)xTaskToNotify);
 	
 #undef traceTASK_NOTIFY_GIVE_FROM_ISR
-#define traceTASK_NOTIFY_GIVE_FROM_ISR() \
+#define traceTASK_NOTIFY_GIVE_FROM_ISR(x) \
 	prvTraceStoreEvent1(PSF_EVENT_TASK_NOTIFY_GIVE_FROM_ISR, (uint32_t)xTaskToNotify);
 
 #endif /* (TRC_CFG_SCHEDULING_ONLY == 0) */

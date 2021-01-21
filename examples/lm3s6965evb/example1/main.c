@@ -105,8 +105,8 @@
 #define TASK_4_PRIO     ( configMAX_PRIORITIES - configMAX_SLACK_PRIO - 4 )
 #define ATASK_1_PRIO    ( configMAX_PRIORITIES - 1 )
 #define ATASK_2_PRIO    ( configMAX_PRIORITIES - 2 )
-#define ATASK_WCET      ( 2000 )
-#define ATASK_MAX_DELAY ( 4000 )
+#define ATASK_WCET      ( 200 )
+#define ATASK_MAX_DELAY ( 400 )
 
 #define mainMAX_MSG_LEN ( 150 )
 
@@ -169,8 +169,8 @@ int main( void )
 
     /* Initialise the trace recorder.  Use of the trace recorder is optional.
     See http://www.FreeRTOS.org/trace for more information and the comments at
-    the top of this file regarding enabling trace in this demo.
-    vTraceEnable( TRC_START ); */
+    the top of this file regarding enabling trace in this demo. */
+    vTraceEnable( TRC_INIT );
 
     prvSetupHardware();
 
@@ -193,10 +193,10 @@ int main( void )
     xTaskCreate( prvAperiodicTask, "TA2", 256, NULL, ATASK_2_PRIO, &atask2 );
 
     // Configure additional parameters needed by the slack stealing framework.
-    vSlackSetTaskParams( task1, PERIODIC_TASK, 3000,  3000,  1000, 1 );
-    vSlackSetTaskParams( task2, PERIODIC_TASK, 4000,  4000,  1000, 2 );
-    vSlackSetTaskParams( task3, PERIODIC_TASK, 6000,  6000,  1000, 3 );
-    vSlackSetTaskParams( task4, PERIODIC_TASK, 12000, 12000, 1000, 4 );
+    vSlackSetTaskParams( task1, PERIODIC_TASK, 300,  300,  100, 1 );
+    vSlackSetTaskParams( task2, PERIODIC_TASK, 400,  400,  100, 2 );
+    vSlackSetTaskParams( task3, PERIODIC_TASK, 600,  600,  100, 3 );
+    vSlackSetTaskParams( task4, PERIODIC_TASK, 1200, 1200, 100, 4 );
     vSlackSetTaskParams( atask1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 1 );
     vSlackSetTaskParams( atask2, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 2 );
 
@@ -210,6 +210,12 @@ int main( void )
 
     /* Initialise the OLED and display a startup message. */
     vOLEDInit( ulSSI_FREQUENCY );
+
+    /* Initialize random number generator with seed zero to have a reproducible
+     * trace. */
+    srand((unsigned) 0);
+
+    vTraceEnable( TRC_START );
 
     /* Start the scheduler. */
     vTaskStartScheduler();
@@ -275,32 +281,38 @@ static void prvPeriodicTask( void *pvParameters )
 
     int id = ( int ) pvParameters;
 
+    // tick, task id, system available slack, 4 periodic tasks slacks
     int32_t slackArray[ 7 ];
-
-    sprintf(cMessage, "FreeRTOS %s + SS", tskKERNEL_VERSION_NUMBER);
-    vOLEDStringDraw( cMessage, 0, 0, mainFULL_SCALE );
 
     SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
 
     for( ;; )
     {
         vTasksGetSlacks( slackArray );
-        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        if ( xSemaphoreTake( xMutex, 10 ) )
         {
             vPrintSlacks( cMessage, 'S', slackArray, pxTaskSsTCB->xCur );
             xSemaphoreGive( xMutex );
         }
+        else
+        {
+            prvPrintString("!");
+        }
 
         sprintf( cMessage, "%s - %u", pcTaskGetTaskName( NULL ), pxTaskSsTCB->uxReleaseCount );
-        vOLEDStringDraw( cMessage, 0, (mainCHARACTER_HEIGHT+1)*id, mainFULL_SCALE );
+        vOLEDStringDraw( cMessage, 0, (mainCHARACTER_HEIGHT+1)*(id-1), mainFULL_SCALE );
 
-        vBusyWait( pxTaskSsTCB->xWcet - 200 );
+        vBusyWait( pxTaskSsTCB->xWcet - 10 );
 
         vTasksGetSlacks( slackArray );
-        if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
+        if ( xSemaphoreTake( xMutex, 10 ) )
         {
             vPrintSlacks( cMessage, 'E', slackArray, pxTaskSsTCB->xCur );
             xSemaphoreGive( xMutex );
+        }
+        else
+        {
+            prvPrintString("!");
         }
 
         vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
@@ -312,6 +324,7 @@ static void prvAperiodicTask( void *pvParameters )
 {
     static char cMessage[ mainMAX_MSG_LEN ];
 
+    // tick, task id, system available slack, 4 periodic tasks slacks
     int32_t slackArray[ 7 ];
 
     SsTCB_t *pxTaskSsTCB;
@@ -348,8 +361,8 @@ static void prvAperiodicTask( void *pvParameters )
 void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
         TickType_t xTickCount )
 {
-    taskDISABLE_INTERRUPTS();
-    for (;; ) {}
+    //taskDISABLE_INTERRUPTS();
+    //for (;; ) {}
 }
 /*-----------------------------------------------------------*/
 
