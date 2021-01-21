@@ -74,6 +74,7 @@ char* itoa(int value, char* result, int base)
    }
    return result;
 }
+/*-----------------------------------------------------------*/
 
 void vCommonSetupHardware(void)
 {
@@ -94,6 +95,7 @@ void vCommonSetupHardware(void)
    // Initialize UART @ 115200 bauds.
    uartConfig( UART_USB, 115200 );
 }
+/*-----------------------------------------------------------*/
 
 void vCommonPrintSlacks( char s, int32_t * slackArray, TickType_t xCur )
 {
@@ -128,6 +130,7 @@ void vCommonPrintSlacks( char s, int32_t * slackArray, TickType_t xCur )
 
 	xTaskResumeAll();
 }
+/*-----------------------------------------------------------*/
 
 void vCommonPeriodicTask( void* params )
 {
@@ -175,3 +178,5 @@ void vCommonPeriodicTask( void* params )
 		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }
 }
+/*-----------------------------------------------------------*/
+

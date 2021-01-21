@@ -64,6 +64,7 @@ void FreeRTOSDelay(uint32_t ms)
 	xDelayTime = xTaskGetTickCount();
 	vTaskDelayUntil(&xDelayTime, ms);
 }
+/*-----------------------------------------------------------*/
 
 /* FreeRTOS malloc fail hook */
 __WEAK__ void vApplicationMallocFailedHook(void)
@@ -72,6 +73,7 @@ __WEAK__ void vApplicationMallocFailedHook(void)
 	taskDISABLE_INTERRUPTS();
 	for (;; ) {}
 }
+/*-----------------------------------------------------------*/
 
 /* FreeRTOS application idle hook */
 __WEAK__ void vApplicationIdleHook(void)
@@ -79,6 +81,7 @@ __WEAK__ void vApplicationIdleHook(void)
 	/* Best to sleep here until next systick */
 	__WFI();
 }
+/*-----------------------------------------------------------*/
 
 /* FreeRTOS stack overflow hook */
 __WEAK__ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
@@ -93,10 +96,12 @@ __WEAK__ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskNam
 	taskDISABLE_INTERRUPTS();
 	for (;; ) {}
 }
+/*-----------------------------------------------------------*/
 
 /* FreeRTOS application tick hook */
 __WEAK__ void vApplicationTickHook(void)
 {}
+/*-----------------------------------------------------------*/
 
 #if ( configUSE_SLACK_STEALING == 1 )
 __WEAK__ void vApplicationDebugAction( void *param )
@@ -113,6 +118,7 @@ __WEAK__ void vApplicationDebugAction( void *param )
         vUtilsEatCpu( 500 );
 	}
 }
+/*-----------------------------------------------------------*/
 
 __WEAK__ void vApplicationNotSchedulable( void )
 {
@@ -128,6 +134,7 @@ __WEAK__ void vApplicationNotSchedulable( void )
         vUtilsEatCpu( 500 );
 	}
 }
+/*-----------------------------------------------------------*/
 
 __WEAK__ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB, TickType_t xTickCount )
 {
@@ -150,5 +157,6 @@ __WEAK__ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *x
         vUtilsEatCpu( 500 );
     }
 }
+/*-----------------------------------------------------------*/
 #endif
 
