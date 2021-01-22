@@ -379,8 +379,10 @@ int main( void )
 void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
         TickType_t xTickCount )
 {
-    //taskDISABLE_INTERRUPTS();
-    //for (;; ) {}
+    taskDISABLE_INTERRUPTS();
+    sprintf(cMessage, "\n\r%s missed its deadline at %d\n\r", pcTaskName, xTickCount);
+    prvPrintString( cMessage );
+    for (;; ) {}
 }
 /*-----------------------------------------------------------*/
 
