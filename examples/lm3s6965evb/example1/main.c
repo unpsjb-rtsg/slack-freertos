@@ -170,6 +170,11 @@ static void ( *vOLEDClear )( void ) = NULL;
  ****************************************************************************/
 static SemaphoreHandle_t xMutex = NULL;
 
+static char cMessage[ mainMAX_MSG_LEN ];
+
+// tick, task id, system available slack, 4 periodic tasks slacks
+static int32_t slackArray[ 7 ];
+
 /*****************************************************************************
  * Public data
  ****************************************************************************/
@@ -229,20 +234,15 @@ static void vBusyWait( TickType_t ticks )
 
 static void prvPeriodicTask( void *pvParameters )
 {
-    static char cMessage[ mainMAX_MSG_LEN ];
-
     int id = ( int ) pvParameters;
-
-    // tick, task id, system available slack, 4 periodic tasks slacks
-    int32_t slackArray[ 7 ];
 
     SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
 
     for( ;; )
     {
-        vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( xMutex, MUTEX_TIMEOUT ) )
         {
+            vTasksGetSlacks( slackArray );
             vPrintSlacks( cMessage, 'S', slackArray, pxTaskSsTCB->xCur );
             xSemaphoreGive( xMutex );
         }
@@ -256,9 +256,9 @@ static void prvPeriodicTask( void *pvParameters )
 
         vBusyWait( pxTaskSsTCB->xWcet - 10 );
 
-        vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( xMutex, MUTEX_TIMEOUT ) )
         {
+            vTasksGetSlacks( slackArray );
             vPrintSlacks( cMessage, 'E', slackArray, pxTaskSsTCB->xCur );
             xSemaphoreGive( xMutex );
         }
@@ -276,9 +276,6 @@ static void prvAperiodicTask( void *pvParameters )
 {
     static char cMessage[ mainMAX_MSG_LEN ];
 
-    // tick, task id, system available slack, 4 periodic tasks slacks
-    int32_t slackArray[ 7 ];
-
     SsTCB_t *pxTaskSsTCB;
 
     pxTaskSsTCB = getTaskSsTCB( NULL );
@@ -289,18 +286,18 @@ static void prvAperiodicTask( void *pvParameters )
     {
         pxTaskSsTCB->xCur = ( TickType_t ) 0;
 
-        vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
+            vTasksGetSlacks( slackArray );
             vPrintSlacks( cMessage, 'S', slackArray, pxTaskSsTCB->xCur );
             xSemaphoreGive( xMutex );
         }
 
         vBusyWait( rand() % pxTaskSsTCB->xWcet );
 
-        vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
+            vTasksGetSlacks( slackArray );
             vPrintSlacks( cMessage, 'E', slackArray, pxTaskSsTCB->xCur );
             xSemaphoreGive( xMutex );
         }
