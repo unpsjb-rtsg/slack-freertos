@@ -77,6 +77,7 @@ static void vCommonPrintSlacks( char s, int32_t * slackArray, SsTCB_t *pxTaskSsT
  ****************************************************************************/
 static TaskHandle_t task_handles[ TASK_CNT ];
 static TaskHandle_t xApTaskHandle1, xApTaskHandle2;
+static int32_t slackArray[ 7 ];
 
 /*****************************************************************************
  * Public data
@@ -93,17 +94,16 @@ traceString slack_channel;
  ****************************************************************************/
 static void vCommonPrintSlacks( char s, int32_t * slackArray, SsTCB_t *pxTaskSsTCB )
 {
-    pc.printf("%s [%d]\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
+    pc.printf("%s [%3d] %c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
             pcTaskGetTaskName(NULL), pxTaskSsTCB->uxReleaseCount, s,
             slackArray[0], slackArray[2], slackArray[3],
             slackArray[4], slackArray[5], slackArray[6],
             pxTaskSsTCB->xCur);
 }
+/*-----------------------------------------------------------*/
 
 static void vAperiodicTask( void* params )
 {
-    int32_t slackArray[ 7 ];
-
     SsTCB_t *pxTaskSsTCB;
 
     pxTaskSsTCB = getTaskSsTCB( NULL );
@@ -118,18 +118,18 @@ static void vAperiodicTask( void* params )
 
         pxTaskSsTCB->xCur = ( TickType_t ) 0;
 
-        vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
+            vTasksGetSlacks( slackArray );
             vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB );
             xSemaphoreGive( xMutex );
         }
 
         vUtilsEatCpu( rand() % pxTaskSsTCB->xWcet );
 
-        vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
+            vTasksGetSlacks( slackArray );
             vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB );
             xSemaphoreGive( xMutex );
         }
@@ -139,16 +139,17 @@ static void vAperiodicTask( void* params )
         #endif
 
         vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
+
+        pxTaskSsTCB->uxReleaseCount = pxTaskSsTCB->uxReleaseCount + 1;
     }
 }
+/*-----------------------------------------------------------*/
 
 static void vPeriodicTask( void* params )
 {
     ( void ) params;
 
     SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
-
-    int32_t slackArray[ 7 ];
 
     UBaseType_t xRndRun = 0;
 
@@ -198,6 +199,7 @@ static void vPeriodicTask( void* params )
         vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }
 }
+/*-----------------------------------------------------------*/
 
 /*****************************************************************************
  * Public functions
@@ -220,8 +222,8 @@ int main(void)
 #endif
 
     pc.baud( BAUDRATE );
-    pc.printf( "Example %d\n", EXAMPLE );
-    pc.printf( "Using FreeRTOS %s\n", tskKERNEL_VERSION_NUMBER );
+    pc.printf( "Example %d\n\r", EXAMPLE );
+    pc.printf( "Using FreeRTOS %s\n\r", tskKERNEL_VERSION_NUMBER );
 
     // turn off all the on board LEDs.
     leds[0] = 0;
@@ -239,8 +241,8 @@ int main(void)
     xTaskCreate( vPeriodicTask, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
 
     // Aperiodic tasks.
-    xTaskCreate( vAperiodicTask, "TA1", 256, NULL, ATASK_1_PRIO, &xApTaskHandle1 );
-    xTaskCreate( vAperiodicTask, "TA2", 256, NULL, ATASK_2_PRIO, &xApTaskHandle2 );
+    xTaskCreate( vAperiodicTask, "A1", 256, NULL, ATASK_1_PRIO, &xApTaskHandle1 );
+    xTaskCreate( vAperiodicTask, "A2", 256, NULL, ATASK_2_PRIO, &xApTaskHandle2 );
 
 #if configUSE_SLACK_STEALING == 1
     // additional parameters needed by the slack stealing framework

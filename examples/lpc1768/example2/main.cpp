@@ -102,11 +102,11 @@ int main(void)
 	xTaskCreate( vCommonPeriodicTask, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
 
     // Aperiodic tasks.
-    xTaskCreate( vCommonAperiodicTask, "TA1", 256, NULL, ATASK_1_PRIO, &xApTaskHandle1 );
-    xTaskCreate( vCommonAperiodicTask, "TA2", 256, NULL, ATASK_2_PRIO, &xApTaskHandle2 );
+    xTaskCreate( vCommonAperiodicTask, "A1", 256, NULL, ATASK_1_PRIO, &xApTaskHandle1 );
+    xTaskCreate( vCommonAperiodicTask, "A2", 256, NULL, ATASK_2_PRIO, &xApTaskHandle2 );
 
 #if( configUSE_SLACK_STEALING == 1 )
-    #if( tskKERNEL_VERSION_MAJOR >= 9 )
+    #if( tskKERNEL_VERSION_MAJOR == 9 )
     {
         vSlackSystemSetup();
     }
@@ -129,7 +129,11 @@ int main(void)
     vSlackSetTaskParams( xApTaskHandle1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 1 );
     vSlackSetTaskParams( xApTaskHandle2, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 2 );
 
-    vSlackSchedulerSetup();
+    #if( tskKERNEL_VERSION_MAJOR == 9 )
+    {
+        vSlackSchedulerSetup();
+    }
+    #endif
 #endif
 #endif
 

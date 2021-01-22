@@ -8,13 +8,13 @@
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
-static void vCommonPrintSlacks( char s, int32_t * slackArray, TickType_t xCur )
+static void vCommonPrintSlacks( char s, int32_t * slackArray, SsTCB_t *pxTaskSsTCB )
 {
-    pc.printf("%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
-            pcTaskGetTaskName(NULL), s,
+    pc.printf("%s [%3d] %c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
+            pcTaskGetTaskName(NULL), pxTaskSsTCB->uxReleaseCount, s,
             slackArray[0], slackArray[2], slackArray[3],
             slackArray[4], slackArray[5], slackArray[6],
-            xCur);
+            pxTaskSsTCB->xCur);
 }
 
 /*****************************************************************************
@@ -79,7 +79,7 @@ void vCommonPeriodicTask( void* params )
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
             vTasksGetSlacks( slackArray );
-            vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+            vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB );
             xSemaphoreGive( xMutex );
         }
 #endif
@@ -122,7 +122,7 @@ void vCommonPeriodicTask( void* params )
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
             vTasksGetSlacks( slackArray );
-            vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+            vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB );
             xSemaphoreGive( xMutex );
         }
 #endif
@@ -162,7 +162,7 @@ void vCommonAperiodicTask( void* params )
         vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
-            vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+            vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB );
             xSemaphoreGive( xMutex );
         }
 
@@ -171,7 +171,7 @@ void vCommonAperiodicTask( void* params )
         vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
-            vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+            vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB );
             xSemaphoreGive( xMutex );
         }
 
@@ -180,6 +180,8 @@ void vCommonAperiodicTask( void* params )
 #endif
 
         vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
+
+        pxTaskSsTCB->uxReleaseCount = pxTaskSsTCB->uxReleaseCount + 1;
     }
 }
 
@@ -257,7 +259,7 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
 
     taskDISABLE_INTERRUPTS();
 
-    pc.printf( "\n%s [%d]\tdeadline miss at %d, c=%d\r\n", pcTaskName, xSsTCB->uxReleaseCount, xTickCount, xSsTCB->xCur );
+    pc.printf( "\n\r%s missed its deadline at %d\n\r", pcTaskName, xTickCount);
 
     for( ;; )
     {
