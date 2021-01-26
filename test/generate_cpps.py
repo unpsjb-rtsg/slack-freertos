@@ -78,7 +78,7 @@ def joseph_wcrt(rts):
     
 def get_args():
     """ Command line arguments """
-    freertos_choices = ["v8.1.2", "v9.0.0"]
+    freertos_choices = ["v8.1.2", "v9.0.0", "v10.2.1", "v10.3.1", "v10.4.1"]
     slack_choices = ["ss","k"]
     slackmethod_choices = ["fixed", "davis"]
     test_choices = ['cycles-cs', 'ceils', 'cycles-ss', 'loops']
@@ -186,7 +186,7 @@ def main():
         tmp_file.close()
     
         # cog para que procese los comandos que contiene el archivo temporal
-        subprocess.call("python -m cogapp @{0}".format(tmp_file.name), shell=True)
+        subprocess.call("python3 -m cogapp @{0}".format(tmp_file.name), shell=True)
     
         # ahora si eliminamos el archivo temporal
         os.remove(tmp_file.name)
@@ -203,14 +203,14 @@ def main():
                         "KERNEL_TEST={0}".format(test_names[args.test]),
                         "FREERTOS_KERNEL_VERSION_NUMBER={0}".format(args.freertos),
                         "FREERTOS_KERNEL_VERSION_NUMBER_MAJOR={0}".format(int(args.freertos[1])) ]
-        subprocess.call("python -m cogapp -d -D {0} -o {1} {2}".format(" -D ".join(make_config), os.path.join(args.srcpath, "Makefile.config"), "Makefile.config.template"), shell=True)
+        subprocess.call("python3 -m cogapp -d -D {0} -o {1} {2}".format(" -D ".join(make_config), os.path.join(args.srcpath, "Makefile.config"), "Makefile.config.template"), shell=True)
     
     if(args.bins):
         # generate bins        
         returncode = subprocess.call("make --no-print-directory -C {0} {1}".format(args.srcpath, " ".join(make_config)), shell=True, stdout=None, stderr=None)
     
-    if returncode != 0:
-        print("Something went wrong!")
+        if returncode != 0:
+            print("Something went wrong!")
 
 
 if __name__ == '__main__':

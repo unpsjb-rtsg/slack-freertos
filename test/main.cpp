@@ -34,7 +34,7 @@ rts_to_test = []
 
 context = et.iterparse(RTS_FILE, events=('start', 'end', ))
 context = iter(context)
-event, root = context.next()
+event, root = next(context)
 for event, elem in context:
     rts_id, rts_to_test = get_rts_from_element(elem)
     if rts_to_test_id == rts_id and rts_to_test and event == "end":

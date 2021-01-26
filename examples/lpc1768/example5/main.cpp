@@ -212,8 +212,8 @@ int main(void)
 {
     // Verify that configUSE_SLACK_STEALING is enabled
     configSS_ASSERT_EQUAL( configUSE_SLACK_STEALING, 1 );
-    // Verify that tskKERNEL_VERSION_MAJOR is >= 9
-    configSS_ASSERT_GREATHER_OR_EQUAL( tskKERNEL_VERSION_MAJOR, 9);
+    // Verify that tskKERNEL_VERSION_MAJOR is >= 10
+    configSS_ASSERT_GREATHER_OR_EQUAL( tskKERNEL_VERSION_MAJOR, 10);
 
     // Initializes the trace recorder, but does not start the tracing.
 #if TZ == 1

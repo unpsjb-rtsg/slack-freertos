@@ -29,8 +29,12 @@ endif
 #
 # Paths to the required headers.
 #
-INCLUDE_PATHS += -I../../examples/$(TARGET)/
-INCLUDE_PATHS += -I../../examples/$(TARGET)/$(APP_NAME)
+ifeq ($(TEST), 0)
+    INCLUDE_PATHS += -I../../examples/$(TARGET)/
+    INCLUDE_PATHS += -I../../examples/$(TARGET)/$(APP_NAME)
+else
+    INCLUDE_PATHS += -I../../test/tests/2020-01-21/
+endif
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/include
 ifeq ($(TARGET), lpc1768)
@@ -184,7 +188,7 @@ clean:
 	@rm -f $(PROJECT).bin $(PROJECT).a $(OBJECTS) $(DEPS)	
 
 .c.o:
-	+@echo "[FreeRTOS] Compile: $<"
+	+@echo "[FreeRTOS] Compile: $<"    
 	@$(CC) $(CPU) $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
 
 $(PROJECT).a: $(OBJECTS)
