@@ -117,9 +117,18 @@ extern uint32_t SystemCoreClock;
 
 /* ========================================================================= */
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
+
+/* Required for integrating the SsTCB into the task TCB. */
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
 
-#define INCLUDE_xTaskGetIdleTaskHandle    1 /* Required for identify the IDLE task in slacks methods and deadline check */
+/* Add functionality to be added to FreeRTOS's tasks.c source file. */
+#define configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H 1
+
+#define FREERTOS_TASKS_C_ADDITIONS_INIT() vSlackSchedulerSetup()
+
+/* Required for identify the IDLE task in slacks methods and deadline check. */
+#define INCLUDE_xTaskGetIdleTaskHandle  1
+
 #define INCLUDE_xTaskGetCurrentTaskHandle 1
 
 /*
@@ -131,6 +140,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_SLACK_METHOD          SLACK_METHOD /* Slack method to use */
 #define configUSE_SLACK_K               SLACK_K /* Only calculate slack at the scheduler start */
 #define configMAX_SLACK_PRIO            MAX_PRIO /* priority levels that are used for slack. */
+#define configMIN_SLACK_SD              0 /* Minimum amount of available slack. */
 /* ========================================================================= */
 
 /* Set the following definitions to 1 to include the API function, or zero
@@ -217,48 +227,7 @@ header file. */
 */
 #define configKERNEL_TEST KERNEL_TEST
 
-#if ( FREERTOS_KERNEL_VERSION_NUMBER_MAJOR == 10 )
-
-/* === delay_until() cost ================================================== */
-#if configKERNEL_TEST == 1
-void vMacroTaskDelay( void );
-void vMacroTaskSwitched( void );
-#define traceTASK_DELAY_UNTIL() vMacroTaskDelay();
-#define traceTASK_SWITCHED_OUT() vMacroTaskSwitched();
-
-uint32_t ulDelayTime;
-uint32_t ulDelayTime1;
-
-typedef uint32_t xType[TASK_COUNT][RELEASE_COUNT + 2];
-void vTaskGetTraceInfo( xType *pxArray, uint32_t time, uint32_t r );
-#endif
-/* ========================================================================= */
-
-/* === slack methods ceil/floor cost ======================================= */
-#if configKERNEL_TEST == 2
-typedef uint32_t xType[TASK_COUNT][RELEASE_COUNT + 1];
-void vTaskGetTraceInfo( void );
-#endif
-/* ========================================================================= */
-
-/* === prvTaskCalculateSlack cost ========================================== */
-#if configKERNEL_TEST == 3
-typedef uint32_t xType[TASK_COUNT][RELEASE_COUNT + 1];
-void vTaskGetTraceInfo( uint32_t cycles );
-#endif
-/* ========================================================================= */
-
-/* === prvTaskCalculateSlack cost measured in loops ======================== */
-#if configKERNEL_TEST == 4
-typedef uint32_t xType[TASK_COUNT][RELEASE_COUNT + 1];
-void vTaskGetTraceInfo( void );
-#endif
-/* ========================================================================= */
-
-#endif
-
-
-#if ( FREERTOS_KERNEL_VERSION_NUMBER_MAJOR == 9 )
+#if ( tskKERNEL_VERSION_MAJOR == 10 )
 
 /* === delay_until() cost ================================================== */
 /* The trace macro definitions must be in this header file.                  */
@@ -272,7 +241,22 @@ void vMacroTaskSwitched( void );
 
 #endif
 
-#if ( FREERTOS_KERNEL_VERSION_NUMBER_MAJOR == 8 )
+
+#if ( tskKERNEL_VERSION_MAJOR == 9 )
+
+/* === delay_until() cost ================================================== */
+/* The trace macro definitions must be in this header file.                  */
+#if configKERNEL_TEST == 1
+void vMacroTaskDelay( void );
+void vMacroTaskSwitched( void );
+#define traceTASK_DELAY_UNTIL(xTimeToWake) vMacroTaskDelay();
+#define traceTASK_SWITCHED_OUT()           vMacroTaskSwitched();
+#endif
+/* ========================================================================= */
+
+#endif
+
+#if ( tskKERNEL_VERSION_MAJOR == 8 )
 
 /* === delay_until() cost ================================================== */
 #if configKERNEL_TEST == 1

@@ -128,7 +128,7 @@ BINS = $(OBJS:.o=.bin)
 #
 # Rules to build the example program.
 #
-all: freertos $(BINS)
+all: freertos $(ELFS) $(BINS)
     
 clean:
 	+@echo "Cleaning binary files..."
@@ -137,18 +137,17 @@ clean:
     
 freertos:
 	+@echo "[FreeRTOS] Building FreeRTOS $(FREERTOS_KERNEL_VERSION_NUMBER) library..."    
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ) TEST_INCLUDE_PATHS=$(INCLUDE_PATHS) TEST=1 TASK_COUNT_PARAM=$(TASK_COUNT_PARAM)
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ) TEST_INCLUDE_PATHS=$(INCLUDE_PATHS) TEST=1 KERNEL_TEST=$(KERNEL_TEST) TASK_COUNT_PARAM=$(TASK_COUNT_PARAM)
 	+@echo "[FreeRTOS] Done!"
 
 .cpp.o:
 	+@echo "[App] Compile: $<"
-	@$(CPP) $(COMMON_FLAGS) $(CPP_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
+	@$(CPP) $(COMMON_FLAGS) $(CPP_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
     
 %.elf: %.o $(SYS_OBJECTS)
 	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS) $(WRAP)
     
 %.bin: %.elf
-	+@echo "?"
 	@$(OBJCOPY) -S -O binary $< $@
 
 DEPS = $(OBJS:.o=.d) $(SYS_OBJECTS:.o=.d)

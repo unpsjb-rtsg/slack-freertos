@@ -51,7 +51,7 @@ del context
 #include "slack.h"
 #endif
 
-#if ( configKERNEL_TEST > 0 ) && ( tskKERNEL_VERSION_MAJOR == 9 )
+#if ( configKERNEL_TEST > 0 ) && ( tskKERNEL_VERSION_MAJOR >= 9 )
 #include "slack_tests.h"
 #endif
 
@@ -98,8 +98,8 @@ extern "C" {
 
 #if( configUSE_SLACK_STEALING == 1 )
 void vApplicationDebugAction( void *param );
-void vApplicationNotSchedulable( void );
-void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
+//void vApplicationNotSchedulable( void );
+//void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
 #endif
 void vApplicationMallocFailedHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
@@ -151,11 +151,11 @@ for idx, task in enumerate( rts_to_test ):
 // [[[end]]]
 #endif
 
-#if ( configUSE_SLACK_STEALING == 1 ) && ( tskKERNEL_VERSION_MAJOR == 9 )
+#if ( configUSE_SLACK_STEALING == 1 ) && ( tskKERNEL_VERSION_MAJOR >= 9 )
     /* vSlackSetTaskParams( task_handle[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 0 ); */
 /* [[[cog
 for idx, task in enumerate( rts_to_test ):
-    cog.outl("vSlackSetTaskParams( task_handle[ {0} ], TASK_{1}_PERIOD, TASK_{1}_PERIOD, TASK_{1}_WCET, {0} );".format( idx, idx + 1 ))
+    cog.outl("vSlackSetTaskParams( task_handle[ {0} ], PERIODIC_TASK, TASK_{1}_PERIOD, TASK_{1}_PERIOD, TASK_{1}_WCET, {0} );".format( idx, idx + 1 ))
 ]]]*/
 // [[[end]]]
 #endif
@@ -188,6 +188,8 @@ for idx, task in enumerate( rts_to_test ):
         }
         #endif
     }
+    
+    pc.printf("START!\n\r");
     
 	vTaskStartScheduler();
 
@@ -305,22 +307,21 @@ void vApplicationNotSchedulable( void )
 	}
 }
 
-void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount )
+void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
+        TickType_t xTickCount )
 {
-    ( void ) *pcTaskName;
-    ( void ) uxRelease;
-    ( void ) xTickCount;
-    
+    ( void ) xSsTCB;
+
     taskDISABLE_INTERRUPTS();
-    
-    pc.printf( "%d\n", 1 );
-    
+
+    pc.printf( "\n\r%s missed its deadline at %d\n\r", pcTaskName, xTickCount);
+
     for( ;; )
     {
-        mbed_leds[ 0 ] = 1;
+        /*leds[ 0 ] = 1;
         wait_ms( 1000 );
-        mbed_leds[ 0 ] = 0;
-        wait_ms( 1000 );
+        leds[ 0 ] = 0;
+        wait_ms( 1000 );*/
     }
 }
 #endif
@@ -366,3 +367,53 @@ void vMacroTaskSwitched()
     vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), cs_costs, ulDelayTime1, 1 );
 }
 #endif
+
+/* The prototype shows it is a naked function - in effect this is just an
+assembly function. */
+static void HardFault_Handler( void ) __attribute__( ( naked ) );
+
+/* The fault handler implementation calls a function called
+prvGetRegistersFromStack(). */
+static void HardFault_Handler(void)
+{
+    __asm volatile
+    (
+        " tst lr, #4                                                \n"
+        " ite eq                                                    \n"
+        " mrseq r0, msp                                             \n"
+        " mrsne r0, psp                                             \n"
+        " ldr r1, [r0, #24]                                         \n"
+        " ldr r2, handler2_address_const                            \n"
+        " bx r2                                                     \n"
+        " handler2_address_const: .word prvGetRegistersFromStack    \n"
+    );
+}
+
+void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
+{
+/* These are volatile to try and prevent the compiler/linker optimising them
+away as the variables never actually get used.  If the debugger won't show the
+values of the variables, make them global my moving their declaration outside
+of this function. */
+volatile uint32_t r0;
+volatile uint32_t r1;
+volatile uint32_t r2;
+volatile uint32_t r3;
+volatile uint32_t r12;
+volatile uint32_t lr; /* Link register. */
+volatile uint32_t pc; /* Program counter. */
+volatile uint32_t psr;/* Program status register. */
+
+    r0 = pulFaultStackAddress[ 0 ];
+    r1 = pulFaultStackAddress[ 1 ];
+    r2 = pulFaultStackAddress[ 2 ];
+    r3 = pulFaultStackAddress[ 3 ];
+
+    r12 = pulFaultStackAddress[ 4 ];
+    lr = pulFaultStackAddress[ 5 ];
+    pc = pulFaultStackAddress[ 6 ];
+    psr = pulFaultStackAddress[ 7 ];
+
+    /* When the following line is hit, the variables contain the register values. */
+    for( ;; );
+}

@@ -1,5 +1,5 @@
-#ifndef SLACK_V9_0_0_SLACK_TESTS_H_
-#define SLACK_V9_0_0_SLACK_TESTS_H_
+#ifndef SLACK_V10_4_1_SLACK_TESTS_H_
+#define SLACK_V10_4_1_SLACK_TESTS_H_
 
 #include "slack.h"
 
@@ -57,4 +57,4 @@ void vTaskGetTraceInfo( TaskHandle_t xTask, BaseType_t xLoopCost );
 }
 #endif
 
-#endif /* SLACK_V9_0_0_SLACK_TESTS_H_ */
+#endif /* SLACK_V10_4_1_SLACK_TESTS_H_ */

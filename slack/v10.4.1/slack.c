@@ -2,7 +2,7 @@
 #include "slack_algorithms/slack_algorithms.h"
 
 #if ( configKERNEL_TEST > 0 )
-#include "slack_tests.h"
+//#include "slack_tests.h"
 #if ( configKERNEL_TEST == 2 )
 static BaseType_t xCeilFloorCost = 0;
 #endif
