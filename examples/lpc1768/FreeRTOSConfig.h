@@ -90,7 +90,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_TICK_HOOK				0
 #define configCPU_CLOCK_HZ				( SystemCoreClock )
 #define configTICK_RATE_HZ				( ( TickType_t ) 1000 )
-#define configMAX_PRIORITIES			( 10 )
+#define configMAX_PRIORITIES			( 15 )
 #define configMINIMAL_STACK_SIZE		( ( unsigned short ) 130 )
 #define configTOTAL_HEAP_SIZE			( ( size_t ) ( 16 * 1024 ) )
 #define configMAX_TASK_NAME_LEN			( 10 )
@@ -175,8 +175,12 @@ standard names. */
 #endif
 #endif
 
+#define configKERNEL_TEST 1
+
 /* Slack Stealing configuration. */
 #include "slackConfig.h"
+
+/* ========================================================================= */
 
 #define configSS_ASSERT_EQUAL( x, y ) if( ( x ) != ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
 #define configSS_ASSERT_GREATHER_OR_EQUAL( x, y ) if( ( x ) < ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }

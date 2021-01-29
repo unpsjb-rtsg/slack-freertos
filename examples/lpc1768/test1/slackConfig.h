@@ -3,8 +3,6 @@
 
 #define EXAMPLE 1
 
-#define configMAX_PRIORITIES			( 15 )
-
 /* ========================================================================= */
 /* Required for integrating the SsTCB into the task TCB. */
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
@@ -36,8 +34,6 @@
  * 1 = exact tick count
  */
 #define configTASK_EXEC                 0
-
-/* ========================================================================= */
 
 /* Timing:
  * http://stackoverflow.com/questions/13379220/generating-nano-second-delay-in-c
@@ -74,7 +70,6 @@
 #define SLACK_METHOD 	configUSE_SLACK_METHOD
 #define SLACK_K			configUSE_SLACK_K
 
-
 /* Test to perform.:
 1. Cost in CPU cycles of the vTaskDelayUntil() kernel function.
 2. Amount of ceil and floor operations performed by the Slack Stealing method.
@@ -84,6 +79,13 @@
 #define configKERNEL_TEST 1
 
 /* ========================================================================= */
+
+#if configKERNEL_TEST == 1
+void vMacroTaskDelay( void );
+void vMacroTaskSwitched( void );
+#define traceTASK_DELAY_UNTIL(xTimeToWake) vMacroTaskDelay();
+#define traceTASK_SWITCHED_OUT()           vMacroTaskSwitched();
+#endif
 
 #if ( tskKERNEL_VERSION_MAJOR == 10 )
 
@@ -153,5 +155,6 @@ void vTaskGetTraceInfo( void );
 /* ========================================================================= */
 
 #endif
+
 
 #endif /* EXAMPLES_LPC1768_EXAMPLE1_SLACKCONFIG_H_ */

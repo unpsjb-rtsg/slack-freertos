@@ -9,6 +9,7 @@ BUILD_DIR = ../../build
 OBJECTS += ./$(APP_NAME)/main.o 
 OBJECTS += ./../common/common-mbed.o
 OBJECTS += ./../utils/utils.o
+OBJECTS += ./../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.o
 
 ###############################################################################
 #

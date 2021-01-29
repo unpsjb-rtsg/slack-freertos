@@ -92,6 +92,9 @@ Serial pc( USBTX, USBRX );
 
 DigitalOut leds[ ] = { LED1, LED2, LED3, LED4 };
 
+uint32_t ulDelayTime;
+uint32_t ulDelayTime1;
+
 /* ========================================================================= */
 xType *cs_costs;
 /* ========================================================================= */
@@ -103,7 +106,7 @@ int main()
     ulDelayTime1 = 0;
     #endif
     
-	pc.baud(9600);
+    pc.baud(9600);
     
     /* Reserve memory for task_handle array */
     task_handle = ( TaskHandle_t * ) pvPortMalloc( sizeof( TaskHandle_t ) * TASK_COUNT );
