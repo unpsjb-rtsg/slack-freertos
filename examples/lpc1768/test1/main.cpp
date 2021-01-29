@@ -95,6 +95,8 @@ DigitalOut leds[ ] = { LED1, LED2, LED3, LED4 };
 uint32_t ulDelayTime;
 uint32_t ulDelayTime1;
 
+BaseType_t ulDelayUntilFlag = pdFALSE;
+
 /* ========================================================================= */
 xType *cs_costs;
 /* ========================================================================= */
@@ -187,11 +189,12 @@ vTaskSetParams( task_handle[ 9 ], 9 );
     }
     
     pc.printf("START!\n\r");
-    
+
 	vTaskStartScheduler();
 
     for(;;);
 }
+/*-----------------------------------------------------------*/
 
 void task_body( void* params )
 {
@@ -235,6 +238,7 @@ void task_body( void* params )
 		vTaskDelayUntil( &xPreviousWakeTime, ( TickType_t ) xTasksParams[ id ][ 0 ] );
 	}
 }
+/*-----------------------------------------------------------*/
 
 #if ( configUSE_SLACK_STEALING == 1 )
 void vApplicationDebugAction( void *param )
@@ -254,6 +258,7 @@ void vApplicationDebugAction( void *param )
 	}
 }
 #endif
+/*-----------------------------------------------------------*/
 
 void vEatCpu( BaseType_t ticks )
 {
@@ -265,8 +270,8 @@ void vEatCpu( BaseType_t ticks )
         asm("nop");
     }
 }
+/*-----------------------------------------------------------*/
 
-/* ========================================================================= */
 #if ( configKERNEL_TEST == 1 ) && ( tskKERNEL_VERSION_MAJOR == 8 )
 void vMacroTaskDelay()
 {
@@ -278,24 +283,30 @@ void vMacroTaskDelay()
 void vMacroTaskSwitched()
 {
 	ulDelayTime1 = CPU_CYCLES;
-    vTaskGetTraceInfo( cs_costs, ulDelayTime1, 1 );
+	vTaskGetTraceInfo( cs_costs, ulDelayTime1, 1 );
 }
 #endif
+/*-----------------------------------------------------------*/
 
 #if ( configKERNEL_TEST == 1 ) && ( tskKERNEL_VERSION_MAJOR >= 9 )
 void vMacroTaskDelay()
 {
 	STOPWATCH_RESET();
 	ulDelayTime = CPU_CYCLES;
+	ulDelayUntilFlag = pdTRUE;
     vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), cs_costs, ulDelayTime, 0 );
 }
 
 void vMacroTaskSwitched()
 {
-	ulDelayTime1 = CPU_CYCLES;
-    vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), cs_costs, ulDelayTime1, 1 );
+	if ( ulDelayUntilFlag == pdTRUE ) {
+		ulDelayTime1 = CPU_CYCLES;
+		vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), cs_costs, ulDelayTime1, 1 );
+		ulDelayUntilFlag = pdFALSE;
+	}
 }
 #endif
+/*-----------------------------------------------------------*/
 
 /* The prototype shows it is a naked function - in effect this is just an
 assembly function. */
@@ -317,21 +328,22 @@ static void HardFault_Handler(void)
         " handler2_address_const: .word prvGetRegistersFromStack    \n"
     );
 }
+/*-----------------------------------------------------------*/
 
 void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
 {
-/* These are volatile to try and prevent the compiler/linker optimising them
-away as the variables never actually get used.  If the debugger won't show the
-values of the variables, make them global my moving their declaration outside
-of this function. */
-volatile uint32_t r0;
-volatile uint32_t r1;
-volatile uint32_t r2;
-volatile uint32_t r3;
-volatile uint32_t r12;
-volatile uint32_t lr; /* Link register. */
-volatile uint32_t pc; /* Program counter. */
-volatile uint32_t psr;/* Program status register. */
+	/* These are volatile to try and prevent the compiler/linker optimising them
+	away as the variables never actually get used.  If the debugger won't show the
+	values of the variables, make them global my moving their declaration outside
+	of this function. */
+	volatile uint32_t r0;
+	volatile uint32_t r1;
+	volatile uint32_t r2;
+	volatile uint32_t r3;
+	volatile uint32_t r12;
+	volatile uint32_t lr; /* Link register. */
+	volatile uint32_t pc; /* Program counter. */
+	volatile uint32_t psr;/* Program status register. */
 
     r0 = pulFaultStackAddress[ 0 ];
     r1 = pulFaultStackAddress[ 1 ];
@@ -346,3 +358,4 @@ volatile uint32_t psr;/* Program status register. */
     /* When the following line is hit, the variables contain the register values. */
     for( ;; );
 }
+/*-----------------------------------------------------------*/
