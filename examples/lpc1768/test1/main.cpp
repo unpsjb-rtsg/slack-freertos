@@ -160,12 +160,14 @@ vTaskSetParams( task_handle[ 9 ], 9 );
 
 static void prvPeriodicTask( void *pvParameters )
 {
-	TickType_t xPreviousWakeTime = ( TickType_t ) 0U;
-    int id = ( int ) pvParameters;
+	int id = ( int ) pvParameters;
+
+    SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
 
     for(;;)
 	{               
     	vBusyWait( xTasksParams[ id ][ 1 ]  );
+    	vBusyWait( pxTaskSsTCB->xWcet );
         
         if( id == ( TASK_COUNT - 1) )
         {
@@ -197,7 +199,7 @@ static void prvPeriodicTask( void *pvParameters )
 			}
         }
 
-		vTaskDelayUntil( &xPreviousWakeTime, ( TickType_t ) xTasksParams[ id ][ 0 ] );
+		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
 	}
 }
 /*-----------------------------------------------------------*/
