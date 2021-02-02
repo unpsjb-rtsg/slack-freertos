@@ -55,8 +55,6 @@ del context
 #include "slack_tests.h"
 #endif
 
-#define ONE_TICK_CYCLES ( ( configCPU_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL )
-
 #ifndef TASK_COUNT
 /* [[[cog
 cog.outl("#define TASK_COUNT {0}".format(len(rts_to_test)))
@@ -79,15 +77,6 @@ for task in rts_to_test:
 
 // [[[end]]]
 
-BaseType_t xTasksParams[ TASK_COUNT ][ 2 ] =
-{    
-/* [[[cog
-for task in rts_to_test:
-    cog.outl("{0} TASK_{1}_PERIOD, TASK_{2}_RUNTIME {3},".format("{", int(task["nro"]), int(task["nro"]), "}"))    
-]]] */
-// [[[end]]]
-};
-
 #define TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 
 /* Prototypes for the standard FreeRTOS callback/hook functions implemented within this file. */
@@ -98,8 +87,6 @@ extern "C" {
 
 #if( configUSE_SLACK_STEALING == 1 )
 void vApplicationDebugAction( void *param );
-//void vApplicationNotSchedulable( void );
-//void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
 #endif
 void vApplicationMallocFailedHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
@@ -108,37 +95,26 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 }
 #endif
 
-void vEatCpu( BaseType_t ticks );
-
-void task_body( void* );
-
-TaskHandle_t * task_handle;
-
 Serial pc( USBTX, USBRX );
 
-static DigitalOut mbed_leds[ ] = { LED1, LED2, LED3, LED4 };
+DigitalOut leds[ ] = { LED1, LED2, LED3, LED4 };
 
-/* ========================================================================= */
-xType *cs_costs;
-/* ========================================================================= */
+static void vBusyWait( TickType_t ticks );
+
+static void prvPeriodicTask( void *pvParameters );
 
 int main() 
 {
-    #if ( configKERNEL_TEST == 1 )
-    ulDelayTime = 0;
-    ulDelayTime1 = 0;
-    #endif
-    
 	pc.baud(9600);
     
     /* Reserve memory for task_handle array */
-    task_handle = ( TaskHandle_t * ) pvPortMalloc( sizeof( TaskHandle_t ) * TASK_COUNT );
+	TaskHandle_t *task_handle = ( TaskHandle_t * ) pvPortMalloc( sizeof( TaskHandle_t ) * TASK_COUNT );
 
     /* Periodic tasks. */
-    /* xTaskCreate( task_body, "T01", TASK_STACK_SIZE, ( void * ) 0, configMAX_PRIORITIES - 2, &task_handle[0] ); */    
+    /* xTaskCreate( prvPeriodicTask, "T01", TASK_STACK_SIZE, ( void * ) 0, configMAX_PRIORITIES - 2, &task_handle[0] ); */
 /* [[[cog
 for idx, task in enumerate( rts_to_test ):
-    cog.outl("xTaskCreate( task_body, \"T{0:02}\", TASK_STACK_SIZE, ( void * ) {1}, configMAX_PRIORITIES - {2}, &task_handle[{3}] );".format( int(task["nro"]), idx, idx + 2, idx ))
+    cog.outl("xTaskCreate( prvPeriodicTask, \"T{0:02}\", TASK_STACK_SIZE, ( void * ) {1}, configMAX_PRIORITIES - {2}, &task_handle[{3}] );".format( int(task["nro"]), idx, idx + 2, idx ))
 ]]]*/
 // [[[end]]]
 
@@ -169,45 +145,27 @@ for idx, task in enumerate( rts_to_test ):
 // [[[end]]]
 #endif
 
-    /* Reserve memory for cs_cost[][] array */
-    cs_costs = ( xType* ) pvPortMalloc( sizeof( uint32_t ) * ( TASK_COUNT * (RELEASE_COUNT + 2)));
-
-    /* Zeroes cs_cost[][] */
-    for(int i = 0; i < TASK_COUNT; i++)
-    {
-        #if ( configKERNEL_TEST == 1 )
-        for(int j = 0; j < RELEASE_COUNT + 2; j++) 
-        {            
-            (*cs_costs)[i][j] = 0;
-        }
-        #endif
-        #if ( configKERNEL_TEST == 2 || configKERNEL_TEST == 3 || configKERNELTRACE == 4 )
-        for(int j = 0; j < RELEASE_COUNT + 1; j++) 
-        {            
-            (*cs_costs)[i][j] = 0;
-        }
-        #endif
-    }
-    
-    pc.printf("START!\n\r");
+	vInitArray();
     
 	vTaskStartScheduler();
 
     for(;;);
 }
+/*-----------------------------------------------------------*/
 
-void task_body( void* params )
+static void prvPeriodicTask( void *pvParameters )
 {
-	TickType_t xPreviousWakeTime = ( TickType_t ) 0U;
-    int id = ( int ) params;
+	int id = ( int ) pvParameters;
+
+    SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
 
     for(;;)
 	{               
-        vEatCpu( xTasksParams[ id ][ 1 ]  );
+    	vBusyWait( pxTaskSsTCB->xWcet );
         
         if( id == ( TASK_COUNT - 1) )
         {
-            if( (*cs_costs)[ ( TASK_COUNT - 1) ][ 0 ] >= RELEASE_COUNT )
+            if( cs_costs[ ( TASK_COUNT - 1) ][ 0 ] >= RELEASE_COUNT )
             {
 				vTaskSuspendAll();
 				pc.printf("%d\n", 0);
@@ -221,12 +179,12 @@ void task_body( void* params )
 					pc.printf("%d\t", i);
                     #if ( configKERNEL_TEST == 1 )
 					for(int j = 2; j < RELEASE_COUNT + 2; j++) {
-						pc.printf( "%d\t", (*cs_costs)[i][j]);
+						pc.printf( "%d\t", cs_costs[i][j]);
 					}
                     #endif
                     #if ( configKERNEL_TEST == 2 || configKERNEL_TEST == 3 || configKERNEL_TEST == 4 )
                     for(int j = 1; j < RELEASE_COUNT + 1; j++) {
-						pc.printf( "%d\t", (*cs_costs)[i][j]);
+						pc.printf( "%d\t", cs_costs[i][j]);
 					}
                     #endif
 					pc.printf("\n");
@@ -235,9 +193,10 @@ void task_body( void* params )
 			}
         }
 
-		vTaskDelayUntil( &xPreviousWakeTime, ( TickType_t ) xTasksParams[ id ][ 0 ] );
+		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
 	}
 }
+/*-----------------------------------------------------------*/
 
 void vApplicationMallocFailedHook( void )
 {
@@ -247,32 +206,13 @@ void vApplicationMallocFailedHook( void )
 
 	for( ;; )
 	{
-        mbed_leds[ 3 ] = 1;
+        leds[ 3 ] = 1;
         wait_ms(1000);
-        mbed_leds[ 3 ] = 0;
-        wait_ms(1000);
-	}
-}
-
-#if ( configCHECK_FOR_STACK_OVERFLOW > 0 )
-void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
-{
-	( void ) pcTaskName;
-	( void ) pxTask;
-
-	taskDISABLE_INTERRUPTS();
-
-    pc.printf( "%d\n", 4 );
-
-	for( ;; )
-	{
-        mbed_leds[ 2 ] = 1;
-        wait_ms(1000);
-        mbed_leds[ 2 ] = 0;
+        leds[ 3 ] = 0;
         wait_ms(1000);
 	}
 }
-#endif
+/*-----------------------------------------------------------*/
 
 #if ( configUSE_SLACK_STEALING == 1 )
 void vApplicationDebugAction( void *param )
@@ -285,9 +225,9 @@ void vApplicationDebugAction( void *param )
 
 	for( ;; )
 	{
-        mbed_leds[ 4 ] = 1;
+        leds[ 4 ] = 1;
         wait_ms(1000);
-        mbed_leds[ 4 ] = 0;
+        leds[ 4 ] = 0;
         wait_ms(1000);
 	}
 }
@@ -300,9 +240,9 @@ void vApplicationNotSchedulable( void )
 
 	for( ;; )
 	{
-        mbed_leds[ 1 ] = 1;
+        leds[ 1 ] = 1;
         wait_ms(1000);
-        mbed_leds[ 1 ] = 0;
+        leds[ 1 ] = 0;
         wait_ms(1000);
 	}
 }
@@ -325,48 +265,21 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
     }
 }
 #endif
+/*-----------------------------------------------------------*/
 
-void vEatCpu( BaseType_t ticks )
+static void vBusyWait( TickType_t ticks )
 {
-    BaseType_t xI;
-    BaseType_t xLim = ( ticks * ONE_TICK_CYCLES ) / 5;
-
-    for( xI = 0; xI < xLim; xI++ )
-    {
-        asm("nop");
+    TickType_t elapsedTicks = 0;
+    TickType_t currentTick = 0;
+    while ( elapsedTicks < ticks ) {
+        currentTick = xTaskGetTickCount();
+        while ( currentTick == xTaskGetTickCount() ) {
+            asm("nop");
+        }
+        elapsedTicks++;
     }
 }
-
-/* ========================================================================= */
-#if ( configKERNEL_TEST == 1 ) && ( tskKERNEL_VERSION_MAJOR == 8 )
-void vMacroTaskDelay()
-{
-	STOPWATCH_RESET();
-	ulDelayTime = CPU_CYCLES;
-    vTaskGetTraceInfo( cs_costs, ulDelayTime, 0 );
-}
-
-void vMacroTaskSwitched()
-{
-	ulDelayTime1 = CPU_CYCLES;
-    vTaskGetTraceInfo( cs_costs, ulDelayTime1, 1 );
-}
-#endif
-
-#if ( configKERNEL_TEST == 1 ) && ( tskKERNEL_VERSION_MAJOR == 9 )
-void vMacroTaskDelay()
-{
-	STOPWATCH_RESET();
-	ulDelayTime = CPU_CYCLES;
-    vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), cs_costs, ulDelayTime, 0 );
-}
-
-void vMacroTaskSwitched()
-{
-	ulDelayTime1 = CPU_CYCLES;
-    vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), cs_costs, ulDelayTime1, 1 );
-}
-#endif
+/*-----------------------------------------------------------*/
 
 /* The prototype shows it is a naked function - in effect this is just an
 assembly function. */

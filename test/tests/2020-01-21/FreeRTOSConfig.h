@@ -116,6 +116,7 @@ extern uint32_t SystemCoreClock;
 #endif
 
 /* ========================================================================= */
+
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 
 /* Required for integrating the SsTCB into the task TCB. */
@@ -141,6 +142,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_SLACK_K               SLACK_K /* Only calculate slack at the scheduler start */
 #define configMAX_SLACK_PRIO            MAX_PRIO /* priority levels that are used for slack. */
 #define configMIN_SLACK_SD              0 /* Minimum amount of available slack. */
+
 /* ========================================================================= */
 
 /* Set the following definitions to 1 to include the API function, or zero

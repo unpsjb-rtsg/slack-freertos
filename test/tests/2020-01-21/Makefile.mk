@@ -51,29 +51,6 @@ LINKER_SCRIPT = ../../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/LPC1768.
 
 ###############################################################################
 #
-# Tracealyzer sources, include paths and symbols
-#
-ifeq ($(TZ), 1)
-  CC_SYMBOLS += -DTZ=1
-  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
-    CC_SYMBOLS += -DTRACEALYZER_v3_0_2
-  endif
-  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.1.3)
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
-    CC_SYMBOLS += -DTRACEALYZER_v3_1_3
-  endif
-  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
-    CC_SYMBOLS += -DTRACEALYZER_v3_3_1
-  endif
-endif
-
-###############################################################################
-#
 # Flags and symbols required by the compiler.
 #
 CPU = -mcpu=cortex-m3 -mthumb
@@ -140,11 +117,15 @@ freertos:
 	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ) TEST_INCLUDE_PATHS=$(INCLUDE_PATHS) TEST=1 KERNEL_TEST=$(KERNEL_TEST) TASK_COUNT_PARAM=$(TASK_COUNT_PARAM)
 	+@echo "[FreeRTOS] Done!"
 
+slack_test.o:
+	+@echo "[App] Compile: $<"
+	@$(CC)  $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ ./../../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.c
+
 .cpp.o:
 	+@echo "[App] Compile: $<"
 	@$(CPP) $(COMMON_FLAGS) $(CPP_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
     
-%.elf: %.o $(SYS_OBJECTS)
+%.elf: %.o $(SYS_OBJECTS) slack_test.o
 	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS) $(WRAP)
     
 %.bin: %.elf
