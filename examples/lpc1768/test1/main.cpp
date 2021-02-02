@@ -72,8 +72,6 @@ extern "C" {
 
 #if( configUSE_SLACK_STEALING == 1 )
 void vApplicationDebugAction( void *param );
-//void vApplicationNotSchedulable( void );
-//void vApplicationDeadlineMissedHook( char *pcTaskName, UBaseType_t uxRelease, TickType_t xTickCount );
 #endif
 void vApplicationMallocFailedHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
@@ -82,49 +80,33 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 }
 #endif
 
-void vEatCpu( BaseType_t ticks );
-
-void task_body( void* );
-
-TaskHandle_t * task_handle;
-
 Serial pc( USBTX, USBRX );
 
 DigitalOut leds[ ] = { LED1, LED2, LED3, LED4 };
 
-uint32_t ulDelayTime;
-uint32_t ulDelayTime1;
+static void vBusyWait( TickType_t ticks );
 
-BaseType_t ulDelayUntilFlag = pdFALSE;
-
-/* ========================================================================= */
-xType *cs_costs;
-/* ========================================================================= */
+static void prvPeriodicTask( void *pvParameters );
 
 int main() 
 {
-    #if ( configKERNEL_TEST == 1 )
-    ulDelayTime = 0;
-    ulDelayTime1 = 0;
-    #endif
-    
     pc.baud(9600);
     
     /* Reserve memory for task_handle array */
-    task_handle = ( TaskHandle_t * ) pvPortMalloc( sizeof( TaskHandle_t ) * TASK_COUNT );
+    TaskHandle_t *task_handle = ( TaskHandle_t * ) pvPortMalloc( sizeof( TaskHandle_t ) * TASK_COUNT );
 
     /* Periodic tasks. */
     /* xTaskCreate( task_body, "T01", TASK_STACK_SIZE, ( void * ) 0, configMAX_PRIORITIES - 2, &task_handle[0] ); */    
-xTaskCreate( task_body, "T01", TASK_STACK_SIZE, ( void * ) 0, configMAX_PRIORITIES - 2, &task_handle[0] );
-xTaskCreate( task_body, "T02", TASK_STACK_SIZE, ( void * ) 1, configMAX_PRIORITIES - 3, &task_handle[1] );
-xTaskCreate( task_body, "T03", TASK_STACK_SIZE, ( void * ) 2, configMAX_PRIORITIES - 4, &task_handle[2] );
-xTaskCreate( task_body, "T04", TASK_STACK_SIZE, ( void * ) 3, configMAX_PRIORITIES - 5, &task_handle[3] );
-xTaskCreate( task_body, "T05", TASK_STACK_SIZE, ( void * ) 4, configMAX_PRIORITIES - 6, &task_handle[4] );
-xTaskCreate( task_body, "T06", TASK_STACK_SIZE, ( void * ) 5, configMAX_PRIORITIES - 7, &task_handle[5] );
-xTaskCreate( task_body, "T07", TASK_STACK_SIZE, ( void * ) 6, configMAX_PRIORITIES - 8, &task_handle[6] );
-xTaskCreate( task_body, "T08", TASK_STACK_SIZE, ( void * ) 7, configMAX_PRIORITIES - 9, &task_handle[7] );
-xTaskCreate( task_body, "T09", TASK_STACK_SIZE, ( void * ) 8, configMAX_PRIORITIES - 10, &task_handle[8] );
-xTaskCreate( task_body, "T10", TASK_STACK_SIZE, ( void * ) 9, configMAX_PRIORITIES - 11, &task_handle[9] );
+xTaskCreate( prvPeriodicTask, "T01", TASK_STACK_SIZE, ( void * ) 0, configMAX_PRIORITIES - 2,  &task_handle[0] );
+xTaskCreate( prvPeriodicTask, "T02", TASK_STACK_SIZE, ( void * ) 1, configMAX_PRIORITIES - 3,  &task_handle[1] );
+xTaskCreate( prvPeriodicTask, "T03", TASK_STACK_SIZE, ( void * ) 2, configMAX_PRIORITIES - 4,  &task_handle[2] );
+xTaskCreate( prvPeriodicTask, "T04", TASK_STACK_SIZE, ( void * ) 3, configMAX_PRIORITIES - 5,  &task_handle[3] );
+xTaskCreate( prvPeriodicTask, "T05", TASK_STACK_SIZE, ( void * ) 4, configMAX_PRIORITIES - 6,  &task_handle[4] );
+xTaskCreate( prvPeriodicTask, "T06", TASK_STACK_SIZE, ( void * ) 5, configMAX_PRIORITIES - 7,  &task_handle[5] );
+xTaskCreate( prvPeriodicTask, "T07", TASK_STACK_SIZE, ( void * ) 6, configMAX_PRIORITIES - 8,  &task_handle[6] );
+xTaskCreate( prvPeriodicTask, "T08", TASK_STACK_SIZE, ( void * ) 7, configMAX_PRIORITIES - 9,  &task_handle[7] );
+xTaskCreate( prvPeriodicTask, "T09", TASK_STACK_SIZE, ( void * ) 8, configMAX_PRIORITIES - 10, &task_handle[8] );
+xTaskCreate( prvPeriodicTask, "T10", TASK_STACK_SIZE, ( void * ) 9, configMAX_PRIORITIES - 11, &task_handle[9] );
 
 #if ( configUSE_SLACK_STEALING == 1 ) && ( tskKERNEL_VERSION_MAJOR == 8 )
     /* vTaskSetParams( task_handle[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 0 ); */
@@ -168,46 +150,26 @@ vTaskSetParams( task_handle[ 8 ], 8 );
 vTaskSetParams( task_handle[ 9 ], 9 );
 #endif
 
-    /* Reserve memory for cs_cost[][] array */
-    cs_costs = ( xType* ) pvPortMalloc( sizeof( uint32_t ) * ( TASK_COUNT * (RELEASE_COUNT + 2)));
+	vInitArray();
 
-    /* Zeroes cs_cost[][] */
-    for(int i = 0; i < TASK_COUNT; i++)
-    {
-        #if ( configKERNEL_TEST == 1 )
-        for(int j = 0; j < RELEASE_COUNT + 2; j++) 
-        {            
-            (*cs_costs)[i][j] = 0;
-        }
-        #endif
-        #if ( configKERNEL_TEST == 2 || configKERNEL_TEST == 3 || configKERNELTRACE == 4 )
-        for(int j = 0; j < RELEASE_COUNT + 1; j++) 
-        {            
-            (*cs_costs)[i][j] = 0;
-        }
-        #endif
-    }
-    
-    pc.printf("START!\n\r");
-
-	vTaskStartScheduler();
+    vTaskStartScheduler();
 
     for(;;);
 }
 /*-----------------------------------------------------------*/
 
-void task_body( void* params )
+static void prvPeriodicTask( void *pvParameters )
 {
 	TickType_t xPreviousWakeTime = ( TickType_t ) 0U;
-    int id = ( int ) params;
+    int id = ( int ) pvParameters;
 
     for(;;)
 	{               
-        vEatCpu( xTasksParams[ id ][ 1 ]  );
+    	vBusyWait( xTasksParams[ id ][ 1 ]  );
         
         if( id == ( TASK_COUNT - 1) )
         {
-            if( (*cs_costs)[ ( TASK_COUNT - 1) ][ 0 ] >= RELEASE_COUNT )
+            if( cs_costs[ ( TASK_COUNT - 1) ][ 0 ] >= RELEASE_COUNT )
             {
 				vTaskSuspendAll();
 				pc.printf("%d\n", 0);
@@ -221,12 +183,12 @@ void task_body( void* params )
 					pc.printf("%d\t", i);
                     #if ( configKERNEL_TEST == 1 )
 					for(int j = 2; j < RELEASE_COUNT + 2; j++) {
-						pc.printf( "%d\t", (*cs_costs)[i][j]);
+						pc.printf( "%d\t", cs_costs[i][j]);
 					}
                     #endif
                     #if ( configKERNEL_TEST == 2 || configKERNEL_TEST == 3 || configKERNEL_TEST == 4 )
                     for(int j = 1; j < RELEASE_COUNT + 1; j++) {
-						pc.printf( "%d\t", (*cs_costs)[i][j]);
+						pc.printf( "%d\t", cs_costs[i][j]);
 					}
                     #endif
 					pc.printf("\n");
@@ -260,52 +222,18 @@ void vApplicationDebugAction( void *param )
 #endif
 /*-----------------------------------------------------------*/
 
-void vEatCpu( BaseType_t ticks )
+static void vBusyWait( TickType_t ticks )
 {
-    BaseType_t xI;
-    BaseType_t xLim = ( ticks * ONE_TICK_CYCLES ) / 5;
-
-    for( xI = 0; xI < xLim; xI++ )
-    {
-        asm("nop");
+    TickType_t elapsedTicks = 0;
+    TickType_t currentTick = 0;
+    while ( elapsedTicks < ticks ) {
+        currentTick = xTaskGetTickCount();
+        while ( currentTick == xTaskGetTickCount() ) {
+            asm("nop");
+        }
+        elapsedTicks++;
     }
 }
-/*-----------------------------------------------------------*/
-
-#if ( configKERNEL_TEST == 1 ) && ( tskKERNEL_VERSION_MAJOR == 8 )
-void vMacroTaskDelay()
-{
-	STOPWATCH_RESET();
-	ulDelayTime = CPU_CYCLES;
-    vTaskGetTraceInfo( cs_costs, ulDelayTime, 0 );
-}
-
-void vMacroTaskSwitched()
-{
-	ulDelayTime1 = CPU_CYCLES;
-	vTaskGetTraceInfo( cs_costs, ulDelayTime1, 1 );
-}
-#endif
-/*-----------------------------------------------------------*/
-
-#if ( configKERNEL_TEST == 1 ) && ( tskKERNEL_VERSION_MAJOR >= 9 )
-void vMacroTaskDelay()
-{
-	STOPWATCH_RESET();
-	ulDelayTime = CPU_CYCLES;
-	ulDelayUntilFlag = pdTRUE;
-    vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), cs_costs, ulDelayTime, 0 );
-}
-
-void vMacroTaskSwitched()
-{
-	if ( ulDelayUntilFlag == pdTRUE ) {
-		ulDelayTime1 = CPU_CYCLES;
-		vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), cs_costs, ulDelayTime1, 1 );
-		ulDelayUntilFlag = pdFALSE;
-	}
-}
-#endif
 /*-----------------------------------------------------------*/
 
 /* The prototype shows it is a naked function - in effect this is just an

@@ -2,6 +2,51 @@
 #include "task.h"
 #include "slack_tests.h"
 
+static BaseType_t ulDelayUntilFlag = pdFALSE;
+
+uint32_t cs_costs[TASK_COUNT][RELEASE_COUNT + 2];
+
+void vInitArray()
+{
+	/* Zeroes cs_cost[][] */
+	for(int i = 0; i < TASK_COUNT; i++)
+	{
+		#if ( configKERNEL_TEST == 1 )
+		for(int j = 0; j < RELEASE_COUNT + 2; j++)
+		{
+			//(*cs_costs)[i][j] = 0;
+			cs_costs[i][j] = 0;
+		}
+		#endif
+		#if ( configKERNEL_TEST == 2 || configKERNEL_TEST == 3 || configKERNELTRACE == 4 )
+		for(int j = 0; j < RELEASE_COUNT + 1; j++)
+		{
+			//(*cs_costs)[i][j] = 0;
+			cs_costs[i][j] = 0;
+		}
+		#endif
+	}
+}
+
+#if ( configKERNEL_TEST == 1 ) && ( tskKERNEL_VERSION_MAJOR >= 9 )
+void vMacroTaskDelay()
+{
+	STOPWATCH_RESET();
+	vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), CPU_CYCLES, 0 );
+    ulDelayUntilFlag = pdTRUE;
+}
+/*-----------------------------------------------------------*/
+
+void vMacroTaskSwitched()
+{
+	if ( ulDelayUntilFlag == pdTRUE ) {
+		vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), CPU_CYCLES, 1 );
+		ulDelayUntilFlag = pdFALSE;
+	}
+}
+/*-----------------------------------------------------------*/
+#endif
+
 #if ( configDO_SLACK_TRACE == 1 )
 void prvTaskRecSlack()
 {
@@ -26,24 +71,32 @@ void prvTaskRecSlack()
 /*-----------------------------------------------------------*/
 
 #if ( configKERNEL_TEST == 1 )
-void vTaskGetTraceInfo( TaskHandle_t xTask, xType *pxArray, uint32_t time, uint32_t r )
+//void vTaskGetTraceInfo( TaskHandle_t xTask, xType *pxArray, uint32_t time, uint32_t r )
+void vTaskGetTraceInfo( TaskHandle_t xTask, uint32_t time, uint32_t r )
 {
 	SsTCB_t *pxSsTCB = getTaskSsTCB( xTask );
 
-	if ( (*pxArray)[pxSsTCB->xId][0] < RELEASE_COUNT )
+	//if ( (*pxArray)[pxSsTCB->xId][0] < RELEASE_COUNT )
+	if ( cs_costs[pxSsTCB->xId][0] < RELEASE_COUNT )
 	{
 		if( r == 0 )
 		{
-			(*pxArray)[pxSsTCB->xId][1] = 1;
-			(*pxArray)[pxSsTCB->xId][ (*pxArray)[ pxSsTCB->xId ][0] + 2 ] = time;
+			//(*pxArray)[pxSsTCB->xId][1] = 1;
+			cs_costs[pxSsTCB->xId][1] = 1;
+			//(*pxArray)[pxSsTCB->xId][ (*pxArray)[ pxSsTCB->xId ][0] + 2 ] = time;
+			cs_costs[pxSsTCB->xId][ cs_costs[ pxSsTCB->xId ][0] + 2 ] = time;
 		}
 		else
 		{
-			if( (*pxArray)[pxSsTCB->xId][1] == 1 )
+			//if( (*pxArray)[pxSsTCB->xId][1] == 1 )
+			if( cs_costs[pxSsTCB->xId][1] == 1 )
 			{
-				(*pxArray)[pxSsTCB->xId][ (*pxArray)[ pxSsTCB->xId ][0] + 2] = time - (*pxArray)[ pxSsTCB->xId ][ (*pxArray)[ pxSsTCB->xId ][0] + 2];
-				(*pxArray)[pxSsTCB->xId][1] = 0;
-				(*pxArray)[pxSsTCB->xId][0] += 1U;
+				//(*pxArray)[pxSsTCB->xId][ (*pxArray)[ pxSsTCB->xId ][0] + 2] = time - (*pxArray)[ pxSsTCB->xId ][ (*pxArray)[ pxSsTCB->xId ][0] + 2];
+				//(*pxArray)[pxSsTCB->xId][1] = 0;
+				//(*pxArray)[pxSsTCB->xId][0] += 1U;
+				cs_costs[pxSsTCB->xId][ cs_costs[ pxSsTCB->xId ][0] + 2] = time - cs_costs[ pxSsTCB->xId ][ cs_costs[ pxSsTCB->xId ][0] + 2];
+				cs_costs[pxSsTCB->xId][1] = 0;
+				cs_costs[pxSsTCB->xId][0] += 1U;
 			}
 		}
 	}
