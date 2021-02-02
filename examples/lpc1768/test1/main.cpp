@@ -10,8 +10,6 @@
 #include "slack_tests.h"
 #endif
 
-#define ONE_TICK_CYCLES ( ( configCPU_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL )
-
 #ifndef TASK_COUNT
 #define TASK_COUNT 10
 #endif
@@ -47,20 +45,6 @@
 #define TASK_9_RUNTIME 14
 #define TASK_10_WCET 3
 #define TASK_10_RUNTIME 3
-
-BaseType_t xTasksParams[ TASK_COUNT ][ 2 ] =
-{    
-{ TASK_1_PERIOD, TASK_1_RUNTIME },
-{ TASK_2_PERIOD, TASK_2_RUNTIME },
-{ TASK_3_PERIOD, TASK_3_RUNTIME },
-{ TASK_4_PERIOD, TASK_4_RUNTIME },
-{ TASK_5_PERIOD, TASK_5_RUNTIME },
-{ TASK_6_PERIOD, TASK_6_RUNTIME },
-{ TASK_7_PERIOD, TASK_7_RUNTIME },
-{ TASK_8_PERIOD, TASK_8_RUNTIME },
-{ TASK_9_PERIOD, TASK_9_RUNTIME },
-{ TASK_10_PERIOD, TASK_10_RUNTIME },
-};
 
 #define TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 
@@ -166,7 +150,6 @@ static void prvPeriodicTask( void *pvParameters )
 
     for(;;)
 	{               
-    	vBusyWait( xTasksParams[ id ][ 1 ]  );
     	vBusyWait( pxTaskSsTCB->xWcet );
         
         if( id == ( TASK_COUNT - 1) )
