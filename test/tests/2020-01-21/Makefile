@@ -28,7 +28,7 @@ FREERTOS_DIR = $(MAKE_DIR)/../../../libs/FreeRTOS
 
 ###############################################################################
 #
-# Common flags and symbols used by the compiler for all the examples.
+# Common flags and symbols used by the compiler.
 #
 COMMON_FLAGS += -c
 COMMON_FLAGS += -g
@@ -77,7 +77,6 @@ export KERNEL_TEST TASK_COUNT_PARAM RELEASE_COUNT_PARAM SLACK SLACK_K SLACK_METH
 #
 all:
 	+@echo "-- Target: $(TARGET)"
-	+@echo "-- Building: $(APP_NAME)"
 	+@echo "-- DEBUG: $(DEBUG)"
 	@$(MAKE) $(MAKE_FLAGS) -f Makefile.mk
 	+@echo "Done!"

@@ -229,6 +229,13 @@ header file. */
 */
 #define configKERNEL_TEST KERNEL_TEST
 
+#if configKERNEL_TEST == 1
+void vMacroTaskDelay( void );
+void vMacroTaskSwitched( void );
+#define traceTASK_DELAY_UNTIL(xTimeToWake) vMacroTaskDelay();
+#define traceTASK_SWITCHED_OUT()           vMacroTaskSwitched();
+#endif
+
 #if ( tskKERNEL_VERSION_MAJOR == 10 )
 
 /* === delay_until() cost ================================================== */

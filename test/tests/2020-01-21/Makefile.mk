@@ -4,7 +4,7 @@ BUILD_DIR = ../../build
 
 ###############################################################################
 #
-# Other object files required.
+# Board object files required.
 #
 SYS_OBJECTS += ../../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/board.o
 SYS_OBJECTS += ../../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/cmsis_nvic.o
@@ -94,7 +94,10 @@ ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.2.1)
 WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
 endif
 
-export CPU CC_SYMBOLS MBED_INCLUDE_PATHS COMMON_FLAGS CC_SYMBOLS
+export CPU CC_SYMBOLS MBED_INCLUDE_PATHS COMMON_FLAGS CC_SYMBOLS DEBUG
+
+# Required by the FreeRTOS makefile
+export TEST TEST_PATH TASK_COUNT_PARAM RELEASE_COUNT_PARAM
 
 SRCS = $(wildcard *.cpp)
 OBJS = $(SRCS:.cpp=.o)
@@ -114,7 +117,7 @@ clean:
     
 freertos:
 	+@echo "[FreeRTOS] Building FreeRTOS $(FREERTOS_KERNEL_VERSION_NUMBER) library..."    
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ) TEST_INCLUDE_PATHS=$(INCLUDE_PATHS) TEST=1 TEST_PATH=$(TEST_PATH) KERNEL_TEST=$(KERNEL_TEST) TASK_COUNT_PARAM=$(TASK_COUNT_PARAM)
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk TEST=1 USE_SLACK=1 TZ=0
 	+@echo "[FreeRTOS] Done!"
 
 .cpp.o:
