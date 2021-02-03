@@ -33,7 +33,7 @@ ifeq ($(TEST), 0)
     INCLUDE_PATHS += -I../../examples/$(TARGET)/
     INCLUDE_PATHS += -I../../examples/$(TARGET)/$(APP_NAME)
 else
-    INCLUDE_PATHS += -I../../test/tests/2020-01-21/
+    INCLUDE_PATHS += -I../../test/$(TEST_PATH)
 endif
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/include
@@ -81,7 +81,7 @@ ifeq ($(USE_SLACK), 1)
     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_fixed.o
     CC_SYMBOLS += -DSS_ALGORITHM=$(SS_ALGORITHM)
   endif
-  INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
+  INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)  
 else
   OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
 endif
@@ -92,6 +92,9 @@ endif
 #
 ifeq ($(TEST), 1)
   ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v9.0.0)
+     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.o
+  endif
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.4.1)
      OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.o
   endif
 

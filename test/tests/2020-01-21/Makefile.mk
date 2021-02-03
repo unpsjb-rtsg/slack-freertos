@@ -94,7 +94,7 @@ ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.2.1)
 WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
 endif
 
-export CPU CC_SYMBOLS MBED_INCLUDE_PATHS
+export CPU CC_SYMBOLS MBED_INCLUDE_PATHS COMMON_FLAGS CC_SYMBOLS
 
 SRCS = $(wildcard *.cpp)
 OBJS = $(SRCS:.cpp=.o)
@@ -114,18 +114,14 @@ clean:
     
 freertos:
 	+@echo "[FreeRTOS] Building FreeRTOS $(FREERTOS_KERNEL_VERSION_NUMBER) library..."    
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ) TEST_INCLUDE_PATHS=$(INCLUDE_PATHS) TEST=1 KERNEL_TEST=$(KERNEL_TEST) TASK_COUNT_PARAM=$(TASK_COUNT_PARAM)
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ) TEST_INCLUDE_PATHS=$(INCLUDE_PATHS) TEST=1 TEST_PATH=$(TEST_PATH) KERNEL_TEST=$(KERNEL_TEST) TASK_COUNT_PARAM=$(TASK_COUNT_PARAM)
 	+@echo "[FreeRTOS] Done!"
-
-slack_test.o:
-	+@echo "[App] Compile: $<"
-	@$(CC)  $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ ./../../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.c
 
 .cpp.o:
 	+@echo "[App] Compile: $<"
 	@$(CPP) $(COMMON_FLAGS) $(CPP_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
     
-%.elf: %.o $(SYS_OBJECTS) slack_test.o
+%.elf: %.o $(SYS_OBJECTS)
 	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS) $(WRAP)
     
 %.bin: %.elf
