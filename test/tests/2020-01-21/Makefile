@@ -67,8 +67,8 @@ MAKE_FLAGS += --no-print-directory
 # Export variables to be used by others Makefile.mk files.
 #
 export AR AS CC CPP LD OBJCOPY SIZE 
-export FREERTOS_KERNEL_VERSION_NUMBER TRACEALIZER_VERSION_NUMBER 
-export COMMON_FLAGS C_COMMON_FLAGS CPP_COMMON_FLAGS TARGET EXAMPLE TZ
+export FREERTOS_KERNEL_VERSION_NUMBER FREERTOS_KERNEL_VERSION_NUMBER_MAJOR TZ TRACEALIZER_VERSION_NUMBER 
+export COMMON_FLAGS C_COMMON_FLAGS CPP_COMMON_FLAGS TARGET
 export KERNEL_TEST TASK_COUNT_PARAM RELEASE_COUNT_PARAM SLACK SLACK_K SLACK_METHOD MAX_PRIO TEST_PATH DEBUG
 
 ###############################################################################
@@ -81,5 +81,5 @@ all:
 	@$(MAKE) $(MAKE_FLAGS) -f Makefile.mk
 	+@echo "Done!"
 
-clean:
+clean:	
 	@$(MAKE) $(MAKE_FLAGS) -f Makefile.mk clean

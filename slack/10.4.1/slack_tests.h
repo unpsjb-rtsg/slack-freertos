@@ -20,8 +20,7 @@ void vTaskGetTraceInfo( TaskHandle_t xTask, uint32_t time, uint32_t r );
 /* === slack methods ceil/floor cost ======================================= */
 #if configKERNEL_TEST == 2
 typedef uint32_t xType[TASK_COUNT][RELEASE_COUNT + 1];
-//BaseType_t xCeilFloorCost = 0;
-extern xType *cs_costs;
+extern BaseType_t xCeilFloorCost;
 void vTaskGetTraceInfo( TaskHandle_t xTask, BaseType_t xCeilFloorCost );
 #endif
 /* ========================================================================= */
@@ -46,11 +45,6 @@ void vTaskGetTraceInfo( TaskHandle_t xTask, BaseType_t xLoopCost );
 #if ( configDO_SLACK_TRACE == 1)
     extern xType *xResults;
     extern int xRecSlackIdx;
-#endif
-
-#if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TEST == 1 )
-    /* Set the Id */
-    void vTaskSetParams( TaskHandle_t xTask, const BaseType_t xId ) PRIVILEGED_FUNCTION;
 #endif
 
 #if defined (__cplusplus)

@@ -66,6 +66,11 @@ cog.outl("FREERTOS_KERNEL_VERSION_NUMBER_MAJOR ?= {0}".format(FREERTOS_KERNEL_VE
 ]]]*/
 // [[[end]]]
 
+/* [[[cog
+cog.outl("DEBUG ?= {0}".format(DEBUG))
+]]]*/
+// [[[end]]]
+
 #
 # End configuration.
 ########

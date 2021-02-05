@@ -72,7 +72,7 @@ CC_SYMBOLS += -DRELEASE_COUNT_PARAM=$(RELEASE_COUNT_PARAM)
 CC_SYMBOLS += -DSLACK=$(SLACK)
 CC_SYMBOLS += -DSLACK_K=$(SLACK_K)
 CC_SYMBOLS += -DSLACK_METHOD=$(SLACK_METHOD)
-CC_SYMBOLS += -DFREERTOS_VERSION=$(FREERTOS_KERNEL_VERSION_NUMBER_MAJOR)
+CC_SYMBOLS += -DFREERTOS_KERNEL_VERSION_NUMBER_MAJOR=$(FREERTOS_KERNEL_VERSION_NUMBER_MAJOR)
 CC_SYMBOLS += -DMAX_PRIO=$(MAX_PRIO)
 CC_SYMBOLS += -DKERNEL_TEST=$(KERNEL_TEST)
 
@@ -83,21 +83,23 @@ CC_SYMBOLS += -DKERNEL_TEST=$(KERNEL_TEST)
 LD_FLAGS = $(CPU) -Wl,--gc-sections -u _printf_float -u _scanf_float
 LD_SYS_LIBS = -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
-# Replace these functions
-ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.4.1)
-WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
-endif
-ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.3.1)
-WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
-endif
-ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.2.1)
-WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+ifeq ($(SLACK), 1)
+    # Replace these functions
+    ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
+    WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+    endif
+    ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.3.1)
+    WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+    endif
+    ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.2.1)
+    WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+    endif
 endif
 
 export CPU CC_SYMBOLS MBED_INCLUDE_PATHS COMMON_FLAGS CC_SYMBOLS DEBUG
 
 # Required by the FreeRTOS makefile
-export TEST TEST_PATH TASK_COUNT_PARAM RELEASE_COUNT_PARAM
+export TEST_PATH TASK_COUNT_PARAM RELEASE_COUNT_PARAM FREERTOS_KERNEL_VERSION_NUMBER FREERTOS_KERNEL_VERSION_NUMBER_MAJOR SLACK_METHOD
 
 SRCS = $(wildcard *.cpp)
 OBJS = $(SRCS:.cpp=.o)
@@ -111,18 +113,18 @@ BINS = $(OBJS:.o=.bin)
 all: freertos $(ELFS) $(BINS)
     
 clean:
-	+@echo "Cleaning binary files..."
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ)	
+	+@echo "[App] Cleaning binary files..."
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean TEST=1 USE_SLACK=$(SLACK) TZ=0	
 	@$(RM) -f $(OBJS) $(ELFS) $(BINS) $(DEPS)	
     
 freertos:
 	+@echo "[FreeRTOS] Building FreeRTOS $(FREERTOS_KERNEL_VERSION_NUMBER) library..."    
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk TEST=1 USE_SLACK=1 TZ=0
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk TEST=1 USE_SLACK=$(SLACK) TZ=0
 	+@echo "[FreeRTOS] Done!"
 
 .cpp.o:
 	+@echo "[App] Compile: $<"
-	@$(CPP) $(COMMON_FLAGS) $(CPP_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<
+	@$(CPP) $(COMMON_FLAGS) $(CPP_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
     
 %.elf: %.o $(SYS_OBJECTS)
 	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS) $(WRAP)

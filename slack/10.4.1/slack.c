@@ -2,9 +2,9 @@
 #include "slack_algorithms/slack_algorithms.h"
 
 #if ( configKERNEL_TEST > 0 )
-//#include "slack_tests.h"
+#include "slack_tests.h"
 #if ( configKERNEL_TEST == 2 )
-static BaseType_t xCeilFloorCost = 0;
+BaseType_t xCeilFloorCost = 0;
 #endif
 #if ( configKERNEL_TEST == 4 )
 static BaseType_t xLoopCost = 0;
@@ -465,7 +465,7 @@ void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc )
 #if ( configKERNEL_TEST == 2 )
 	if (xTc > 0)
 	{
-		vTaskGetTraceInfo( xTask, xCeilFloorCost );
+	    vTaskGetTraceInfo( xTask, xCeilFloorCost );
 	}
 #endif
 #if ( configKERNEL_TEST == 3 )

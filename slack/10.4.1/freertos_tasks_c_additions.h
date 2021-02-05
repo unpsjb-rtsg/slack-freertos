@@ -12,23 +12,6 @@
 static void prvTaskRecSlack() PRIVILEGED_FUNCTION;
 #endif
 
-#if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TEST == 1 )
-    void vTaskSetParams( TaskHandle_t xTask, const BaseType_t xId )
-    {
-        TCB_t *pxTCB;
-
-        if( xTask != NULL )
-        {
-            pxTCB = ( TCB_t * ) xTask;
-        }
-        else
-        {
-            pxTCB = pxCurrentTCB;
-        }
-        pxTCB->xId = xId;
-    }
-#endif
-
 #if ( configUSE_SLACK_STEALING == 1 )
     static BaseType_t xTaskSlackResume( void );
     static BaseType_t xTaskSlackSuspend( void );

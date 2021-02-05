@@ -56,29 +56,37 @@ endif
 # Slack Stealing framework source and headers.
 #
 ifeq ($(USE_SLACK), 1)
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v8.1.2)
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 8.1.2)
     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
   endif  
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v9.0.0)
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 9.0.0)
     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
   endif
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.2.1)
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.2.1)
     OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
   endif
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.3.1)
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.3.1)
     OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
-    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_davis.o
-    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_fixed.o
+    ifeq ($(SLACK_METHOD), 0)
+    	OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_fixed.o
+    endif
+    ifeq ($(SLACK_METHOD), 1)
+    	OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_davis.o
+    endif    
     CC_SYMBOLS += -DSS_ALGORITHM=$(SS_ALGORITHM)
   endif
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.4.1)
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
     OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
-    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_davis.o
-    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_fixed.o
+    ifeq ($(SLACK_METHOD), 0)
+    	OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_fixed.o
+    endif
+    ifeq ($(SLACK_METHOD), 1)
+    	OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_davis.o
+    endif
     CC_SYMBOLS += -DSS_ALGORITHM=$(SS_ALGORITHM)
   endif
   INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)  
@@ -90,11 +98,11 @@ endif
 #
 # Required for tests (see test directory)
 #
-ifeq ($(TEST), 1)
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v9.0.0)
+ifeq ($(TEST), 1)  
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 9.0.0)
      OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.o
   endif
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.4.1)
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
      OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.o
   endif
 
@@ -103,7 +111,7 @@ ifeq ($(TEST), 1)
   CC_SYMBOLS += -DSLACK=$(SLACK) 
   CC_SYMBOLS += -DSLACK_K=$(SLACK_K)
   CC_SYMBOLS += -DSLACK_METHOD=$(SLACK_METHOD)
-  CC_SYMBOLS += -DFREERTOS_VERSION=$(FREERTOS_VERSION)
+  CC_SYMBOLS += -DFREERTOS_KERNEL_VERSION_NUMBER_MAJOR=$(FREERTOS_KERNEL_VERSION_NUMBER_MAJOR)
 endif
 
 ###############################################################################

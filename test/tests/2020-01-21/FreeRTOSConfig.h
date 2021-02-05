@@ -122,10 +122,13 @@ extern uint32_t SystemCoreClock;
 /* Required for integrating the SsTCB into the task TCB. */
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
 
+#if SLACK == 1
 /* Add functionality to be added to FreeRTOS's tasks.c source file. */
 #define configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H 1
 
+/* Call vSlackSchedulerSetup() from vTaskStartScheduler(). */
 #define FREERTOS_TASKS_C_ADDITIONS_INIT() vSlackSchedulerSetup()
+#endif
 
 /* Required for identify the IDLE task in slacks methods and deadline check. */
 #define INCLUDE_xTaskGetIdleTaskHandle  1
@@ -229,14 +232,7 @@ header file. */
 */
 #define configKERNEL_TEST KERNEL_TEST
 
-#if configKERNEL_TEST == 1
-void vMacroTaskDelay( void );
-void vMacroTaskSwitched( void );
-#define traceTASK_DELAY_UNTIL(xTimeToWake) vMacroTaskDelay();
-#define traceTASK_SWITCHED_OUT()           vMacroTaskSwitched();
-#endif
-
-#if ( tskKERNEL_VERSION_MAJOR == 10 )
+#if ( FREERTOS_KERNEL_VERSION_NUMBER_MAJOR == 10 )
 
 /* === delay_until() cost ================================================== */
 /* The trace macro definitions must be in this header file.                  */
@@ -250,8 +246,7 @@ void vMacroTaskSwitched( void );
 
 #endif
 
-
-#if ( tskKERNEL_VERSION_MAJOR == 9 )
+#if ( FREERTOS_KERNEL_VERSION_NUMBER_MAJOR == 9 )
 
 /* === delay_until() cost ================================================== */
 /* The trace macro definitions must be in this header file.                  */
@@ -265,7 +260,7 @@ void vMacroTaskSwitched( void );
 
 #endif
 
-#if ( tskKERNEL_VERSION_MAJOR == 8 )
+#if ( FREERTOS_KERNEL_VERSION_NUMBER_MAJOR == 8 )
 
 /* === delay_until() cost ================================================== */
 #if configKERNEL_TEST == 1

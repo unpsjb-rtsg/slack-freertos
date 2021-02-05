@@ -78,7 +78,7 @@ def joseph_wcrt(rts):
     
 def get_args():
     """ Command line arguments """
-    freertos_choices = ["v8.1.2", "v9.0.0", "v10.2.1", "v10.3.1", "v10.4.1"]
+    freertos_choices = ["8.1.2", "9.0.0", "10.2.1", "10.3.1", "10.4.1"]
     slack_choices = ["ss","k"]
     slackmethod_choices = ["fixed", "davis"]
     test_choices = ['cycles-cs', 'ceils', 'cycles-ss', 'loops']
@@ -202,7 +202,7 @@ def main():
                         "TEST_PATH={0}".format(args.srcpath),
                         "KERNEL_TEST={0}".format(test_names[args.test]),
                         "FREERTOS_KERNEL_VERSION_NUMBER={0}".format(args.freertos),
-                        "FREERTOS_KERNEL_VERSION_NUMBER_MAJOR={0}".format(int(args.freertos[1])) ]
+                        "FREERTOS_KERNEL_VERSION_NUMBER_MAJOR={0}".format(int(args.freertos.split(".")[0])) ]
         subprocess.call("python3 -m cogapp -d -D {0} -o {1} {2}".format(" -D ".join(make_config), os.path.join(args.srcpath, "Makefile.config"), "Makefile.config.template"), shell=True)
     
     if(args.bins):

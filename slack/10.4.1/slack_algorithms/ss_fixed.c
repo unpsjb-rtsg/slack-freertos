@@ -4,9 +4,10 @@
  *  Created on: 22 jul. 2020
  *      Author: Francisco E. Páez
  */
-#if ( configUSE_SLACK_METHOD == 0 )
-
 #include "slack.h"
+#if ( configKERNEL_TEST > 0 )
+#include "slack_tests.h"
+#endif
 
 /**
  *
@@ -181,4 +182,3 @@ static inline BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask,
             ( BaseType_t ) xWc;
 }
 /*-----------------------------------------------------------*/
-#endif

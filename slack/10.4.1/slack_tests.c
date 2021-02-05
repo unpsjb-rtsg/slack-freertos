@@ -2,7 +2,9 @@
 #include "task.h"
 #include "slack_tests.h"
 
+#if ( configKERNEL_TEST == 1 )
 static BaseType_t ulDelayUntilFlag = pdFALSE;
+#endif
 
 uint32_t cs_costs[TASK_COUNT][RELEASE_COUNT + 2];
 
@@ -14,21 +16,56 @@ void vInitArray()
 		#if ( configKERNEL_TEST == 1 )
 		for(int j = 0; j < RELEASE_COUNT + 2; j++)
 		{
-			//(*cs_costs)[i][j] = 0;
 			cs_costs[i][j] = 0;
 		}
 		#endif
 		#if ( configKERNEL_TEST == 2 || configKERNEL_TEST == 3 || configKERNELTRACE == 4 )
 		for(int j = 0; j < RELEASE_COUNT + 1; j++)
 		{
-			//(*cs_costs)[i][j] = 0;
 			cs_costs[i][j] = 0;
 		}
 		#endif
 	}
 }
+/*-----------------------------------------------------------*/
 
-#if ( configKERNEL_TEST == 1 ) && ( tskKERNEL_VERSION_MAJOR >= 9 )
+#if ( configUSE_SLACK_STEALING == 0 )
+/*
+ * Just completes the SsTCB with the task parameters. Do not initialize any
+ * additional task list. Used when no slack stealing support is compiled, and
+ * the context switch cost of FreeRTOS is evaluated.
+ */
+void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
+        const TickType_t xPeriod, const TickType_t xDeadline,
+        const TickType_t xWcet, const BaseType_t xId )
+{
+    SsTCB_t * pxNewSsTCB = pvPortMalloc( sizeof( SsTCB_t ) );
+
+    pxNewSsTCB->xTaskType = xTaskType;
+
+    pxNewSsTCB->xPeriod = xPeriod;
+    pxNewSsTCB->xDeadline = xDeadline;
+    pxNewSsTCB->xWcet = xWcet;
+    pxNewSsTCB->xA = xWcet;
+    pxNewSsTCB->xB = xPeriod;
+    pxNewSsTCB->xId = xId;
+
+    pxNewSsTCB->uxReleaseCount = 1U;
+    pxNewSsTCB->xPreviousWakeTime = ( TickType_t ) 0U;
+    pxNewSsTCB->xTimeToWake = ( TickType_t ) 0U;
+    pxNewSsTCB->xWcrt = 0U;
+    pxNewSsTCB->xEndTick = ( TickType_t ) 0U;
+    pxNewSsTCB->xSlack = 0U;
+    pxNewSsTCB->xTtma = 0U;
+    pxNewSsTCB->xDi = 0U;
+    pxNewSsTCB->xCur = ( TickType_t ) 0U;
+
+    vTaskSetThreadLocalStoragePointer( xTask, 0, ( void * ) pxNewSsTCB );
+}
+#endif
+/*-----------------------------------------------------------*/
+
+#if ( configKERNEL_TEST == 1 )
 void vMacroTaskDelay()
 {
 	STOPWATCH_RESET();
@@ -71,32 +108,26 @@ void prvTaskRecSlack()
 /*-----------------------------------------------------------*/
 
 #if ( configKERNEL_TEST == 1 )
-//void vTaskGetTraceInfo( TaskHandle_t xTask, xType *pxArray, uint32_t time, uint32_t r )
 void vTaskGetTraceInfo( TaskHandle_t xTask, uint32_t time, uint32_t r )
 {
-	SsTCB_t *pxSsTCB = getTaskSsTCB( xTask );
+    BaseType_t xId;
+    SsTCB_t *pxSsTCB = getTaskSsTCB( xTask );
+    xId = pxSsTCB->xId;
 
-	//if ( (*pxArray)[pxSsTCB->xId][0] < RELEASE_COUNT )
-	if ( cs_costs[pxSsTCB->xId][0] < RELEASE_COUNT )
+	if ( cs_costs[xId][0] < RELEASE_COUNT )
 	{
 		if( r == 0 )
 		{
-			//(*pxArray)[pxSsTCB->xId][1] = 1;
-			cs_costs[pxSsTCB->xId][1] = 1;
-			//(*pxArray)[pxSsTCB->xId][ (*pxArray)[ pxSsTCB->xId ][0] + 2 ] = time;
-			cs_costs[pxSsTCB->xId][ cs_costs[ pxSsTCB->xId ][0] + 2 ] = time;
+			cs_costs[xId][1] = 1;
+			cs_costs[xId][ cs_costs[ xId ][0] + 2 ] = time;
 		}
 		else
 		{
-			//if( (*pxArray)[pxSsTCB->xId][1] == 1 )
-			if( cs_costs[pxSsTCB->xId][1] == 1 )
+			if( cs_costs[xId][1] == 1 )
 			{
-				//(*pxArray)[pxSsTCB->xId][ (*pxArray)[ pxSsTCB->xId ][0] + 2] = time - (*pxArray)[ pxSsTCB->xId ][ (*pxArray)[ pxSsTCB->xId ][0] + 2];
-				//(*pxArray)[pxSsTCB->xId][1] = 0;
-				//(*pxArray)[pxSsTCB->xId][0] += 1U;
-				cs_costs[pxSsTCB->xId][ cs_costs[ pxSsTCB->xId ][0] + 2] = time - cs_costs[ pxSsTCB->xId ][ cs_costs[ pxSsTCB->xId ][0] + 2];
-				cs_costs[pxSsTCB->xId][1] = 0;
-				cs_costs[pxSsTCB->xId][0] += 1U;
+				cs_costs[xId][ cs_costs[ xId ][0] + 2] = time - cs_costs[xId][ cs_costs[xId][0] + 2];
+				cs_costs[xId][1] = 0;
+				cs_costs[xId][0] += 1U;
 			}
 		}
 	}
@@ -110,10 +141,10 @@ void vTaskGetTraceInfo( TaskHandle_t xTask, BaseType_t xCeilFloorCost )
 {
 	SsTCB_t *pxSsTCB = getTaskSsTCB( xTask );
 
-	if ( ( *cs_costs )[ pxSsTCB->xId ][ 0 ] < RELEASE_COUNT )
+	if ( cs_costs[ pxSsTCB->xId ][ 0 ] < RELEASE_COUNT )
 	{
-		( *cs_costs )[ pxSsTCB->xId ][ (*cs_costs)[ pxSsTCB->xId ][0] + 1 ] = xCeilFloorCost;
-		( *cs_costs )[ pxSsTCB->xId ][ 0 ] += 1U;
+		cs_costs[ pxSsTCB->xId ][cs_costs[ pxSsTCB->xId ][0] + 1 ] = xCeilFloorCost;
+		cs_costs[ pxSsTCB->xId ][ 0 ] += 1U;
 	}
 }
 #endif

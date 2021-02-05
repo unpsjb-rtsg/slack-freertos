@@ -4,8 +4,6 @@
  *  Created on: 22 jul. 2020
  *      Author: Francisco E. Páez
  */
-#if ( configUSE_SLACK_METHOD == 1 )
-
 #include "slack.h"
 
 /* from "Scheduling Slack Time on Fixed Priority Pre-emptive Systems" paper */
@@ -41,7 +39,7 @@ void vTaskCalculateSlack_alg( TaskHandle_t xTask, const TickType_t xTc,
         pxHigherPrioTaskListItem = pxTaskListItem;
         do
         {
-            pxHigherPrioTaskTCB = ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
+            pxHigherPrioTaskTCB = ( TaskHandle_t* ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
             pxHigherPrioTask = getTaskSsTCB( pxHigherPrioTaskTCB );
 
             TickType_t xIj = ( TickType_t ) 0U;
@@ -83,7 +81,7 @@ void vTaskCalculateSlack_alg( TaskHandle_t xTask, const TickType_t xTc,
                 pxHigherPrioTaskListItem = pxTaskListItem;
                 do
                 {
-                    pxHigherPrioTaskTCB = ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
+                    pxHigherPrioTaskTCB = ( TaskHandle_t* ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
                     pxHigherPrioTask = getTaskSsTCB( pxHigherPrioTaskTCB );
 
                     TickType_t xIj = ( TickType_t ) 0U;
@@ -129,4 +127,3 @@ void vTaskCalculateSlack_alg( TaskHandle_t xTask, const TickType_t xTc,
     pxTask->xSlack = xS - ONE_TICK;
 }
 /*-----------------------------------------------------------*/
-#endif

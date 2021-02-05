@@ -51,7 +51,7 @@ del context
 #include "slack.h"
 #endif
 
-#if ( configKERNEL_TEST > 0 ) && ( tskKERNEL_VERSION_MAJOR >= 9 )
+#if ( configKERNEL_TEST > 0 )
 #include "slack_tests.h"
 #endif
 
@@ -118,32 +118,12 @@ for idx, task in enumerate( rts_to_test ):
 ]]]*/
 // [[[end]]]
 
-#if ( configUSE_SLACK_STEALING == 1 ) && ( tskKERNEL_VERSION_MAJOR == 8 )
-    /* vTaskSetParams( task_handle[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 0 ); */
-/* [[[cog
-for idx, task in enumerate( rts_to_test ):
-    cog.outl("vTaskSetParams( task_handle[ {0} ], TASK_{1}_PERIOD, TASK_{1}_PERIOD, TASK_{1}_WCET, {0} );".format( idx, idx + 1 ))
-]]]*/    
-// [[[end]]]
-#endif
-
-#if ( configUSE_SLACK_STEALING == 1 ) && ( tskKERNEL_VERSION_MAJOR >= 9 )
     /* vSlackSetTaskParams( task_handle[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 0 ); */
 /* [[[cog
 for idx, task in enumerate( rts_to_test ):
     cog.outl("vSlackSetTaskParams( task_handle[ {0} ], PERIODIC_TASK, TASK_{1}_PERIOD, TASK_{1}_PERIOD, TASK_{1}_WCET, {0} );".format( idx, idx + 1 ))
 ]]]*/
 // [[[end]]]
-#endif
-
-#if ( configUSE_SLACK_STEALING == 0 ) && ( configKERNEL_TEST == 1 )
-    /* vTaskSetParams( task_handle[ 0 ], 0 ); */
-/* [[[cog
-for idx, task in enumerate( rts_to_test ):
-    cog.outl("vTaskSetParams( task_handle[ {0} ], {0} );".format(idx))
-]]]*/    
-// [[[end]]]
-#endif
 
 	vInitArray();
     
@@ -160,7 +140,7 @@ static void prvPeriodicTask( void *pvParameters )
     SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
 
     for(;;)
-	{               
+	{
     	vBusyWait( pxTaskSsTCB->xWcet );
         
         if( id == ( TASK_COUNT - 1) )
@@ -168,11 +148,11 @@ static void prvPeriodicTask( void *pvParameters )
             if( cs_costs[ ( TASK_COUNT - 1) ][ 0 ] >= RELEASE_COUNT )
             {
 				vTaskSuspendAll();
-				pc.printf("%d\n", 0);
-				pc.printf("%d\n", configKERNEL_TEST );
-                pc.printf("%d\n", SLACK);
-                pc.printf("%d\n", SLACK_METHOD);
-                pc.printf("%d\n", SLACK_K);
+				pc.printf("%d\n\r", 0);
+				pc.printf("%d\n\r", configKERNEL_TEST );
+                pc.printf("%d\n\r", SLACK);
+                pc.printf("%d\n\r", SLACK_METHOD);
+                pc.printf("%d\n\r", SLACK_K);
                 
 				for(int i = 0; i < TASK_COUNT; i++)
 				{
@@ -187,7 +167,7 @@ static void prvPeriodicTask( void *pvParameters )
 						pc.printf( "%d\t", cs_costs[i][j]);
 					}
                     #endif
-					pc.printf("\n");
+					pc.printf("\n\r");
 				}
 				for(;;);
 			}
@@ -206,9 +186,9 @@ void vApplicationMallocFailedHook( void )
 
 	for( ;; )
 	{
-        leds[ 3 ] = 1;
+        leds[ 2 ] = 1;
         wait_ms(1000);
-        leds[ 3 ] = 0;
+        leds[ 2 ] = 0;
         wait_ms(1000);
 	}
 }
@@ -225,9 +205,9 @@ void vApplicationDebugAction( void *param )
 
 	for( ;; )
 	{
-        leds[ 4 ] = 1;
+        leds[ 3 ] = 1;
         wait_ms(1000);
-        leds[ 4 ] = 0;
+        leds[ 3 ] = 0;
         wait_ms(1000);
 	}
 }
@@ -258,10 +238,10 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
 
     for( ;; )
     {
-        /*leds[ 0 ] = 1;
+        leds[ 0 ] = 1;
         wait_ms( 1000 );
         leds[ 0 ] = 0;
-        wait_ms( 1000 );*/
+        wait_ms( 1000 );
     }
 }
 #endif
@@ -283,11 +263,11 @@ static void vBusyWait( TickType_t ticks )
 
 /* The prototype shows it is a naked function - in effect this is just an
 assembly function. */
-static void HardFault_Handler( void ) __attribute__( ( naked ) );
+void HardFault_Handler( void ) __attribute__( ( naked ) );
 
 /* The fault handler implementation calls a function called
 prvGetRegistersFromStack(). */
-static void HardFault_Handler(void)
+void HardFault_Handler(void)
 {
     __asm volatile
     (
@@ -304,18 +284,18 @@ static void HardFault_Handler(void)
 
 void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
 {
-/* These are volatile to try and prevent the compiler/linker optimising them
-away as the variables never actually get used.  If the debugger won't show the
-values of the variables, make them global my moving their declaration outside
-of this function. */
-volatile uint32_t r0;
-volatile uint32_t r1;
-volatile uint32_t r2;
-volatile uint32_t r3;
-volatile uint32_t r12;
-volatile uint32_t lr; /* Link register. */
-volatile uint32_t pc; /* Program counter. */
-volatile uint32_t psr;/* Program status register. */
+    /* These are volatile to try and prevent the compiler/linker optimising them
+    away as the variables never actually get used.  If the debugger won't show the
+    values of the variables, make them global my moving their declaration outside
+    of this function. */
+    volatile uint32_t r0;
+    volatile uint32_t r1;
+    volatile uint32_t r2;
+    volatile uint32_t r3;
+    volatile uint32_t r12;
+    volatile uint32_t lr; /* Link register. */
+    volatile uint32_t pc; /* Program counter. */
+    volatile uint32_t psr;/* Program status register. */
 
     r0 = pulFaultStackAddress[ 0 ];
     r1 = pulFaultStackAddress[ 1 ];
@@ -326,6 +306,16 @@ volatile uint32_t psr;/* Program status register. */
     lr = pulFaultStackAddress[ 5 ];
     pc = pulFaultStackAddress[ 6 ];
     psr = pulFaultStackAddress[ 7 ];
+
+    // to avoid annoying "variable 'rX' set but not used"
+    (void)(r0);
+    (void)(r1);
+    (void)(r2);
+    (void)(r3);
+    (void)(r12);
+    (void)(lr);
+    (void)(pc);
+    (void)(psr);
 
     /* When the following line is hit, the variables contain the register values. */
     for( ;; );
