@@ -17,6 +17,7 @@ def read_results(ser, taskcnt):
     if fail:
         return (fail, [], 0, 0, 0)
         
+    test = int(ser.readline().decode().rstrip())
     slack = int(ser.readline().decode().rstrip())
     slack_method = int(ser.readline().decode().rstrip())
     slack_k = int(ser.readline().decode().rstrip())
@@ -24,7 +25,7 @@ def read_results(ser, taskcnt):
     for _ in range(taskcnt):
         results.append(ser.readline().decode().rstrip())
 
-    return (0, results, slack, slack_method, slack_k)
+    return (0, results, test, slack, slack_method, slack_k)
 
 
 def get_args():
@@ -46,6 +47,7 @@ def get_args():
 def main():
     args = get_args()
     
+    tests = { 1: 'cs', 2: 'ceils-floors', 3: 'ss-cost', 4: 'loops' }
     slack = { 0: 'noss', 1: 'ss' }
     slack_k = { 0: 'd', 1: 'k' }
     slack_method = { 0: 'fixed', 1: 'davis' }
@@ -99,7 +101,7 @@ def main():
                     tested_files.add(row[-4])      
     
     # copy each file into the mbed microcontroller, send a break through the
-    # the serial port, and read the results.
+    # the serial port and read the results.
     with open(save_file_path, mode) as save_file:
         for bin_file in bin_files:
             
@@ -111,19 +113,19 @@ def main():
             while(True):
                 try:
                     print("Testing: {0}".format(bin_file))
-                    print(os.path.join(args.drive, "test.bin"))
                     
-                    shutil.copy(bin_file, os.path.join(args.drive, os.path.abspath("test.bin")))
+                    #shutil.copyfile(bin_file, os.path.join(args.drive, os.path.abspath("test.bin")))
+                    shutil.copyfile(bin_file, os.path.join(args.drive, "test.bin"))
                     
                     sleep(0.5)
                     ser.sendBreak(0.5)                    
                     
-                    r, results, s1, s2, s3 = read_results(ser, args.taskcnt)
+                    r, results, test, s1, s2, s3 = read_results(ser, args.taskcnt)
                     
                     if results:
                         # save results in save_file file
                         for r in results:
-                            save_file.write("{1}\t{0}\t{2}\t{3}\t{4}\n".format(os.path.basename(bin_file), r.rstrip('\n'), slack[s1], slack_method[s2], slack_k[s3]))
+                            save_file.write("{1}\t{0}\t{2}\t{3}\t{4}".format(os.path.basename(bin_file), r.rstrip('\n\r'), slack[s1], slack_method[s2], slack_k[s3]))
                         ok_counter = ok_counter + 1
                     else:
                         # increment the fail counters
