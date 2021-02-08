@@ -8,7 +8,7 @@ source('summarySE.R')  # SummarySE function
 # read the results
 r <- read.table("tests/Test1/results.txt")
 
-# extract UF and number of tasks
+# extract UF and number of tasks from the filename
 r$u <- str_extract(r$V12, "u[0-9]*")
 r$n <- str_extract(r$V12, "n[0-9]*")
 

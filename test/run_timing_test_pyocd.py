@@ -9,6 +9,8 @@ from time import sleep
 
 from pyocd.core.helpers import ConnectHelper
 from pyocd.flash.file_programmer import FileProgrammer
+from pyocd.core.exceptions import TransferError
+from pyocd.probe.pydapaccess.dap_access_api import DAPAccessIntf
 
 def read_results(ser, taskcnt):
     results = []
@@ -149,8 +151,9 @@ def main():
                     except (IOError, os.error) as err:
                         print("IOerror: {0}".format(str(err)), file=sys.stderr)
                         break
-                    except pyocd.core.exceptions.TransferError as err:
+                    except (TransferError, DAPAccessIntf) as err:
                         print("!")
+                        
             sleep(1)
 
     # print results and end
