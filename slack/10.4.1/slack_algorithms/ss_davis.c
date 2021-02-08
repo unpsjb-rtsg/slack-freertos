@@ -5,9 +5,15 @@
  *      Author: Francisco E. Páez
  */
 #include "slack.h"
+#include "slackConfig.h"
+#if ( configKERNEL_TEST > 0 )
+#include "slack_tests.h"
+#endif
+
+#if ( configUSE_SLACK_METHOD == 1 )
 
 /* from "Scheduling Slack Time on Fixed Priority Pre-emptive Systems" paper */
-void vTaskCalculateSlack_alg( TaskHandle_t xTask, const TickType_t xTc,
+void vSlackCalculateSlack_alg( TaskHandle_t xTask, const TickType_t xTc,
         const List_t * pxTasksList )
 {
     SsTCB_t *pxTask = getTaskSsTCB( xTask );
@@ -127,3 +133,5 @@ void vTaskCalculateSlack_alg( TaskHandle_t xTask, const TickType_t xTc,
     pxTask->xSlack = xS - ONE_TICK;
 }
 /*-----------------------------------------------------------*/
+
+#endif

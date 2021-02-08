@@ -215,7 +215,7 @@ TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t xTc,
  * @param xTask The task which available slack should be calculated.
  * @param xTc The time at which the slack calculation should be done.
  */
-void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc );
+void vSlackCalculateSlack( TaskHandle_t xTask, const TickType_t xTc );
 
 /**
  * \brief Return the system available slack.

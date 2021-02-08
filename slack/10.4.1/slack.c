@@ -266,7 +266,7 @@ void vSlackSchedulerSetup( void )
     	TaskHandle_t xTask = ( TaskHandle_t ) listGET_LIST_ITEM_OWNER( pxTaskListItem );
     	SsTCB_t *pxTaskSs = getTaskSsTCB( xTask );
 
-    	vTaskCalculateSlack( xTask, (TickType_t) 0U );
+    	vSlackCalculateSlack( xTask, (TickType_t) 0U );
     	pxTaskSs->xSlackK = pxTaskSs->xSlack;
 
     	/* Deadline */
@@ -448,7 +448,7 @@ inline TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t xTc,
 }
 /*-----------------------------------------------------------*/
 
-void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc )
+void vSlackCalculateSlack( TaskHandle_t xTask, const TickType_t xTc )
 {
 #if ( configKERNEL_TEST == 2 )
 	xCeilFloorCost = 0;
@@ -460,7 +460,7 @@ void vTaskCalculateSlack( TaskHandle_t xTask, const TickType_t xTc )
 	xLoopCost = 0;
 #endif
 
-	vTaskCalculateSlack_alg( xTask, xTc, &xSsTaskList );
+	vSlackCalculateSlack_alg( xTask, xTc, &xSsTaskList );
 
 #if ( configKERNEL_TEST == 2 )
 	if (xTc > 0)

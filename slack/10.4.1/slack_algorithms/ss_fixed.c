@@ -5,9 +5,12 @@
  *      Author: Francisco E. Páez
  */
 #include "slack.h"
+#include "slackConfig.h"
 #if ( configKERNEL_TEST > 0 )
 #include "slack_tests.h"
 #endif
+
+#if ( configUSE_SLACK_METHOD == 0 )
 
 /**
  *
@@ -22,7 +25,7 @@ static BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask, const TickType_t x
         const TickType_t xT, const TickType_t xWc, const List_t * pxTasksList );
 
 /* from "Low Cost Slack Stealing Method for RM/DM" paper. */
-void vTaskCalculateSlack_alg( TaskHandle_t xTask, const TickType_t xTc,
+void vSlackCalculateSlack_alg( TaskHandle_t xTask, const TickType_t xTc,
         const List_t * pxTasksList )
 {
     SsTCB_t * pxTask = getTaskSsTCB( xTask );
@@ -182,3 +185,5 @@ static inline BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask,
             ( BaseType_t ) xWc;
 }
 /*-----------------------------------------------------------*/
+
+#endif

@@ -10,7 +10,7 @@
 
 #include "FreeRTOS.h"
 
-void vTaskCalculateSlack_alg( TaskHandle_t xTask, const TickType_t xTc,
+void vSlackCalculateSlack_alg( TaskHandle_t xTask, const TickType_t xTc,
         const List_t * pxTasksList );
 
 #endif /* SLACK_V10_4_1_SLACK_ALGORITHMS_SLACK_ALGORITHMS_H_ */

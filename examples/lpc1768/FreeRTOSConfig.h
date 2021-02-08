@@ -175,8 +175,6 @@ standard names. */
 #endif
 #endif
 
-#define configKERNEL_TEST 1
-
 /* Slack Stealing configuration. */
 #include "slackConfig.h"
 

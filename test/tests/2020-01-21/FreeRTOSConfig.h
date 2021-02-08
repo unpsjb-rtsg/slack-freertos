@@ -115,39 +115,6 @@ extern uint32_t SystemCoreClock;
 #define configTIMER_TASK_STACK_DEPTH	( configMINIMAL_STACK_SIZE * 2 )
 #endif
 
-/* ========================================================================= */
-
-#define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
-
-/* Required for integrating the SsTCB into the task TCB. */
-#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
-
-#if SLACK == 1
-/* Add functionality to be added to FreeRTOS's tasks.c source file. */
-#define configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H 1
-
-/* Call vSlackSchedulerSetup() from vTaskStartScheduler(). */
-#define FREERTOS_TASKS_C_ADDITIONS_INIT() vSlackSchedulerSetup()
-#endif
-
-/* Required for identify the IDLE task in slacks methods and deadline check. */
-#define INCLUDE_xTaskGetIdleTaskHandle  1
-
-#define INCLUDE_xTaskGetCurrentTaskHandle 1
-
-/*
- * Slack methods available:
- * 0 = Fixed
- * 1 = Davis
- */
-#define configUSE_SLACK_STEALING 		SLACK /* 1: Use slack stealing methods, 0: No slack. */
-#define configUSE_SLACK_METHOD          SLACK_METHOD /* Slack method to use */
-#define configUSE_SLACK_K               SLACK_K /* Only calculate slack at the scheduler start */
-#define configMAX_SLACK_PRIO            MAX_PRIO /* priority levels that are used for slack. */
-#define configMIN_SLACK_SD              0 /* Minimum amount of available slack. */
-
-/* ========================================================================= */
-
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
 #define INCLUDE_vTaskPrioritySet		1
@@ -299,5 +266,7 @@ void vTaskGetTraceInfo( void );
 /* ========================================================================= */
 
 #endif
+
+#include "slackConfig.h"
 
 #endif /* FREERTOS_CONFIG_H */

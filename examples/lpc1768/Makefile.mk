@@ -9,9 +9,6 @@ BUILD_DIR = ../../build
 OBJECTS += ./$(APP_NAME)/main.o 
 OBJECTS += ./../common/common-mbed.o
 OBJECTS += ./../utils/utils.o
-ifneq (,$(findstring test,$(APP_NAME)))
-	OBJECTS += ./../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.o
-endif
 
 ###############################################################################
 #
@@ -102,8 +99,6 @@ CC_SYMBOLS += -DTOOLCHAIN_GCC
 CC_SYMBOLS += -D__CORTEX_M3
 CC_SYMBOLS += -DARM_MATH_CM3
 CC_SYMBOLS += -D__MBED__=1 
-CC_SYMBOLS += -DBATCH_TEST=$(BATCH_TEST) 
-CC_SYMBOLS += -DMAX_PRIO=$(MAX_PRIO)
 
 ###############################################################################
 #

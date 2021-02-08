@@ -7,6 +7,8 @@ import csv
 from argparse import ArgumentParser
 from time import sleep
 
+from pyocd.core.helpers import ConnectHelper
+from pyocd.flash.file_programmer import FileProgrammer
 
 def read_results(ser, taskcnt):
     results = []
@@ -109,39 +111,46 @@ def main():
             if args.cont:
                 if os.path.basename(bin_file) in tested_files:
                     continue
-
+            
             while(True):
-                try:
-                    print("Testing: {0}".format(bin_file))
+                with ConnectHelper.session_with_chosen_probe() as session:
+                    try:                        
+                        print("Testing: {0}".format(bin_file))
+
+                        board = session.board
+                        target = board.target
+                        flash = target.memory_map.get_boot_memory()
+                        
+                        # Load firmware into device.
+                        FileProgrammer(session).program(bin_file)
+                        
+                        # Reset, run.
+                        target.reset_and_halt()
+                        target.resume()
                     
-                    #shutil.copyfile(bin_file, os.path.join(args.drive, os.path.normpath("test.bin")))
-                    #shutil.copy2(bin_file, os.path.join(args.drive, "test1.bin"))
-                    os.popen("copy {0} {1}".format(bin_file, os.path.join(args.drive, "test.bin")))
-                    
-                    sleep(5)
-                    ser.sendBreak(0.5)
-                    
-                    r, results, test, s1, s2, s3 = read_results(ser, args.taskcnt)
-                    
-                    if results:
-                        # save results in save_file file
-                        for r in results:
-                            save_file.write("{1}\t{0}\t{2}\t{3}\t{4}".format(os.path.basename(bin_file), r.rstrip('\n\r'), slack[s1], slack_method[s2], slack_k[s3]))
-                        ok_counter = ok_counter + 1
-                    else:
-                        # increment the fail counters
-                        errors[0] = errors[0] + 1
-                        errors[r] = errors[r] + 1
-                        deadline_miss.append(os.path.basename(bin_file))
-                    break
-                except ValueError as err:
-                    # something is wrong...
-                    print("ValueError: {0}".format(str(err)), file=sys.stderr)
-                except IndexError as err:
-                    print("IndexError: {0}".format(str(err)), file=sys.stderr)
-                except (IOError, os.error) as err:
-                    print("IOerror: {0}".format(str(err)), file=sys.stderr)
-                    break
+                        r, results, test, s1, s2, s3 = read_results(ser, args.taskcnt)
+                        
+                        if results:
+                            # save results in save_file file
+                            for r in results:
+                                save_file.write("{1}\t{0}\t{2}\t{3}\t{4}".format(os.path.basename(bin_file), r.rstrip('\n\r'), slack[s1], slack_method[s2], slack_k[s3]))
+                            ok_counter = ok_counter + 1
+                        else:
+                            # increment the fail counters
+                            errors[0] = errors[0] + 1
+                            errors[r] = errors[r] + 1
+                            deadline_miss.append(os.path.basename(bin_file))
+                        break
+                    except ValueError as err:
+                        # something is wrong...
+                        print("ValueError: {0}".format(str(err)), file=sys.stderr)
+                    except IndexError as err:
+                        print("IndexError: {0}".format(str(err)), file=sys.stderr)
+                    except (IOError, os.error) as err:
+                        print("IOerror: {0}".format(str(err)), file=sys.stderr)
+                        break
+                    except pyocd.core.exceptions.TransferError as err:
+                        print("!")
             sleep(1)
 
     # print results and end
