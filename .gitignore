@@ -57,6 +57,10 @@ Makefile.mine
 doxygen/**
 !doxygen/.keep
 
+test/tests/**
+!test/tests/.keep
+!test/tests/README.md
+
 # lm3s6965evb compiled binaries
 !board/lm3s6965evb/drivers/arm-none-eabi-gcc/libdriver.a
 !board/lm3s6965evb/drivers/arm-none-eabi-gcc/libgr.a
