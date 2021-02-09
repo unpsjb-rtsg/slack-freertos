@@ -7,13 +7,12 @@
 extern "C" {
 #endif
 
-extern uint32_t cs_costs[TASK_COUNT][RELEASE_COUNT + 2];
+extern uint32_t cs_costs[TASK_COUNT][RELEASE_COUNT + 1];
 
 void vInitArray();
 
 /* === delay_until() cost ================================================== */
 #if configKERNEL_TEST == 1
-void vTaskGetTraceInfo( TaskHandle_t xTask, uint32_t time, uint32_t r );
 #endif
 /* ========================================================================= */
 

@@ -80,21 +80,6 @@ struct SsTCB
 
 typedef struct SsTCB SsTCB_t;
 
-/**
- * \brief List of tasks blocked by insufficient available slack.
- *
- * This list stores tasks that have been blocked by insufficient available
- * slack. They need to be stored in a separated list because we don't know
- * in advance when there is enough available slack.
- *
- * The blocked (delayed) list of FreeRTOS stores real-time tasks that are
- * blocked in waiting of a resource, with a timeout or for an unspecified
- * amount of time. Although that list could be used to store the slack-blocked
- * tasks, identifying the tasks waiting for slack from the resource-blocked ones
- * by means of the \ref SsTCB could be time consuming.
- */
-extern List_t xSsTaskBlockedList;
-
 /*****************************************************************************
  * Public functions declaration
  ****************************************************************************/
@@ -122,33 +107,6 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
 void vApplicationNotSchedulable( void );
 
 /**
- * \brief Perform the initialization steps required before the scheduler starts.
- *
- * This function perform the initialization required before the FreeRTOS scheduler
- * is started: executes the schedulability test and the initial slack calculations.
- *
- * This function is called with the FREERTOS_TASKS_C_ADDITIONS_INIT() macro.
- */
-void vSlackSchedulerSetup( void );
-
-/**
- * \brief Perform the deadline check of the RTTs.
- *
- * If a deadline miss is detected \ref vApplicationDeadlineMissedHook() is called.
- */
-void vSlackDeadlineCheck( void );
-
-/**
- * \brief Updates the absolute deadline of \p pxTask.
- *
- * Remove the current release deadline and insert the deadline for the next release of \p pxTask.
- *
- * @param pxTask The task to which update its deadline.
- * @param xTimeToWake The task release time from which calculate the absolute deadline.
- */
-void vSlackUpdateDeadline( SsTCB_t *pxTask, TickType_t xTimeToWake );
-
-/**
  * \brief Set additional task parameters.
  *
  * This function set the task parameters required to calculate the slack.
@@ -163,66 +121,6 @@ void vSlackUpdateDeadline( SsTCB_t *pxTask, TickType_t xTimeToWake );
 void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
         const TickType_t xPeriod, const TickType_t xDeadline,
         const TickType_t xWcet, const BaseType_t xId );
-
-/**
- * \brief Add \p xTicks to all lower priority tasks than \p xTask .
- *
- * @param xTask Task which has gained slack.
- * @param xTicks Amount of ticks to add to the slack counters.
- */
-void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks );
-
-/**
- * \brief Decrement the slack counter of all the tasks.
- *
- * Subtract the specified \p xTicks amount from the slack counters of all the tasks.
- * The available slack of a task is stored in \ref SsTCB.xSlack.
- *
- * @param xTicks Amount of ticks to subtract from the available slack of the tasks.
- */
-void vSlackDecrementAllTasksSlack( const TickType_t xTicks );
-
-/**
- * \brief Reduce \p xTicks to all higher priority tasks than \p pxTask.
- *
- * Substract the specified \p xTicks amount from the slack counters of higher priority tasks than \p xTask.
- *
- * @param pxTask The task currently running.
- * @param xTicks Amount of ticks to subtract from the slack counters of higher priority tasks.
- */
-void vSlackDecrementTasksSlack( TaskHandle_t xTask, const TickType_t xTicks );
-
-/**
- * \brief Calculates the system workload at the instant \p xTc
- *
- * This utility function calculates the system workload at the time \p xTc, for
- * the subsystem composed of \p xTask and all the higher priority tasks. The
- * result is used in the calculation of the available slack of \p xTask.
- *
- * @param xTask The task that defines the subsystem.
- * @param xTc The time at which the workload should be calculated.
- * @param pxTasksList List of tasks. It should be a pointer to \ref xSsTaskList.
- * @return The system workload at the instant \p xTc.
- */
-TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t xTc,
-        const List_t * pxTasksList );
-
-/**
- * \brief Calculates the available slack of task \p xTask at \p xTc .
- *
- * This is a wrapper function that call the appropriate slack method.
- *
- * @param xTask The task which available slack should be calculated.
- * @param xTc The time at which the slack calculation should be done.
- */
-void vSlackCalculateSlack( TaskHandle_t xTask, const TickType_t xTc );
-
-/**
- * \brief Return the system available slack.
- *
- * @return The system available slack.
- */
-TickType_t xSlackGetAvailableSlack( void );
 
 /**
  * \brief Record the available slack of each task in \p pxArray.

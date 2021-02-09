@@ -80,13 +80,6 @@ ifeq ($(USE_SLACK), 1)
   endif
   ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
     OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
-    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
-    #ifeq ($(SLACK_METHOD), 0)
-    	OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_fixed.o
-    #endif
-    #ifeq ($(SLACK_METHOD), 1)
-    	OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_davis.o
-    #endif
     CC_SYMBOLS += -DSS_ALGORITHM=$(SS_ALGORITHM)
   endif
   INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)  

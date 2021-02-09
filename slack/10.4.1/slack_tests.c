@@ -6,7 +6,8 @@
 static BaseType_t ulDelayUntilFlag = pdFALSE;
 #endif
 
-uint32_t cs_costs[TASK_COUNT][RELEASE_COUNT + 2];
+//uint32_t cs_costs[TASK_COUNT][RELEASE_COUNT + 2];
+uint32_t cs_costs[TASK_COUNT][RELEASE_COUNT + 1];
 
 void vInitArray()
 {
@@ -14,7 +15,8 @@ void vInitArray()
 	for(int i = 0; i < TASK_COUNT; i++)
 	{
 		#if ( configKERNEL_TEST == 1 )
-		for(int j = 0; j < RELEASE_COUNT + 2; j++)
+		//for(int j = 0; j < RELEASE_COUNT + 2; j++)
+        for(int j = 0; j < RELEASE_COUNT + 1; j++)
 		{
 			cs_costs[i][j] = 0;
 		}
@@ -69,15 +71,26 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
 void vMacroTaskDelay()
 {
 	STOPWATCH_RESET();
-	vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), CPU_CYCLES, 0 );
+    uint32_t cycles = CPU_CYCLES;
+    BaseType_t xId = (( SsTCB_t* ) getTaskSsTCB( xTaskGetCurrentTaskHandle() ))->xId;
+    if ( cs_costs[xId][0] < RELEASE_COUNT )
+	{
+        cs_costs[xId][ cs_costs[ xId ][0] + 1 ] = cycles;
+    }
     ulDelayUntilFlag = pdTRUE;
 }
 /*-----------------------------------------------------------*/
 
 void vMacroTaskSwitched()
 {
+    uint32_t cycles = CPU_CYCLES;
 	if ( ulDelayUntilFlag == pdTRUE ) {
-		vTaskGetTraceInfo( xTaskGetCurrentTaskHandle(), CPU_CYCLES, 1 );
+        BaseType_t xId = (( SsTCB_t* ) getTaskSsTCB( xTaskGetCurrentTaskHandle() ))->xId;
+        if ( cs_costs[xId][0] < RELEASE_COUNT )
+        {
+            cs_costs[xId][ cs_costs[ xId ][0] + 1] = cycles - cs_costs[xId][ cs_costs[xId][0] + 1];
+            cs_costs[xId][0] += 1U;
+        }
 		ulDelayUntilFlag = pdFALSE;
 	}
 }
@@ -103,34 +116,6 @@ void prvTaskRecSlack()
 	}
 
 	xRecSlackIdx = xRecSlackIdx + 1;
-}
-#endif
-/*-----------------------------------------------------------*/
-
-#if ( configKERNEL_TEST == 1 )
-void vTaskGetTraceInfo( TaskHandle_t xTask, uint32_t time, uint32_t r )
-{
-    BaseType_t xId;
-    SsTCB_t *pxSsTCB = getTaskSsTCB( xTask );
-    xId = pxSsTCB->xId;
-
-	if ( cs_costs[xId][0] < RELEASE_COUNT )
-	{
-		if( r == 0 )
-		{
-			cs_costs[xId][1] = 1;
-			cs_costs[xId][ cs_costs[ xId ][0] + 2 ] = time;
-		}
-		else
-		{
-			if( cs_costs[xId][1] == 1 )
-			{
-				cs_costs[xId][ cs_costs[ xId ][0] + 2] = time - cs_costs[xId][ cs_costs[xId][0] + 2];
-				cs_costs[xId][1] = 0;
-				cs_costs[xId][0] += 1U;
-			}
-		}
-	}
 }
 #endif
 /*-----------------------------------------------------------*/

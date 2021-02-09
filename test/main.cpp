@@ -158,7 +158,8 @@ static void prvPeriodicTask( void *pvParameters )
 				{
 					pc.printf("%d\t", i);
                     #if ( configKERNEL_TEST == 1 )
-					for(int j = 2; j < RELEASE_COUNT + 2; j++) {
+					//for(int j = 2; j < RELEASE_COUNT + 2; j++) {
+                    for(int j = 1; j < RELEASE_COUNT + 1; j++) {
 						pc.printf( "%d\t", cs_costs[i][j]);
 					}
                     #endif
