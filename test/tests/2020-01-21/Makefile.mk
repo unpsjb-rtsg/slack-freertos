@@ -85,31 +85,27 @@ LD_SYS_LIBS = -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
 ifeq ($(SLACK), 1)
     # Replace these functions
-    ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
     WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
-    endif
-    ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.3.1)
-    WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
-    endif
-    ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.2.1)
-    WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
-    endif
 endif
 
+###############################################################################
+#
+# Export symbols required by other makefiles.
+#
 export CPU CC_SYMBOLS MBED_INCLUDE_PATHS COMMON_FLAGS CC_SYMBOLS DEBUG
 
 # Required by the FreeRTOS makefile
 export TEST_PATH TASK_COUNT_PARAM RELEASE_COUNT_PARAM FREERTOS_KERNEL_VERSION_NUMBER FREERTOS_KERNEL_VERSION_NUMBER_MAJOR SLACK_METHOD SLACK_K MAX_PRIO
 
+###############################################################################
+#
+# Rules to build the example program.
+#
 SRCS = $(wildcard *.cpp)
 OBJS = $(SRCS:.cpp=.o)
 ELFS = $(OBJS:.o=.elf)
 BINS = $(OBJS:.o=.bin)
 
-###############################################################################
-#
-# Rules to build the example program.
-#
 all: freertos $(ELFS) $(BINS)
     
 clean:
