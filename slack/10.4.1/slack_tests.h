@@ -18,8 +18,6 @@ void vInitArray();
 
 /* === slack methods ceil/floor cost ======================================= */
 #if configKERNEL_TEST == 2
-typedef uint32_t xType[TASK_COUNT][RELEASE_COUNT + 1];
-extern BaseType_t xCeilFloorCost;
 void vTaskGetTraceInfo( TaskHandle_t xTask, BaseType_t xCeilFloorCost );
 #endif
 /* ========================================================================= */
