@@ -83,7 +83,7 @@ def get_args():
     slackmethod_choices = ["fixed", "davis"]
     test_choices = ['cycles-cs', 'ceils', 'cycles-ss', 'loops']
 
-    parser = ArgumentParser(description="Generate CPP files, each of them implementing a set of real-time tasks using the FreeRTOS real-time operating system.")
+    parser = ArgumentParser(description="Generate source code files, each of them implementing a set of real-time tasks using the FreeRTOS real-time operating system. Also generate a Makefile.config file with compilation options used by make.")
 
     parser.add_argument("count", help="Number of CPP files to generate for each XML file. Each CPP file will implement a task-set of several periodic tasks.", type=int)
     parser.add_argument("xml_files", help="XML file with real-time task-sets from which generate CPPs files.", nargs="+", metavar="xml")
@@ -98,16 +98,15 @@ def get_args():
     schedtest_group.add_argument("--testsched", help="Check the schedulability of each RTS before generating a CPP file. Defaults to %(default)s.", action="store_true", default=True)
     schedtest_group.add_argument("--limit", help="Maximum amount of RTS to test for schedulability.", type=int, default=None)
 
-    bin_group = parser.add_argument_group('Compilation options', 'This options control how the CPP files are compiled.')
-    bin_group.add_argument("--bins", help="Compile the CPP files.", action="store_true", default=False)
+    bin_group = parser.add_argument_group('Compilation options', 'This options control how the source code files will be compiled with make. Their values could be changed later in the generated Makefile.config file.')
     bin_group.add_argument("--freertos", help="FreeRTOS version to use. Valid values are " + ', '.join(freertos_choices) + ". Defaults to %(default)s.", choices=freertos_choices, default=freertos_choices[0])
     bin_group.add_argument("--taskcnt", help="Number of tasks in each RTS. Defaults to %(default)s.", type=int, default=10)
-    bin_group.add_argument("--releasecnt", help="Number of task releases to evaluate. Defaults to %(default)s.", type=int, default=10)
+    bin_group.add_argument("--releasecnt", help="Default number of task releases to evaluate. It could be changed later in the generated Makefile.config file. Defaults to %(default)s.", type=int, default=10)
     bin_group.add_argument("--slack", help="Use Slack Stealing.", action="store_const", const=1, default=0)
     bin_group.add_argument("--slackcalc", help="When to calculate slack. Valid values are " + ', '.join(slack_choices) + ". Defaults to %(default)s.", choices=slack_choices, default=slack_choices[0])
     bin_group.add_argument("--slackmethod", help="Slack Stealing method to test. Valid values are " + ', '.join(slackmethod_choices) + ". Defaults to %(default)s.", choices=slackmethod_choices, default=slackmethod_choices[0])
     bin_group.add_argument("--debug", help="Set the GCC debug option (-G).", action="store_const", const=1, default=0)
-    bin_group.add_argument("--test", help="Test to perform. Available tests are " + ', '.join(test_choices) + ". Defaults to %(default)s.", choices=test_choices, default=test_choices[0] )
+    bin_group.add_argument("--test", help="Default test to perform. It could be changed in the generated Makefile.config file. Available tests are " + ', '.join(test_choices) + ". Defaults to %(default)s.", choices=test_choices, default=test_choices[0] )
 
     return parser.parse_args()
 
@@ -204,13 +203,6 @@ def main():
                         "FREERTOS_KERNEL_VERSION_NUMBER={0}".format(args.freertos),
                         "FREERTOS_KERNEL_VERSION_NUMBER_MAJOR={0}".format(int(args.freertos.split(".")[0])) ]
         subprocess.call("python3 -m cogapp -d -D {0} -o {1} {2}".format(" -D ".join(make_config), os.path.join(args.srcpath, "Makefile.config"), "Makefile.config.template"), shell=True)
-    
-    if(args.bins):
-        # generate bins        
-        returncode = subprocess.call("make --no-print-directory -C {0} {1}".format(args.srcpath, " ".join(make_config)), shell=True, stdout=None, stderr=None)
-    
-        if returncode != 0:
-            print("Something went wrong!")
 
 
 if __name__ == '__main__':
