@@ -11,11 +11,6 @@ extern uint32_t cs_costs[TASK_COUNT][RELEASE_COUNT + 1];
 
 void vInitArray();
 
-/* === delay_until() cost ================================================== */
-#if configKERNEL_TEST == 1
-#endif
-/* ========================================================================= */
-
 /* === slack methods ceil/floor cost ======================================= */
 #if configKERNEL_TEST == 2
 void vTaskGetTraceInfo( TaskHandle_t xTask, BaseType_t xCeilFloorCost );

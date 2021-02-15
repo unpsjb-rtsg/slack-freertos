@@ -6,7 +6,6 @@
 static BaseType_t ulDelayUntilFlag = pdFALSE;
 #endif
 
-//uint32_t cs_costs[TASK_COUNT][RELEASE_COUNT + 2];
 uint32_t cs_costs[TASK_COUNT][RELEASE_COUNT + 1];
 
 void vInitArray()
@@ -14,19 +13,10 @@ void vInitArray()
 	/* Zeroes cs_cost[][] */
 	for(int i = 0; i < TASK_COUNT; i++)
 	{
-		#if ( configKERNEL_TEST == 1 )
-		//for(int j = 0; j < RELEASE_COUNT + 2; j++)
         for(int j = 0; j < RELEASE_COUNT + 1; j++)
 		{
 			cs_costs[i][j] = 0;
 		}
-		#endif
-		#if ( configKERNEL_TEST == 2 || configKERNEL_TEST == 3 || configKERNELTRACE == 4 )
-		for(int j = 0; j < RELEASE_COUNT + 1; j++)
-		{
-			cs_costs[i][j] = 0;
-		}
-		#endif
 	}
 }
 /*-----------------------------------------------------------*/
