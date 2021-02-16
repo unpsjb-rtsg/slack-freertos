@@ -283,13 +283,14 @@ def main():
                         errors[test_result] = errors[test_result] + 1
                         deadline_miss.append(os.path.basename(xml_file.name))
                     break
+                except KeyError as err:
+                    print("KeyError: {0}".format(str(err)), file=sys.stderr)
                 except ValueError as err:
                     print("ValueError: {0}".format(str(err)), file=sys.stderr)
                 except IndexError as err:
                     print("IndexError: {0}".format(str(err)), file=sys.stderr)
                 except (IOError, os.error) as err:
                     print("IOerror: {0}".format(str(err)), file=sys.stderr)
-                    break
 
     # print summary
     print("{0} rts evaluated.".format(ok_counter), file=sys.stderr)
