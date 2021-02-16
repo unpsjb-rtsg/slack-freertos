@@ -19,12 +19,17 @@
 /*****************************************************************************
  * Private data declaration
  ****************************************************************************/
+/**
+ * \brief Union used when retriving data from the serial port.
+ */
 union int_union {
     char c[4];
     int i;
 } int_u;
 
-// Tarea de TR
+/**
+ * \brief Real-time task simple model.
+ */
 struct task_t {
     int id;                    // task id
     int c;                     // worst case execution time (wcet)
@@ -64,7 +69,6 @@ static void prvPeriodicTask( void *pvParameters );
 /* The prototype shows it is a naked function - in effect this is just an
 assembly function. */
 static void HardFault_Handler( void ) __attribute__( ( naked ) );
-static void putc(int i);
 static int getc();
 
 /*****************************************************************************
@@ -82,16 +86,6 @@ task_t str[TASK_COUNT];
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
-static void putc(int i)
-{
-    int_u.i = i;
-    pc.putc(int_u.c[3]);
-    pc.putc(int_u.c[2]);
-    pc.putc(int_u.c[1]);
-    pc.putc(int_u.c[0]);
-}
-/*-----------------------------------------------------------*/
-
 static int getc()
 {
     int_u.c[3] = pc.getc();
@@ -140,16 +134,9 @@ static void prvPeriodicTask( void *pvParameters )
 				for(int i = 0; i < TASK_COUNT; i++)
 				{
 					pc.printf("%d\t", i);
-                    #if ( configKERNEL_TEST == 1 )
-					for(int j = 1; j < RELEASE_COUNT + 1; j++) {
-						pc.printf( "%d\t", cs_costs[i][j]);
-					}
-                    #endif
-                    #if ( configKERNEL_TEST == 2 || configKERNEL_TEST == 3 || configKERNEL_TEST == 4 )
                     for(int j = 1; j < RELEASE_COUNT + 1; j++) {
 						pc.printf( "%d\t", cs_costs[i][j]);
 					}
-                    #endif
 					pc.printf("\n");
 				}
 				for(;;);
@@ -225,31 +212,24 @@ static void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
 int main()
 {
     pc.baud(9600);
-    
+
     while (pc.readable() == 0) {
     	;
     }
 
-	// read the number of tasks
+	/* Read the number of tasks. */
 	int num_task = getc();
 	int i, j;
-    
-    // read task-set from serial
+
+    /* Read each task from the serial port. */
 	for (j = 0; j < num_task; j++) {
 		str[j].id = j + 1;
-
-		// read C
 		str[j].c = getc();
-
-		// read T
 		str[j].t = getc();
-
-		// read D
 		str[j].d = getc();
-        
-     }
+    }
     
-    /* Reserve memory for task_handle array */
+    /* Reserve memory for task_handle array. */
     TaskHandle_t *task_handle = ( TaskHandle_t * ) pvPortMalloc( sizeof( TaskHandle_t ) * TASK_COUNT );
 
     /* Periodic tasks. */
