@@ -158,7 +158,7 @@ def read_results(ser, taskcnt):
     fail = int(ser.readline().decode().rstrip())
 
     if fail:
-        return (fail, [], 0, 0, 0)
+        return (fail, [], 0, 0, 0, 0)
         
     test = int(ser.readline().decode().rstrip())
     slack = int(ser.readline().decode().rstrip())
@@ -181,6 +181,7 @@ def get_args():
     parser.add_argument("--append", help="Append results in save file", action="store_true")
     parser.add_argument("--cont", help="Continue from previous execution", action="store_true")
     parser.add_argument("--taskcnt", help="Number of tasks in the rts", type=int, default=10)
+    parser.add_argument("--instance-count", help="Number of instances per task.", type=int, default=10)
     parser.add_argument("--rts", type=str, help="RTS inside file(s) to test.")
     parser.add_argument("--xml", type=FileType('r'), help="XML file(s) with RTS to test.", nargs="+")
 
@@ -233,42 +234,49 @@ def main():
     # send rts parameters to the mbed board and wait for the results
     with open(save_file_path, mode) as save_file:
         for xml_file in args.xml:
-            print("Testing RTS in {0:}".format(xml_file.name))
+            print("XML file {0:}".format(xml_file.name))
             for rts in get_from_xml(xml_file, rts_list):
                 while(True):
                     try:
-                        print("Testing: {0}".format(rts["id"]))
+                        print("Testing RTS {0}".format(rts["id"]))
                         
                         ser.reset_input_buffer()
                         ser.reset_output_buffer()
-                        ser.sendBreak(1)
+                        ser.sendBreak(0.5)
                         sleep(1)
 
                         send_rts_to_mbed(rts["tasks"], ser)
                         
-                        r, results, test, s1, s2, s3 = read_results(ser, args.taskcnt)
+                        test_result, results, test, s1, s2, s3 = read_results(ser, args.taskcnt)
                         
-                        if results:
-                            # save results in save_file file
-                            for r in results:
-                                save_file.write("{1}\t{0}\t{2}\t{3}\t{4}\n\r".format(os.path.basename(xml_file.name), r.rstrip('\n\r'), slack[s1], slack_method[s2], slack_k[s3]))
-                            ok_counter = ok_counter + 1
-                            save_file.flush()
+                        if test_result == 0:
+                            if results:
+                                if len(results) != args.taskcnt:
+                                    print("Error: tasks results is {0:}, should be {1:}".format(len(results), args.taskcnt))
+                                    continue
+                                
+                                for r in results:
+                                    if len(r.split()) != (args.instance_count + 1):
+                                        print("Error: instance results for task {0:} is {1:}, should be {2:}".format(r.split()[0], len(r.split()) - 1, args.instance_count))
+                                        continue
+
+                                for r in results:
+                                    save_file.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n".format(rts["id"], r.rstrip('\n\r'), os.path.basename(xml_file.name), slack[s1], slack_method[s2], slack_k[s3]))
+                                ok_counter = ok_counter + 1
+                                save_file.flush()
                         else:
                             # increment the fail counters
                             errors[0] = errors[0] + 1
-                            errors[r] = errors[r] + 1
+                            errors[test_result] = errors[test_result] + 1
                             deadline_miss.append(os.path.basename(xml_file.name))
                         break
                     except ValueError as err:
-                        # something is wrong...
                         print("ValueError: {0}".format(str(err)), file=sys.stderr)
                     except IndexError as err:
                         print("IndexError: {0}".format(str(err)), file=sys.stderr)
                     except (IOError, os.error) as err:
                         print("IOerror: {0}".format(str(err)), file=sys.stderr)
                         break
-                sleep(1)
 
     # print results and end
     print("Results saved in {0}".format(save_file_path))
