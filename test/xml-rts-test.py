@@ -5,6 +5,7 @@ import tempfile
 import subprocess
 import xml.etree.cElementTree as et
 import math
+import pandas as pd
 from typing import TextIO
 from argparse import ArgumentParser, FileType
 from functools import reduce
@@ -154,10 +155,17 @@ def main():
     args = get_args()
     rts_list = mixrange(args.rts)
 
+    df_cols = ["id", "task", "c", "t", "d"]
+
     for xml in args.files:
         print("File: {0}".format(xml.name))
+        df_rows = []
         for rts in get_from_xml(xml, rts_list):
-            print("RTS {0}: U={1}".format(rts["id"], rts["u"]))
+            for task in rts["tasks"]:
+                df_rows.append({"id": rts["id"], "task": task["nro"], "c": task["C"], "t": task["T"], "d": task["D"]})
+        df = pd.DataFrame(df_rows, columns = df_cols)
+        print(df.describe())
+
 
 
 if __name__ == '__main__':
