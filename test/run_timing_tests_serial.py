@@ -287,7 +287,6 @@ def main():
                     print("ValueError: {0}".format(str(err)), file=sys.stderr)
                 except IndexError as err:
                     print("IndexError: {0}".format(str(err)), file=sys.stderr)
-                    print(err)
                 except (IOError, os.error) as err:
                     print("IOerror: {0}".format(str(err)), file=sys.stderr)
                     break
