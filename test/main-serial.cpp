@@ -70,6 +70,7 @@ static void prvPeriodicTask( void *pvParameters );
 assembly function. */
 static void HardFault_Handler( void ) __attribute__( ( naked ) );
 static int getc();
+static void putc(uint32_t i);
 
 /*****************************************************************************
  * Private data
@@ -93,6 +94,16 @@ static int getc()
     int_u.c[1] = pc.getc();
     int_u.c[0] = pc.getc();
     return int_u.i;
+}
+/*-----------------------------------------------------------*/
+
+static void putc(uint32_t i)
+{
+    int_u.i = i;
+    pc.putc(int_u.c[3]);
+    pc.putc(int_u.c[2]);
+    pc.putc(int_u.c[1]);
+    pc.putc(int_u.c[0]);    
 }
 /*-----------------------------------------------------------*/
 
@@ -125,19 +136,18 @@ static void prvPeriodicTask( void *pvParameters )
             if( cs_costs[ ( TASK_COUNT - 1) ][ 0 ] >= RELEASE_COUNT )
             {
 				vTaskSuspendAll();
-				pc.printf("%d\n", 0);
-				pc.printf("%d\n", configKERNEL_TEST );
-                pc.printf("%d\n", SLACK);
-                pc.printf("%d\n", SLACK_METHOD);
-                pc.printf("%d\n", SLACK_K);
-                
+                putc(0);
+                putc(configKERNEL_TEST);
+                putc(SLACK);
+                putc(SLACK_METHOD);
+                putc(SLACK_K);
+
 				for(int i = 0; i < TASK_COUNT; i++)
 				{
-					pc.printf("%d\t", i);
+                    putc(i);
                     for(int j = 1; j < RELEASE_COUNT + 1; j++) {
-						pc.printf( "%d\t", cs_costs[i][j]);
-					}
-					pc.printf("\n");
+                        putc(cs_costs[i][j]);
+                    }
 				}
 				for(;;);
 			}

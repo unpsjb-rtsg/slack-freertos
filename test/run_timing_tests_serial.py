@@ -141,44 +141,68 @@ def mixrange(s: str) -> list:
 
 
 def send_rts_to_mbed(rts, ser):
-    # send task count
+    """
+    Send the RTS task-model to the board throught the serial port.
+    """
+    # first send the task count
     ser.write(struct.pack('>i', len(rts)))
 
-    # send task parameters
+    # then send each task parameters
     for task in rts:
         ser.write(struct.pack('>i', task["C"]))
         ser.write(struct.pack('>i', task["T"]))
         ser.write(struct.pack('>i', task["D"]))
 
 
-def read_results(ser, taskcnt):
+def read_results_bytes(ser, taskcnt, instance_count):
+    """
+    Read the test results from the board throught the serial port.
+    """
+    def get_int(ser):
+        return int.from_bytes(ser.read(4), byteorder='big', signed=False)
+
+    # wait for the results to be ready
+    while True:
+        if (ser.in_waiting > 0):
+            break
+        sleep(1)
+        
     results = []
 
-    # first line indicates if an error ocurred
-    fail = int(ser.readline().decode().rstrip())
+    # first 4 bytes indicates if any error ocurred in the test
+    fail = get_int(ser)
 
     if fail:
         return (fail, [], 0, 0, 0, 0)
         
-    test = int(ser.readline().decode().rstrip())
-    slack = int(ser.readline().decode().rstrip())
-    slack_method = int(ser.readline().decode().rstrip())
-    slack_k = int(ser.readline().decode().rstrip())
+    # the following 4 ints describe the test configuration
+    test = get_int(ser)
+    slack = get_int(ser)
+    slack_method = get_int(ser)
+    slack_k = get_int(ser)
 
+    # the remaining data are the tasks individual results
     for _ in range(taskcnt):
-        results.append(ser.readline().decode().rstrip())
+        # first 4 bytes indicates the task number
+        task_results = [get_int(ser)]
+
+        # the following instance_count ints are the results
+        for _ in range(instance_count):
+            task_results.append(get_int(ser))
+
+        results.append(task_results)
 
     return (0, results, test, slack, slack_method, slack_k)
 
 
 def get_args():
-    """ Procesa argumentos de la linea de comandos """
+    """ 
+    Process the command line arguments.
+    """
     parser = ArgumentParser()
     parser.add_argument("--port", help="COM port", default=None, type=str)
     parser.add_argument("--baudrate", help="Baudios", default=9600, type=int)
     parser.add_argument("--timeout", help="individual test timeout", type=int, default=25)
-    parser.add_argument("--savefile", help="Save file", type=str, default="")
-    parser.add_argument("--append", help="Append results in save file", action="store_true")
     parser.add_argument("--cont", help="Continue from previous execution", action="store_true")
     parser.add_argument("--taskcnt", help="Number of tasks in the rts", type=int, default=10)
     parser.add_argument("--instance-count", help="Number of instances per task.", type=int, default=10)
@@ -210,12 +234,6 @@ def main():
     ser.send_break(0.5)
     sleep(1)
 
-    # path name for the text file where store the results
-    if args.savefile:
-        save_file_path = args.savefile
-    else:
-        save_file_path = os.path.join(args.binpath, "results.txt")
-
     # keep count of the number of rts that could be tested (schedulable)
     ok_counter = 0    
     # fail counter, deadline, notsched, debug, stack, malloc
@@ -223,71 +241,66 @@ def main():
     # rts which missed a deadline
     deadline_miss = []
     
-    if args.append:
-        mode = "a"
-    else:
-        mode = "w"
-
     # range of rts to test in the xml files
     rts_list = mixrange(args.rts)
         
     # send rts parameters to the mbed board and wait for the results
-    with open(save_file_path, mode) as save_file:
-        for xml_file in args.xml:
-            print("XML file {0:}".format(xml_file.name))
-            for rts in get_from_xml(xml_file, rts_list):
-                while(True):
-                    try:
-                        print("Testing RTS {0}".format(rts["id"]))
-                        
-                        ser.reset_input_buffer()
-                        ser.reset_output_buffer()
-                        ser.sendBreak(0.5)
-                        sleep(1)
+    for xml_file in args.xml:
+        print("XML file {0:}".format(xml_file.name), file=sys.stderr)
+        for rts in get_from_xml(xml_file, rts_list):
+            while(True):
+                try:
+                    print("Testing RTS {0}".format(rts["id"]), file=sys.stderr)
+                    
+                    ser.reset_input_buffer()
+                    ser.reset_output_buffer()
+                    ser.sendBreak(0.5)
+                    sleep(1)
 
-                        send_rts_to_mbed(rts["tasks"], ser)
-                        
-                        test_result, results, test, s1, s2, s3 = read_results(ser, args.taskcnt)
-                        
-                        if test_result == 0:
-                            if results:
-                                if len(results) != args.taskcnt:
-                                    print("Error: tasks results is {0:}, should be {1:}".format(len(results), args.taskcnt))
+                    send_rts_to_mbed(rts["tasks"], ser)
+                    
+                    test_result, results, test, s1, s2, s3 = read_results_bytes(ser, args.taskcnt, args.instance_count)
+                    
+                    if test_result == 0:
+                        if results:
+                            if len(results) != args.taskcnt:
+                                print("Error: tasks results is {0:}, should be {1:}".format(len(results), args.taskcnt), file=sys.stderr)
+                                continue
+                            
+                            for r in results:
+                                if len(r) != (args.instance_count + 1):
+                                    print("Error: instance results for task {0:} is {1:}, should be {2:}".format(r[0], len(r) - 1, args.instance_count), file=sys.stderr)
                                     continue
-                                
-                                for r in results:
-                                    if len(r.split()) != (args.instance_count + 1):
-                                        print("Error: instance results for task {0:} is {1:}, should be {2:}".format(r.split()[0], len(r.split()) - 1, args.instance_count))
-                                        continue
 
-                                for r in results:
-                                    save_file.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n".format(rts["id"], r.rstrip('\n\r'), os.path.basename(xml_file.name), slack[s1], slack_method[s2], slack_k[s3]))
-                                ok_counter = ok_counter + 1
-                                save_file.flush()
-                        else:
-                            # increment the fail counters
-                            errors[0] = errors[0] + 1
-                            errors[test_result] = errors[test_result] + 1
-                            deadline_miss.append(os.path.basename(xml_file.name))
-                        break
-                    except ValueError as err:
-                        print("ValueError: {0}".format(str(err)), file=sys.stderr)
-                    except IndexError as err:
-                        print("IndexError: {0}".format(str(err)), file=sys.stderr)
-                    except (IOError, os.error) as err:
-                        print("IOerror: {0}".format(str(err)), file=sys.stderr)
-                        break
+                            for r in results:
+                                print("{0}\t{1}\t{2}\t{3}\t{4}\t{5}".format(rts["id"], "\t".join(str(i) for i in r), 
+                                    os.path.basename(xml_file.name), slack[s1], slack_method[s2], slack_k[s3]))
+                            ok_counter = ok_counter + 1
+                            sys.stdout.flush()
+                    else:
+                        # increment the fail counters
+                        errors[0] = errors[0] + 1
+                        errors[test_result] = errors[test_result] + 1
+                        deadline_miss.append(os.path.basename(xml_file.name))
+                    break
+                except ValueError as err:
+                    print("ValueError: {0}".format(str(err)), file=sys.stderr)
+                except IndexError as err:
+                    print("IndexError: {0}".format(str(err)), file=sys.stderr)
+                    print(err)
+                except (IOError, os.error) as err:
+                    print("IOerror: {0}".format(str(err)), file=sys.stderr)
+                    break
 
-    # print results and end
-    print("Results saved in {0}".format(save_file_path))
-    print("{0} rts evaluated.".format(ok_counter))
-    print("{0} rts with errors:".format(errors[0]) if errors[0] > 0 else "No errors.")
+    # print summary
+    print("{0} rts evaluated.".format(ok_counter), file=sys.stderr)
+    print("{0} rts with errors:".format(errors[0]) if errors[0] > 0 else "No errors.", file=sys.stderr)
     if errors[0] > 0:
-        print("\tdeadline missed: {0}".format(errors[1]))
-        print("\tnot schedulable: {0}".format(errors[2]))    
-        print("\tstack overflow: {0}".format(errors[4]))
-        print("\tmalloc failed: {0}".format(errors[5]))  
-        print("\tother error: {0}".format(errors[3]))
+        print("\tdeadline missed: {0}".format(errors[1]), file=sys.stderr)
+        print("\tnot schedulable: {0}".format(errors[2]), file=sys.stderr)    
+        print("\tstack overflow: {0}".format(errors[4]), file=sys.stderr)
+        print("\tmalloc failed: {0}".format(errors[5]), file=sys.stderr)  
+        print("\tother error: {0}".format(errors[3]), file=sys.stderr)
 
 
 if __name__ == '__main__':
