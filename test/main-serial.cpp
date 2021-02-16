@@ -45,8 +45,9 @@ struct task_t {
 /*****************************************************************************
  * Public functions declaration
  ****************************************************************************/
-/* Prototypes for the standard FreeRTOS callback/hook functions implemented within this file. */
-/* The extern "C" is required to avoid name mangling between C and C++ code. */
+/* Prototypes for the standard FreeRTOS callback/hook functions implemented 
+ * within this file. The extern "C" is required to avoid name mangling between 
+ * C and C++ code. */
 #if defined (__cplusplus)
 extern "C" {
 #endif
