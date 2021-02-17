@@ -16,6 +16,10 @@
 #define TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 #define BAUDRATE 9600
 
+#define DEADLINE_MISSED     1
+#define NOT_SCHEDULABLE     2
+#define MALLOC_FAILED       5
+
 /*****************************************************************************
  * Private data declaration
  ****************************************************************************/
@@ -264,11 +268,11 @@ int main()
 void vApplicationDebugAction( void *param )
 {
     ( void ) param;
+
+    putc(3);
     
 	taskDISABLE_INTERRUPTS();
     
-    pc.printf( "%d\n", 3 );
-
 	for( ;; )
 	{
         leds[ 3 ] = 1;
@@ -280,9 +284,9 @@ void vApplicationDebugAction( void *param )
 
 void vApplicationNotSchedulable( void )
 {
-	taskDISABLE_INTERRUPTS();
-    
-    pc.printf( "%d\n", 2 );
+    putc(NOT_SCHEDULABLE);
+
+    taskDISABLE_INTERRUPTS();
 
 	for( ;; )
 	{
@@ -297,10 +301,9 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
         TickType_t xTickCount )
 {
     ( void ) xSsTCB;
+    putc(DEADLINE_MISSED);
 
     taskDISABLE_INTERRUPTS();
-
-    pc.printf( "\n\r%s missed its deadline at %d\n\r", pcTaskName, xTickCount);
 
     for( ;; )
     {
@@ -315,9 +318,8 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
 
 void vApplicationMallocFailedHook( void )
 {
-	taskDISABLE_INTERRUPTS();
-
-    pc.printf( "%d\n", 5 );
+    putc(MALLOC_FAILED);
+    taskDISABLE_INTERRUPTS();
 
 	for( ;; )
 	{

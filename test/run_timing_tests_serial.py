@@ -1,3 +1,17 @@
+"""
+Perform test evaluations of RTS on a mbed-compatible microcontroller.
+Copyright (C) 2020  Francisco E. Páez
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+"""
 import struct
 import serial
 import shutil
@@ -269,20 +283,20 @@ def main():
                     
                     test_result, results, test, s1, s2, s3 = read_results_bytes(ser, args.taskcnt, args.instance_count)
 
-                    if test not in tests.keys(): 
-                        print("Invalid test key: {0:}".format(test), file=sys.stderr)
-                        continue
-                    if s1 not in slack.keys(): 
-                        print("Invalid slack key: {0:}".format(test), file=sys.stderr)
-                        continue
-                    if s2 not in slack_method.keys(): 
-                        print("Invalid slack method key: {0:}".format(test), file=sys.stderr)
-                        continue
-                    if s3 not in slack_k.keys(): 
-                        print("Invalid slack_k key: {0:}".format(test), file=sys.stderr)
-                        continue
-
                     if test_result == 0:
+                        if test not in tests.keys(): 
+                            print("Invalid test key: {0:}".format(test), file=sys.stderr)
+                            continue
+                        if s1 not in slack.keys(): 
+                            print("Invalid slack key: {0:}".format(test), file=sys.stderr)
+                            continue
+                        if s2 not in slack_method.keys(): 
+                            print("Invalid slack method key: {0:}".format(test), file=sys.stderr)
+                            continue
+                        if s3 not in slack_k.keys(): 
+                            print("Invalid slack_k key: {0:}".format(test), file=sys.stderr)
+                            continue
+
                         if len(results) != args.taskcnt:
                             print("Error: tasks results is {0:}, should be {1:}".format(len(results), args.taskcnt), file=sys.stderr)
                             continue
@@ -295,10 +309,10 @@ def main():
                                 print("Error: corrupted results", file=sys.stderr)
                                 continue
                     
-                    if test_result == 0:
                         for r in results:
                             print("{0}\t{1}\t{2}\t{3}\t{4}\t{5}".format(rts["id"], "\t".join(str(i) for i in r), 
                                 os.path.basename(xml_file.name), slack[s1], slack_method[s2], slack_k[s3]))
+
                         ok_counter = ok_counter + 1
                         sys.stdout.flush()
                     else:
