@@ -162,9 +162,17 @@ def read_results_bytes(ser, taskcnt, instance_count):
         return int.from_bytes(ser.read(4), byteorder='big', signed=False)
 
     # wait for the results to be ready
+    wait_count = 0
     while True:
         if (ser.in_waiting > 0):
             break
+        wait_count += 1
+        if wait_count > 120:
+            print("Error: no response for more than {0:}. Sending a serial break.".format(120), file=sys.stderr)
+            ser.reset_input_buffer()
+            ser.reset_output_buffer()
+            ser.sendBreak(0.5)
+            wait_count = 0
         sleep(1)
         
     results = []
@@ -174,7 +182,7 @@ def read_results_bytes(ser, taskcnt, instance_count):
 
     if fail:
         return (fail, [], 0, 0, 0, 0)
-        
+
     # the following 4 ints describe the test configuration
     test = get_int(ser)
     slack = get_int(ser)
@@ -260,23 +268,39 @@ def main():
                     send_rts_to_mbed(rts["tasks"], ser)
                     
                     test_result, results, test, s1, s2, s3 = read_results_bytes(ser, args.taskcnt, args.instance_count)
+
+                    if test not in tests.keys(): 
+                        print("Invalid test key: {0:}".format(test), file=sys.stderr)
+                        continue
+                    if s1 not in slack.keys(): 
+                        print("Invalid slack key: {0:}".format(test), file=sys.stderr)
+                        continue
+                    if s2 not in slack_method.keys(): 
+                        print("Invalid slack method key: {0:}".format(test), file=sys.stderr)
+                        continue
+                    if s3 not in slack_k.keys(): 
+                        print("Invalid slack_k key: {0:}".format(test), file=sys.stderr)
+                        continue
+
+                    if test_result == 0:
+                        if len(results) != args.taskcnt:
+                            print("Error: tasks results is {0:}, should be {1:}".format(len(results), args.taskcnt), file=sys.stderr)
+                            continue
+
+                        for i, r in enumerate(results):
+                            if len(r) != (args.instance_count + 1):
+                                print("Error: instance results for task {0:} is {1:}, should be {2:}".format(r[0], len(r) - 1, args.instance_count), file=sys.stderr)
+                                continue
+                            if r[0] != i:
+                                print("Error: corrupted results", file=sys.stderr)
+                                continue
                     
                     if test_result == 0:
-                        if results:
-                            if len(results) != args.taskcnt:
-                                print("Error: tasks results is {0:}, should be {1:}".format(len(results), args.taskcnt), file=sys.stderr)
-                                continue
-                            
-                            for r in results:
-                                if len(r) != (args.instance_count + 1):
-                                    print("Error: instance results for task {0:} is {1:}, should be {2:}".format(r[0], len(r) - 1, args.instance_count), file=sys.stderr)
-                                    continue
-
-                            for r in results:
-                                print("{0}\t{1}\t{2}\t{3}\t{4}\t{5}".format(rts["id"], "\t".join(str(i) for i in r), 
-                                    os.path.basename(xml_file.name), slack[s1], slack_method[s2], slack_k[s3]))
-                            ok_counter = ok_counter + 1
-                            sys.stdout.flush()
+                        for r in results:
+                            print("{0}\t{1}\t{2}\t{3}\t{4}\t{5}".format(rts["id"], "\t".join(str(i) for i in r), 
+                                os.path.basename(xml_file.name), slack[s1], slack_method[s2], slack_k[s3]))
+                        ok_counter = ok_counter + 1
+                        sys.stdout.flush()
                     else:
                         # increment the fail counters
                         errors[0] = errors[0] + 1
