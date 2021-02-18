@@ -1,14 +1,11 @@
-library(tidyverse)  
+library(tidyverse)  # dyplr, ggplot2, etc.
 library(stringr)    # str_extract
 library(reshape2)   # melt
 
 ################################################################################
 #
-# Load the data
+# Load and prepare the data
 #
-cc_k <- read.table("u10-90-n10-k.txt")
-cc_f <- read.table("u10-90-n10-freertos.txt")
-#cc <- read.table("u10-90-n10-i30-c10-ss-2.txt")
 cc1 <- read.table("u10-50_n10_i30_t1-100_ss-cycles.txt")
 cc2 <- read.table("u60-90_n10_i30_t1-100_ss-cycles.txt")
 cc1_k <- read.table("u10-50_n10_i30_t1-100_k-cycles.txt")
@@ -19,16 +16,14 @@ cc$n <- strtoi(gsub("^n*", "", str_extract(cc$V33, "n[0-9]*")))
 cc$V33 <- NULL
 colnames(cc) <- c("id", "task", 1:30, "slack","method","calc","u","n")
 rm <- melt(cc, id.vars=c("n","u","id","task","slack","method","calc")) # melt for easier plotting
-
+rm$m <- paste(cc$slack, cc$calc, sep='-')
 
 ################################################################################
 #
 # Summary statistics
 #
 
-# using dplyr library
 # reminder to myself: %>% is the pipe operator
-library(dplyr)
 rm[ which(rm$slack=='ss' & rm$calc=='d'), ][c('u','value')] %>%
   group_by(u) %>%
   summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value))
@@ -37,9 +32,6 @@ rm[ which(rm$slack=='ss' & rm$calc=='d'), ][c('u','value')] %>%
 #
 # Plots
 #
-
-rm$m <- paste(cc$slack, cc$calc, sep='-')
-
 rm[ which(rm$m=='ss-d'), ][c('u', 'task', 'variable', 'value')] %>%
   group_by(u, task, variable) %>%
   summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value)) %>%
@@ -49,13 +41,32 @@ rm[ which(rm$m=='ss-d'), ][c('u', 'task', 'variable', 'value')] %>%
   theme_bw() +
   facet_wrap(~u, nrow=3)
 
-rm[ which(rm$m=='ss-d' & rm$u==70), ][c('task', 'variable', 'value')] %>%
+rm[ which(rm$m=='ss-k' & rm$u==70 & rm$task==9), ][c('variable', 'value')] %>%
+  ggplot(aes(x=variable, y=value)) +
+  geom_point(size=2.5) +
+  theme_bw() +
+  labs(
+    x = "Instance",
+    y = "CPU clyes",
+    title = paste(
+      "Context switch cost per instance"
+    )
+  )
+
+rm[ which(rm$m=='ss-k' & rm$u==10), ][c('task', 'variable', 'value')] %>%
   group_by(variable, task) %>%
   summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value)) %>%
   ggplot(aes(x=variable, y=mean_value, group=task)) +
   geom_line() +
   geom_point(size=2.5) +
-  theme_bw()
+  theme_bw() +
+  labs(
+    x = "Instance",
+    y = "CPU clyes",
+    title = paste(
+      "Context switch cost per instance"
+    )
+  )
 
 rm[c('m', 'u', 'task', 'variable', 'value')] %>%
   group_by(u, m) %>%
