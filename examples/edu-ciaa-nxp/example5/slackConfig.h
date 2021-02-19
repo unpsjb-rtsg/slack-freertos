@@ -10,8 +10,12 @@
 /* Add functionality to be added to FreeRTOS's tasks.c source file. */
 #define configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H 1
 
+#define FREERTOS_TASKS_C_ADDITIONS_INIT() vSlackSchedulerSetup()
+
 /* Required for identify the IDLE task in slacks methods and deadline check. */
 #define INCLUDE_xTaskGetIdleTaskHandle  1
+
+#define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 
 /*
  * Slack methods available:
@@ -30,9 +34,6 @@
  * 1 = exact tick count
  */
 #define configTASK_EXEC                 0
-
-#define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
-
 /* ========================================================================= */
 
 #endif /* EXAMPLES_EDU_CIAA_NXP_EXAMPLE5_SLACKCONFIG_H_ */

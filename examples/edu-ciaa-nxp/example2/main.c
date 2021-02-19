@@ -80,7 +80,7 @@ static TaskHandle_t atask_handles[ ATASK_CNT ];
  ****************************************************************************/
 gpioMap_t leds[] = { LED1, LED2, LED3 };
 gpioMap_t aleds[] = { LEDR, LEDG, LEDB };
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER_v3_3_1 )
 traceString slack_channel;
 #endif
 
@@ -97,10 +97,7 @@ static void vAperiodicTask( void* params )
 
     SsTCB_t *pxTaskSsTCB;
 
-#if( tskKERNEL_VERSION_MAJOR == 8 )
-    pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
-#endif
-#if( tskKERNEL_VERSION_MAJOR >= 9 )
+#if( tskKERNEL_VERSION_MAJOR >= 10 )
     pxTaskSsTCB = getTaskSsTCB( NULL );
 #endif
 
@@ -108,7 +105,7 @@ static void vAperiodicTask( void* params )
 
     for(;;)
     {
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 
@@ -124,7 +121,7 @@ static void vAperiodicTask( void* params )
 
         gpioWrite( aleds[ pxTaskSsTCB->xId - 1], OFF );
 
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 
@@ -143,11 +140,8 @@ int main(void)
 {
 	vCommonSetupHardware();
 
+#if defined( TRACEALYZER_v3_3_1 )
     // Initializes the trace recorder, but does not start the tracing.
-#ifdef TRACEALYZER_v3_0_2
-    vTraceInitTraceData();
-#endif
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
     vTraceEnable( TRC_INIT );
     slack_channel = xTraceRegisterString("Slack Events");
 #endif
@@ -165,19 +159,6 @@ int main(void)
     xTaskCreate ( vAperiodicTask, "TA3", 256, NULL, ATASK_3_PRIO, &atask_handles[ 2 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
-    #if( tskKERNEL_VERSION_MAJOR >= 9 )
-    {
-        vSlackSystemSetup();
-    }
-    #endif
-
-    // additional parameters needed by the slack stealing framework
-#if( tskKERNEL_VERSION_MAJOR == 8 )
-    vTaskSetParams( task_handles[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
-    vTaskSetParams( task_handles[ 1 ], TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
-    vTaskSetParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
-#endif
-#if( tskKERNEL_VERSION_MAJOR >= 9 )
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
             TASK_1_PERIOD, TASK_1_WCET, 1 );
     vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD,
@@ -192,15 +173,10 @@ int main(void)
             0, ATASK_WCET, 2 );
     vSlackSetTaskParams( atask_handles[ 2 ], APERIODIC_TASK, ATASK_MAX_DELAY,
             0, ATASK_WCET, 3 );
-   	vSlackSchedulerSetup();
-#endif
 #endif
 
+#if defined( TRACEALYZER_v3_3_1 )
     // Start the tracing.
-#ifdef TRACEALYZER_v3_0_2
-    uiTraceStart();
-#endif
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
     vTraceEnable( TRC_START );
 #endif
 

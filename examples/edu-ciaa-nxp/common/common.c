@@ -138,10 +138,7 @@ void vCommonPeriodicTask( void* params )
 
 	SsTCB_t *pxTaskSsTCB;
 
-#if( tskKERNEL_VERSION_MAJOR == 8 )
-	pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
-#endif
-#if( tskKERNEL_VERSION_MAJOR >= 9 )
+#if( tskKERNEL_VERSION_MAJOR >= 10 )
 	pxTaskSsTCB = getTaskSsTCB( NULL );
 #endif
 
@@ -149,7 +146,7 @@ void vCommonPeriodicTask( void* params )
 
 	for(;;)
     {
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 
@@ -171,7 +168,7 @@ void vCommonPeriodicTask( void* params )
 
 		gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
 
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER_v3_3_1 )
 		vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 
