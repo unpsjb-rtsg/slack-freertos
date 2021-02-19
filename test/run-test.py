@@ -222,19 +222,23 @@ def get_args():
     Process the command line arguments.
     """
     parser = ArgumentParser()
-    parser.add_argument("--port", help="COM port", default=None, type=str)
-    parser.add_argument("--baudrate", help="Baudios", default=9600, type=int)
-    parser.add_argument("--timeout", help="individual test timeout", type=int, default=25)
-    parser.add_argument("--cont", help="Continue from previous execution", action="store_true")
-    parser.add_argument("--taskcnt", help="Number of tasks in the rts", type=int, default=10)
+    parser.add_argument("--port", help="Serial port of the mbed board.", default=None, type=str)
+    parser.add_argument("--baudrate", help="Baudrate. Defaults to 9600.", default=9600, type=int)
+    parser.add_argument("--timeout", help="Serial port timeout. Defaults to 5.", type=int, default=5)
+    parser.add_argument("--taskcnt", help="Number of tasks of each RTS.", type=int, default=10)
     parser.add_argument("--instance-count", help="Number of instances per task.", type=int, default=10)
-    parser.add_argument("--rts", type=str, help="RTS inside file(s) to test.")
+    parser.add_argument("--rts", type=str, help="RTS to test.")
     parser.add_argument("--xml", type=FileType('r'), help="XML file(s) with RTS to test.", nargs="+")
 
     return parser.parse_args()
     
     
 def main():
+    if not len(sys.argv) > 1:
+        print("Missing arguments.", file=sys.stderr)
+        print("Try '--help' for more information.", file=sys.stderr)
+        exit(1)
+
     args = get_args()
     
     tests = { 1: 'cs', 2: 'ceils-floors', 3: 'ss-cost', 4: 'loops' }
