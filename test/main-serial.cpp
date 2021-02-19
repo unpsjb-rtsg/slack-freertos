@@ -69,13 +69,29 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 /*****************************************************************************
  * Private functions declaration
  ****************************************************************************/
+/**
+ * \brief Perfomen a busy wait for the specified ticks.
+ */
 static void vBusyWait( TickType_t ticks );
+
+/**
+ * Periodic task.
+ */
 static void prvPeriodicTask( void *pvParameters );
+
+/**
+ * \brief Get 4 bytes from the serial port.
+ */
+static int getc();
+
+/**
+ * \brief Write 4 bytes into the serial port.
+ */
+static void putc(uint32_t i);
+
 /* The prototype shows it is a naked function - in effect this is just an
 assembly function. */
 static void HardFault_Handler( void ) __attribute__( ( naked ) );
-static int getc();
-static void putc(uint32_t i);
 
 /*****************************************************************************
  * Private data
@@ -245,15 +261,18 @@ int main()
     }
     
     /* Reserve memory for task_handle array. */
-    TaskHandle_t *task_handle = ( TaskHandle_t * ) pvPortMalloc( sizeof( TaskHandle_t ) * TASK_COUNT );
+    TaskHandle_t *task_handle = ( TaskHandle_t * ) pvPortMalloc( 
+                                        sizeof( TaskHandle_t ) * TASK_COUNT );
 
     /* Periodic tasks. */
     for (i = 0; i < num_task; i++) {
-    	xTaskCreate( prvPeriodicTask, "T01", TASK_STACK_SIZE, ( void * ) i, configMAX_PRIORITIES - (2 + i),  &task_handle[i] );
+    	xTaskCreate( prvPeriodicTask, "T01", TASK_STACK_SIZE, ( void * ) i, 
+                            configMAX_PRIORITIES - (2 + i),  &task_handle[i] );
     }
 
     for (i = 0; i < num_task; i++) {
-    	vSlackSetTaskParams( task_handle[ i ], PERIODIC_TASK, str[i].t, str[i].d, str[i].c, i );
+    	vSlackSetTaskParams( task_handle[ i ], PERIODIC_TASK, str[i].t, str[i].d, 
+                                                                str[i].c, i );
     }
 
     vInitArray();
@@ -281,6 +300,7 @@ void vApplicationDebugAction( void *param )
         wait_ms(1000);
 	}
 }
+/*-----------------------------------------------------------*/
 
 void vApplicationNotSchedulable( void )
 {
@@ -296,6 +316,7 @@ void vApplicationNotSchedulable( void )
         wait_ms(1000);
 	}
 }
+/*-----------------------------------------------------------*/
 
 void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
         TickType_t xTickCount )
