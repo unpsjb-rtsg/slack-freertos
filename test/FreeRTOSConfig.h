@@ -88,8 +88,8 @@ extern uint32_t SystemCoreClock;
 #define configCPU_CLOCK_HZ				( SystemCoreClock )
 #define configTICK_RATE_HZ				( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES			TASK_COUNT_PARAM + 2
-#define configMINIMAL_STACK_SIZE		( ( unsigned short ) 140 )
-#define configTOTAL_HEAP_SIZE			( ( size_t ) ( 23 * 1024 ) )
+#define configMINIMAL_STACK_SIZE		( ( unsigned short ) 130 )
+#define configTOTAL_HEAP_SIZE			( ( size_t ) ( 16 * 1024 ) )
 #define configMAX_TASK_NAME_LEN			( 10 )
 #define configUSE_TRACE_FACILITY		0
 #define configUSE_16_BIT_TICKS			0
@@ -114,24 +114,6 @@ extern uint32_t SystemCoreClock;
 #define configTIMER_QUEUE_LENGTH		5
 #define configTIMER_TASK_STACK_DEPTH	( configMINIMAL_STACK_SIZE * 2 )
 #endif
-
-/* ========================================================================= */
-#define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
-#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
-
-#define INCLUDE_xTaskGetIdleTaskHandle    1 /* Required for identify the IDLE task in slacks methods and deadline check */
-#define INCLUDE_xTaskGetCurrentTaskHandle 1
-
-/*
- * Slack methods available:
- * 0 = Fixed
- * 1 = Davis
- */
-#define configUSE_SLACK_STEALING 		SLACK /* 1: Use slack stealing methods, 0: No slack. */
-#define configUSE_SLACK_METHOD          SLACK_METHOD /* Slack method to use */
-#define configUSE_SLACK_K               SLACK_K /* Only calculate slack at the scheduler start */
-#define configMAX_SLACK_PRIO            MAX_PRIO /* priority levels that are used for slack. */
-/* ========================================================================= */
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
@@ -217,7 +199,7 @@ header file. */
 */
 #define configKERNEL_TEST KERNEL_TEST
 
-#if ( FREERTOS_VERSION == 9 )
+#if ( FREERTOS_KERNEL_VERSION_NUMBER_MAJOR == 10 )
 
 /* === delay_until() cost ================================================== */
 /* The trace macro definitions must be in this header file.                  */
@@ -231,7 +213,21 @@ void vMacroTaskSwitched( void );
 
 #endif
 
-#if ( FREERTOS_VERSION == 8 )
+#if ( FREERTOS_KERNEL_VERSION_NUMBER_MAJOR == 9 )
+
+/* === delay_until() cost ================================================== */
+/* The trace macro definitions must be in this header file.                  */
+#if configKERNEL_TEST == 1
+void vMacroTaskDelay( void );
+void vMacroTaskSwitched( void );
+#define traceTASK_DELAY_UNTIL(xTimeToWake) vMacroTaskDelay();
+#define traceTASK_SWITCHED_OUT()           vMacroTaskSwitched();
+#endif
+/* ========================================================================= */
+
+#endif
+
+#if ( FREERTOS_KERNEL_VERSION_NUMBER_MAJOR == 8 )
 
 /* === delay_until() cost ================================================== */
 #if configKERNEL_TEST == 1
@@ -270,5 +266,7 @@ void vTaskGetTraceInfo( void );
 /* ========================================================================= */
 
 #endif
+
+#include "slackConfig.h"
 
 #endif /* FREERTOS_CONFIG_H */
