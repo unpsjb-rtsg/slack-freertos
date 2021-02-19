@@ -53,16 +53,6 @@ LINKER_SCRIPT = ../../board/lm3s6965evb/linker.ld
 # Tracealyzer sources, include paths and symbols.
 #
 ifeq ($(TZ), 1)
-  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
-    CC_FLAGS += -DTRACEALYZER_v3_0_2
-  endif
-  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.1.3)
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
-    CC_FLAGS += -DTRACEALYZER_v3_1_3
-  endif
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
@@ -94,12 +84,6 @@ LD_FLAGS += $(foreach l, $(LIBS), -l$(l))
 ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.4.1)
 WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
 endif
-ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.3.1)
-WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
-endif
-ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.2.1)
-WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
-endif
 
 ###############################################################################
 #
@@ -115,7 +99,7 @@ all: $(BUILD_DIR)/$(EXAMPLE).bin size
 
 clean:
 	+@echo "Cleaning $(TARGET) files..."
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ)
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ) TEST=0
 	@rm -f $(BUILD_DIR)/$(EXAMPLE).bin $(BUILD_DIR)/$(EXAMPLE).elf $(OBJECTS) $(DEPS)
 
 .c.o:
@@ -123,7 +107,7 @@ clean:
 	@$(CC) $(COMMON_FLAGS) $(C_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
 
 $(BUILD_DIR)/$(EXAMPLE).elf: $(OBJECTS)
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ)
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ) TEST=0
 	+@echo "[App] Linking: $@"
 	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(WRAP)
 

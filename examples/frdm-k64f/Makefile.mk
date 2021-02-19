@@ -69,17 +69,6 @@ LINKER_SCRIPT = ../../board/frdm-k64f/TARGET_K64F/TOOLCHAIN_GCC_ARM/MK64FN1M0xxx
 # Tracealyzer sources, include paths and symbols.
 #
 ifeq ($(TZ), 1)
-  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
-    CPP_SYMBOLS += -DTRACEALYZER_v3_0_2
-  endif
-  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.1.3)
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config    
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/include    
-    CPP_SYMBOLS += -DTRACEALYZER_v3_1_3
-  endif
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config    
@@ -118,10 +107,7 @@ LD_FLAGS += $(CPU) -Wl,--gc-sections -Wl,--wrap,main
 LD_SYS_LIBS += -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
 # Replace these functions
-ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.3.1)
-WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
-endif
-ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.2.1)
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.4.1)
 WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
 endif
 
@@ -138,7 +124,7 @@ export CPU CC_SYMBOLS MBED_INCLUDE_PATHS
 all: $(BUILD_DIR)/$(EXAMPLE).bin size
 
 clean:
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean APP_DIR=$(APP_NAME) USE_SLACK=$(USE_SLACK) TZ=$(TZ)
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk clean APP_DIR=$(APP_NAME) USE_SLACK=$(USE_SLACK) TZ=$(TZ) TEST=0
 	+@echo "-- Cleaning $(TARGET) files..."
 	@rm -f $(BUILD_DIR)/$(EXAMPLE).bin $(BUILD_DIR)/$(EXAMPLE).elf $(OBJECTS) $(DEPS)
 
@@ -151,7 +137,7 @@ clean:
 	@$(CPP) $(COMMON_FLAGS) $(CPP_COMMON_FLAGS) $(CPP_FLAGS) $(CPP_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
 
 $(BUILD_DIR)/$(EXAMPLE).elf: $(OBJECTS) $(SYS_OBJECTS)
-	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=$(USE_SLACK) TZ=$(TZ)
+	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=$(USE_SLACK) TZ=$(TZ) TEST=0
 	+@echo "[App] Linking: $@"
 	@$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS) $(WRAP)
 

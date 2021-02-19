@@ -122,6 +122,14 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
         const TickType_t xPeriod, const TickType_t xDeadline,
         const TickType_t xWcet, const BaseType_t xId );
 
+
+/**
+ * \brief Return the current system available slack.
+ *
+ * @return The systema available slack.
+ */
+TickType_t xSlackGetAvailableSlack();
+
 /**
  * \brief Record the available slack of each task in \p pxArray.
  *

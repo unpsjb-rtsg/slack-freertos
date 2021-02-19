@@ -53,7 +53,7 @@ static TaskHandle_t task_handles[ TASK_CNT ];
 Serial pc( USBTX, USBRX );
 DigitalOut leds[] = { LED1, LED2, LED3, LED4 };
 SemaphoreHandle_t xMutex = NULL;
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER_v3_3_1 )
 traceString slack_channel;
 #endif
 

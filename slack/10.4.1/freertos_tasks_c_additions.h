@@ -19,7 +19,7 @@
  *
  * @return The system available slack.
  */
-#define xSlackGetAvailableSlack() xSlackSD
+#define xTaskGetAvailableSlack() xSlackSD
 
 /*****************************************************************************
  * Private data declaration
@@ -418,7 +418,7 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
 
     #if( configUSE_SLACK_STEALING == 1 )
     {
-        if( xSlackGetAvailableSlack() > configMIN_SLACK_SD )
+        if( xTaskGetAvailableSlack() > configMIN_SLACK_SD )
         {
             /* Resume slack-delayed tasks if there is enough
             available slack. */
@@ -671,7 +671,7 @@ BaseType_t xSwitchRequired = pdFALSE;
                 vSlackDecrementTasksSlack( pxCurrentTCB, ONE_TICK );
             }
 
-            if( xSlackGetAvailableSlack() <= configMIN_SLACK_SD )
+            if( xTaskGetAvailableSlack() <= configMIN_SLACK_SD )
             {
                 UBaseType_t x;
 
@@ -1050,7 +1050,7 @@ void vTasksGetSlacks( int32_t *pxArray )
 {
     pxArray[ 0 ] = xTaskGetTickCount();
     pxArray[ 1 ] = getTaskSsTCB( xTaskGetCurrentTaskHandle() )->xId;
-    pxArray[ 2 ] = xSlackGetAvailableSlack();
+    pxArray[ 2 ] = xTaskGetAvailableSlack();
 
     ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
 
@@ -1126,6 +1126,11 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
     }
 
     vTaskSetThreadLocalStoragePointer( xTask, 0, ( void * ) pxNewSsTCB );
+}
+/*-----------------------------------------------------------*/
+
+TickType_t xSlackGetAvailableSlack() {
+    return xTaskGetAvailableSlack();
 }
 /*-----------------------------------------------------------*/
 

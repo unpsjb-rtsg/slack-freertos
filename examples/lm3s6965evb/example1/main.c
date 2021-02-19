@@ -317,10 +317,12 @@ int main( void )
     // Verify that tskKERNEL_VERSION_MAJOR is >= 10
     configSS_ASSERT_GREATHER_OR_EQUAL( tskKERNEL_VERSION_MAJOR, 10);
 
+#if TZ == 1
     /* Initialise the trace recorder.  Use of the trace recorder is optional.
     See http://www.FreeRTOS.org/trace for more information and the comments at
     the top of this file regarding enabling trace in this demo. */
     vTraceEnable( TRC_INIT );
+#endif
 
     prvSetupHardware();
 
@@ -365,7 +367,9 @@ int main( void )
      * trace. */
     srand((unsigned) 0);
 
+#if TZ == 1
     vTraceEnable( TRC_START );
+#endif
 
     /* Start the scheduler. */
     vTaskStartScheduler();
