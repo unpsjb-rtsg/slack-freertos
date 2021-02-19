@@ -41,9 +41,21 @@ rm[ which(rm$m=='ss-d'), ][c('u', 'task', 'variable', 'value')] %>%
   theme_bw() +
   facet_wrap(~u, nrow=3)
 
-rm[ which(rm$m=='ss-k' & rm$u==70 & rm$task==9), ][c('variable', 'value')] %>%
+rm[ which(rm$m=='ss-d' & rm$u==70 & rm$task==9), ][c('variable', 'value')] %>%
   ggplot(aes(x=variable, y=value)) +
   geom_point(size=2.5) +
+  theme_bw() +
+  labs(
+    x = "Instance",
+    y = "CPU clyes",
+    title = paste(
+      "Context switch cost per instance"
+    )
+  )
+
+rm[ which(rm$m=='ss-d' & rm$task==9), ][c('value')] %>%
+  ggplot() +
+  geom_bar(mapping = aes(x=value)) +
   theme_bw() +
   labs(
     x = "Instance",
@@ -89,7 +101,7 @@ rm[c('m', 'u', 'task', 'variable', 'value')] %>%
 rm[c('m', 'u','value')] %>%
   group_by(u, m) %>%
   summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value)) %>%
-  ggplot(aes(x=u, y=mean_value, group=m, shape=m)) +
+  ggplot(aes(x=u, y=max_value, group=m, shape=m)) +
   geom_line() +
   geom_point(size=2.5) +
   theme_bw() +
