@@ -85,7 +85,7 @@ void vCommonPeriodicTask( void* params )
 #endif
 
 #if ( configTASK_EXEC == 0 )
-        vUtilsEatCpu( pxTaskSsTCB->xWcet - 200 );
+        vUtilsBusyWait( pxTaskSsTCB->xWcet - 200 );
 #endif
 #if ( configTASK_EXEC == 1 )
         while( pxTaskSsTCB->xCur <  pxTaskSsTCB->xWcet )
@@ -158,7 +158,7 @@ void vCommonAperiodicTask( void* params )
             xSemaphoreGive( xMutex );
         }
 
-        vUtilsEatCpu( rand() % pxTaskSsTCB->xWcet );
+        vUtilsBusyWait( rand() % pxTaskSsTCB->xWcet );
 
         vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )

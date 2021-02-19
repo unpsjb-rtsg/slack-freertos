@@ -115,7 +115,7 @@ static void vAperiodicTask( void* params )
 
         vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
 
-        vUtilsEatCpu( rand() % ATASK_WCET );
+        vUtilsBusyWait( rand() % ATASK_WCET );
 
         vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
 

@@ -11,7 +11,7 @@ extern "C" {
  *
  * @param ticks
  */
-void vUtilsEatCpu( UBaseType_t ticks );
+void vUtilsBusyWait( TickType_t ticks );
 
 #if defined (__cplusplus)
 }

@@ -113,9 +113,9 @@ __WEAK__ void vApplicationDebugAction( void *param )
 	for( ;; )
 	{
 		gpioWrite( LEDR, ON);
-		vUtilsEatCpu( 500 );
+		vUtilsBusyWait( 500 );
         gpioWrite( LEDR, OFF);
-        vUtilsEatCpu( 500 );
+        vUtilsBusyWait( 500 );
 	}
 }
 /*-----------------------------------------------------------*/
@@ -129,9 +129,9 @@ __WEAK__ void vApplicationNotSchedulable( void )
 	for( ;; )
 	{
 		gpioWrite( LEDR, ON);
-		vUtilsEatCpu( 500 );
+		vUtilsBusyWait( 500 );
         gpioWrite( LEDR, OFF);
-        vUtilsEatCpu( 500 );
+        vUtilsBusyWait( 500 );
 	}
 }
 /*-----------------------------------------------------------*/
@@ -152,9 +152,9 @@ __WEAK__ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *x
     for( ;; )
     {
 		gpioWrite( LEDR, ON);
-		vUtilsEatCpu( 500 );
+		vUtilsBusyWait( 500 );
         gpioWrite( LEDR, OFF);
-        vUtilsEatCpu( 500 );
+        vUtilsBusyWait( 500 );
     }
 }
 /*-----------------------------------------------------------*/

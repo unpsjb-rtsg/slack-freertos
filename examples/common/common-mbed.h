@@ -25,7 +25,18 @@ void vApplicationMallocFailedHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 }
 
+/**
+ * Periodic task.
+ *
+ * @param params
+ */
 void vCommonPeriodicTask( void* params );
+
+/**
+ * Aperiodic task.
+ *
+ * @param params
+ */
 void vCommonAperiodicTask( void* params );
 
 #endif /* EXAMPLES_COMMON_COMMON_MBED_H_ */

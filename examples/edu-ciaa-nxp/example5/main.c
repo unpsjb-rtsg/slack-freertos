@@ -101,7 +101,7 @@ void vPeriodicTask( void* params )
         vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
 
 #if ( configTASK_EXEC == 0 )
-        vUtilsEatCpu( pxTaskSsTCB->xWcet - 300 );
+        vUtilsBusyWait( pxTaskSsTCB->xWcet - 300 );
 #endif
 #if ( configTASK_EXEC == 1 )
         while( pxTaskSsTCB->xCur <  ( pxTaskSsTCB->xWcet - 200 ) )
