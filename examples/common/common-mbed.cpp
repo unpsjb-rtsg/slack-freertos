@@ -84,29 +84,7 @@ void vCommonPeriodicTask( void* params )
         leds[ pxTaskSsTCB->xId - 1] = 1;
 #endif
 
-#if ( configTASK_EXEC == 0 )
         vUtilsBusyWait( pxTaskSsTCB->xWcet - 200 );
-#endif
-#if ( configTASK_EXEC == 1 )
-        while( pxTaskSsTCB->xCur <  pxTaskSsTCB->xWcet )
-        {
-            asm("nop");
-        }
-#endif
-#if ( configTASK_EXEC == 2 )
-        while( pxTaskSsTCB->xCur <  ( pxTaskSsTCB->xWcet - 200)  )
-        {
-            TickType_t slack = xSlackGetAvailableSlack();
-            if (slack < 10) {
-                leds[0] = 1;
-                leds[1] = 0;
-            } else {
-                leds[0] = 0;
-                leds[1] = 1;
-            }
-            asm("nop");
-        }
-#endif
 
 #ifdef TARGET_MBED_LPC1768
         leds[ pxTaskSsTCB->xId - 1] = 0;

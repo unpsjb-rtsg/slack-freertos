@@ -28,13 +28,6 @@
 #define configMAX_SLACK_PRIO            1 /* priority levels that are used for slack. */
 #define configMIN_SLACK_SD              1 /* Minimum amount of available slack. */
 
-/*
- * How the task simulate the execution time.
- * 0 = execute asm nops
- * 1 = exact tick count
- */
-#define configTASK_EXEC                 0
-
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 
 /* ========================================================================= */

@@ -125,7 +125,7 @@ static void vAperiodicTask( void* params )
             xSemaphoreGive( xMutex );
         }
 
-        vUtilsEatCpu( rand() % pxTaskSsTCB->xWcet );
+        vUtilsBusyWait( rand() % pxTaskSsTCB->xWcet );
 
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
@@ -168,20 +168,8 @@ static void vPeriodicTask( void* params )
 
         leds[ pxTaskSsTCB->xId - 1] = 1;
 
-        #if ( configTASK_EXEC == 0 )
-        {
-            xRndRun = (UBaseType_t) rand() % ( pxTaskSsTCB->xWcet - 300 );
-            vUtilsEatCpu( xRndRun );
-        }
-        #endif
-        #if ( configTASK_EXEC == 1 )
-        {
-            while( pxTaskSsTCB->xCur < pxTaskSsTCB->xWcet )
-            {
-                asm("nop");
-            }
-        }
-        #endif
+        xRndRun = (UBaseType_t) rand() % ( pxTaskSsTCB->xWcet - 300 );
+        vUtilsBusyWait( xRndRun );
 
         leds[ pxTaskSsTCB->xId - 1] = 0;
 

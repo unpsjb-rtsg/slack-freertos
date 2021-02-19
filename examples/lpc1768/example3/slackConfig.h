@@ -30,17 +30,9 @@
 #define configUSE_SLACK_K               0 /* Only calculate slack at the scheduler start */
 #define configMAX_SLACK_PRIO            1 /* priority levels that are used for slack. */
 #define configMIN_SLACK_SD              0 /* Minimum amount of available slack. */
-
-/*
- * How the task simulate the execution time.
- * 0 = execute asm nops
- * 1 = exact tick count
- */
-#define configTASK_EXEC                 0
 /* ========================================================================= */
 
 void traceTaskSwitchedIn();
-
 #define traceTASK_SWITCHED_IN() traceTaskSwitchedIn()
 
 #endif /* EXAMPLES_LPC1768_EXAMPLE2_SLACKCONFIG_H_ */

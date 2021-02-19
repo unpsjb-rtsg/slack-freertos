@@ -98,7 +98,7 @@ static void vPeriodicTask( void* params )
 
     for(;;)
     {
-        #ifdef TRACEALYZER_v3_1_3
+        #ifdef TZ == 1
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
         #endif
 
@@ -113,20 +113,8 @@ static void vPeriodicTask( void* params )
 
 
 
-        #if ( configTASK_EXEC == 0 )
-        {
-            xRndRun = (UBaseType_t) rand() % ( pxTaskSsTCB->xWcet - 200 );
-            vUtilsEatCpu( xRndRun );
-        }
-        #endif
-        #if ( configTASK_EXEC == 1 )
-        {
-            while( pxTaskSsTCB->xCur < pxTaskSsTCB->xWcet )
-            {
-                asm("nop");
-            }
-        }
-        #endif
+        xRndRun = (UBaseType_t) rand() % ( pxTaskSsTCB->xWcet - 200 );
+        vUtilsBusyWait( xRndRun );
 
         leds[ pxTaskSsTCB->xId - 1] = 0;
 
@@ -137,7 +125,7 @@ static void vPeriodicTask( void* params )
             xSemaphoreGive( xMutex );
         }
 
-        #ifdef TRACEALYZER_v3_1_3
+        #ifdef TZ == 1
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
         #endif
 

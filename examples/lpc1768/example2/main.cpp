@@ -73,7 +73,7 @@ traceString slack_channel;
  ****************************************************************************/
 int main(void)
 {
-#if defined( TRACEALYZER_v3_3_1 )
+#if TZ == 1
     // Initializes the trace recorder, but does not start the tracing.
     vTraceEnable( TRC_INIT );
     slack_channel = xTraceRegisterString("Slack Events");
@@ -113,7 +113,7 @@ int main(void)
     vSlackSetTaskParams( xApTaskHandle2, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 2 );
 #endif
 
-#if defined( TRACEALYZER_v3_3_1 )
+#if TZ == 1
     // Start the tracing.
     vTraceEnable( TRC_START );
 #endif
