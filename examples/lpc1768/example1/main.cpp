@@ -71,11 +71,8 @@ traceString slack_channel;
  */
 int main(void)
 {
+#if defined( TRACEALYZER_v3_3_1 )
     // Initializes the trace recorder, but does not start the tracing.
-#ifdef TRACEALYZER_v3_0_2
-    vTraceInitTraceData();
-#endif
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
     vTraceEnable( TRC_INIT );
     slack_channel = xTraceRegisterString("Slack Events");
 #endif
@@ -100,37 +97,14 @@ int main(void)
     xTaskCreate( vCommonPeriodicTask, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
-    #if( tskKERNEL_VERSION_MAJOR == 9 )
-    {
-        vSlackSystemSetup();
-    }
-    #endif
-
-    // additional parameters needed by the slack stealing framework
-#if( tskKERNEL_VERSION_MAJOR == 8 )
-    vTaskSetParams( task_handles[ 0 ], TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
-    vTaskSetParams( task_handles[ 1 ], TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
-    vTaskSetParams( task_handles[ 2 ], TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
-    vTaskSetParams( task_handles[ 3 ], TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
-#endif
-#if( tskKERNEL_VERSION_MAJOR >= 9 )
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
     vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
     vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
     vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
-    #if( tskKERNEL_VERSION_MAJOR == 9 )
-    {
-        vSlackSchedulerSetup();
-    }
-    #endif
-#endif
 #endif
 
+#if defined( TRACEALYZER_v3_3_1 )
     // Start the tracing.
-#ifdef TRACEALYZER_v3_0_2
-    uiTraceStart();
-#endif
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
     vTraceEnable( TRC_START );
 #endif
 

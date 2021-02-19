@@ -27,16 +27,11 @@ void vCommonPeriodicTask( void* params )
     SsTCB_t *pxTaskSsTCB;
 
 #if(configUSE_SLACK_STEALING == 1)
-#if( tskKERNEL_VERSION_MAJOR == 8 )
-	pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
-#endif
-#if( tskKERNEL_VERSION_MAJOR >= 9 )
 	pxTaskSsTCB = getTaskSsTCB( NULL );
 #endif
 
 #if EXAMPLE == 1
     int32_t slackArray[ 7 ];
-#endif
 #endif
 
     for(;;)
@@ -71,7 +66,7 @@ void vCommonPeriodicTask( void* params )
 	    }
 #endif
 
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
 #endif
 
@@ -127,7 +122,7 @@ void vCommonPeriodicTask( void* params )
         }
 #endif
 
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
 #endif
 #endif
@@ -142,9 +137,6 @@ void vCommonAperiodicTask( void* params )
 
     SsTCB_t *pxTaskSsTCB;
 
-#if( tskKERNEL_VERSION_MAJOR == 8 )
-    pxTaskSsTCB = pxTaskGetTaskSsTCB( NULL );
-#endif
 #if( tskKERNEL_VERSION_MAJOR >= 9 )
     pxTaskSsTCB = getTaskSsTCB( NULL );
 #endif
@@ -153,7 +145,7 @@ void vCommonAperiodicTask( void* params )
 
     for(;;)
     {
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
 #endif
 
@@ -175,7 +167,7 @@ void vCommonAperiodicTask( void* params )
             xSemaphoreGive( xMutex );
         }
 
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER_v3_3_1 )
         vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
 #endif
 
@@ -263,10 +255,10 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
 
     for( ;; )
     {
-        /*leds[ 0 ] = 1;
+        leds[ 0 ] = 1;
         wait_ms( 1000 );
         leds[ 0 ] = 0;
-        wait_ms( 1000 );*/
+        wait_ms( 1000 );
     }
 }
 #endif

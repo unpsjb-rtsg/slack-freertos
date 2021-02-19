@@ -215,8 +215,8 @@ int main(void)
     // Verify that tskKERNEL_VERSION_MAJOR is >= 10
     configSS_ASSERT_GREATHER_OR_EQUAL( tskKERNEL_VERSION_MAJOR, 10);
 
-    // Initializes the trace recorder, but does not start the tracing.
 #if TZ == 1
+    // Initializes the trace recorder, but does not start the tracing.
     vTraceEnable( TRC_INIT );
     slack_channel = xTraceRegisterString("Slack Events");
 #endif
@@ -261,8 +261,8 @@ int main(void)
             ATASK_WCET, 2 );
 #endif
 
-    // Start the tracing.
 #if TZ == 1
+    // Start the tracing.
     vTraceEnable( TRC_START );
 #endif
 

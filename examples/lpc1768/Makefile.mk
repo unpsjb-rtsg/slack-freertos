@@ -66,16 +66,6 @@ LINKER_SCRIPT = ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/LPC1768.ld
 #
 ifeq ($(TZ), 1)
   CC_SYMBOLS += -DTZ=1
-  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
-    CC_SYMBOLS += -DTRACEALYZER_v3_0_2
-  endif
-  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.1.3)
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
-    CC_SYMBOLS += -DTRACEALYZER_v3_1_3
-  endif
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
@@ -109,12 +99,6 @@ LD_SYS_LIBS = -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
 # Replace these functions
 ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
-WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
-endif
-ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.3.1)
-WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
-endif
-ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.2.1)
 WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
 endif
 

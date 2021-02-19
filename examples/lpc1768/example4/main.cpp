@@ -159,8 +159,8 @@ int main(void)
     // Verify that tskKERNEL_VERSION_MAJOR is >= 9
     configSS_ASSERT_GREATHER_OR_EQUAL( tskKERNEL_VERSION_MAJOR, 9);
 
-    // Initializes the trace recorder, but does not start the tracing.
 #if TZ == 1
+    // Initializes the trace recorder, but does not start the tracing.
     vTraceEnable( TRC_INIT );
 #endif
 
@@ -184,8 +184,6 @@ int main(void)
     xTaskCreate( vPeriodicTask, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
 
 #if configUSE_SLACK_STEALING == 1
-    vSlackSystemSetup();
-
     // additional parameters needed by the slack stealing framework
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
             TASK_1_PERIOD, TASK_1_WCET, 1 );
@@ -195,8 +193,6 @@ int main(void)
             TASK_3_PERIOD, TASK_3_WCET, 3 );
     vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD,
             TASK_4_PERIOD, TASK_4_WCET, 4 );
-
-    vSlackSchedulerSetup();
 #endif
 
     // Start the tracing.

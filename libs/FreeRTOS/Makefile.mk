@@ -55,29 +55,7 @@ endif
 #
 # Slack Stealing framework source and headers.
 #
-ifeq ($(USE_SLACK), 1)
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 8.1.2)
-    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
-  endif  
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 9.0.0)
-    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
-    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
-  endif
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.2.1)
-    OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
-    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
-  endif
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.3.1)
-    OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
-    OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack.o
-    ifeq ($(SLACK_METHOD), 0)
-    	OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_fixed.o
-    endif
-    ifeq ($(SLACK_METHOD), 1)
-    	OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_algorithms/ss_davis.o
-    endif    
-    CC_SYMBOLS += -DSS_ALGORITHM=$(SS_ALGORITHM)
-  endif
+ifeq ($(USE_SLACK), 1)  
   ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
     OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
     CC_SYMBOLS += -DSS_ALGORITHM=$(SS_ALGORITHM)
@@ -92,9 +70,6 @@ endif
 # Required for tests (see test directory)
 #
 ifeq ($(TEST), 1)  
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 9.0.0)
-     OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.o
-  endif
   ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
      OBJECTS += ../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)/slack_tests.o
   endif
@@ -114,37 +89,7 @@ endif
 #
 ifeq ($(TZ), 1)
   INCLUDE_PATHS += $(MBED_INCLUDE_PATHS)
-  
-  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.0.2)
-    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcBase.o
-    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcHardwarePort.o
-    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernel.o
-    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernelPortFreeRTOS.o
-    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcUser.o
-  
-    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/Include
-    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/ConfigurationTemplate
     
-    CC_SYMBOLS += -DTRACEALYZER_v3_0_2
-  endif
-  
-  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.1.3)
-    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernelPort.o
-    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcSnapshotRecorder.o
-    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcStreamingRecorder.o
-    
-    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
-    INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
-    
-    ifeq ($(TARGET), frdm-k64f)
-      OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/SEGGER_RTT_Printf.o
-      OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/SEGGER_RTT.o
-      INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/include
-    endif
-    
-    CC_SYMBOLS += -DTRACEALYZER_v3_1_3
-  endif
-  
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
     OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernelPort.o
     OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcSnapshotRecorder.o
