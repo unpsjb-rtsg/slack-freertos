@@ -140,17 +140,17 @@ def mixrange(s: str) -> list:
 
 def get_args():
     """ Command line arguments """
-    parser = ArgumentParser(description="Evaluate RTS in XML file.")
-    parser.add_argument("--rts", type=str, help="RTS inside file(s) to test.")
-    parser.add_argument("--xml", type=FileType('r'), help="XML files with RTS to test.", nargs="+")
-    #parser.add_argument("csv", type=FileType('w'), help="CSV file to create.")
+    parser = ArgumentParser(description="Prints the selected RTS from the specified XML files as CSV into the stdout.")
+    parser.add_argument("--rts", type=str, help="Selected RTS to convert.")
+    parser.add_argument("--xml", type=FileType('r'), help="XML files with RTS.", nargs="+")
     return parser.parse_args()
 
 
 def main():
     if not len(sys.argv) > 1:
-        print("No arguments!", file=sys.stderr)
-        exit()
+        print("Missing arguments.", file=sys.stderr)
+        print("Try '--help' for more information.", file=sys.stderr)
+        exit(1)
 
     args = get_args()
     rts_list = mixrange(args.rts)

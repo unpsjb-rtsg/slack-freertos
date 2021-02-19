@@ -141,7 +141,7 @@ def mixrange(s: str) -> list:
 
 def get_args():
     """ Command line arguments """
-    parser = ArgumentParser(description="Evaluate RTS in XML file.")
+    parser = ArgumentParser(description="Print a basic statistical details of the selected RTS from the specified XML files.")
     parser.add_argument("--rts", type=str, help="RTS inside file(s) to test.")
     parser.add_argument("--files", type=FileType('r'), help="XML files with RTS to test.", nargs="+")
     return parser.parse_args()
@@ -149,8 +149,9 @@ def get_args():
 
 def main():
     if not len(sys.argv) > 1:
-        print("No arguments!", file=sys.stderr)
-        exit()
+        print("Missing arguments.", file=sys.stderr)
+        print("Try '--help' for more information.", file=sys.stderr)
+        exit(1)
 
     args = get_args()
     rts_list = mixrange(args.rts)
@@ -165,7 +166,6 @@ def main():
                 df_rows.append({"id": rts["id"], "task": task["nro"], "c": task["C"], "t": task["T"], "d": task["D"]})
         df = pd.DataFrame(df_rows, columns = df_cols)
         print(df.describe())
-
 
 
 if __name__ == '__main__':
