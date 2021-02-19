@@ -146,7 +146,7 @@ void vCommonPeriodicTask( void* params )
 
 	for(;;)
     {
-#if defined( TRACEALYZER_v3_3_1 )
+#if TZ == 1
         vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 
@@ -154,21 +154,13 @@ void vCommonPeriodicTask( void* params )
 
 	    vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
 
-#if ( configTASK_EXEC == 0 )
 		vUtilsBusyWait( pxTaskSsTCB->xWcet - 300 );
-#endif
-#if ( configTASK_EXEC == 1 )
-		while( pxTaskSsTCB->xCur <  ( pxTaskSsTCB->xWcet - 200 ) )
-		{
-			asm("nop");
-		}
-#endif
 
 		vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
 
 		gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
 
-#if defined( TRACEALYZER_v3_3_1 )
+#if TZ == 1
 		vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
 #endif
 
