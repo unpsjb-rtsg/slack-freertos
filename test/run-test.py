@@ -290,6 +290,7 @@ def main():
                     
                     # wait for the card to be ready
                     board_ready = False
+                    wait_count = 0
                     while not board_ready:                        
                         if (ser.in_waiting > 0):
                             ok = get_int(ser);
@@ -299,6 +300,10 @@ def main():
                             else:
                                 print("Error: the board seems to have a error when restarting.", file=sys.stderr)
                                 break
+                        wait_count += 1
+                        if wait_count > 10:
+                            print("Error: the board do not respond after restarting.", file=sys.stderr)
+                            break                        
                         sleep(1)
 
                     if not board_ready:
@@ -331,16 +336,16 @@ def main():
 
                     if test_result == 0:
                         if test not in tests.keys(): 
-                            print("Invalid test key: {0:}".format(test), file=sys.stderr)
+                            print("Error: invalid test key {0:}".format(test), file=sys.stderr)
                             continue
                         if s1 not in slack.keys(): 
-                            print("Invalid slack key: {0:}".format(test), file=sys.stderr)
+                            print("Error: invalid slack key {0:}".format(test), file=sys.stderr)
                             continue
                         if s2 not in slack_method.keys(): 
-                            print("Invalid slack method key: {0:}".format(test), file=sys.stderr)
+                            print("Error: invalid slack method key {0:}".format(test), file=sys.stderr)
                             continue
                         if s3 not in slack_k.keys(): 
-                            print("Invalid slack_k key: {0:}".format(test), file=sys.stderr)
+                            print("Error: invalid slack_k key {0:}".format(test), file=sys.stderr)
                             continue
 
                         if len(results) != args.taskcnt:
