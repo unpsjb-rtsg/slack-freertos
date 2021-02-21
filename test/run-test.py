@@ -168,24 +168,29 @@ def send_rts_to_mbed(rts, ser):
         ser.write(struct.pack('>i', task["D"]))
 
 
+def get_int(ser):
+    return int.from_bytes(ser.read(4), byteorder='big', signed=False)
+        
+        
 def read_results_bytes(ser, taskcnt, instance_count):
     """
     Read the test results from the board throught the serial port.
     """
-    def get_int(ser):
-        return int.from_bytes(ser.read(4), byteorder='big', signed=False)
-
     # wait for the results to be ready
     wait_count = 0
     while True:
         if (ser.in_waiting > 0):
             break
         wait_count += 1
-        if wait_count > 120:
-            print("Error: no response for more than {0:}. Sending a serial break.".format(120), file=sys.stderr)
+        if wait_count > 60:
+            print("Error: no response for more than {0:}. Reopening serial connection.".format(60), file=sys.stderr)
+            ser.close()
+            sleep(5)
+            ser.open()
+            sleep(5)
             ser.reset_input_buffer()
             ser.reset_output_buffer()
-            ser.sendBreak(0.5)
+            ser.sendBreak(1)
             wait_count = 0
         sleep(1)
         
@@ -280,10 +285,47 @@ def main():
                     
                     ser.reset_input_buffer()
                     ser.reset_output_buffer()
-                    ser.sendBreak(0.5)
-                    sleep(1)
+                    ser.sendBreak(1)
+                    sleep(2)
+                    
+                    # wait for the card to be ready
+                    board_ready = False
+                    while not board_ready:                        
+                        if (ser.in_waiting > 0):
+                            ok = get_int(ser);
+                            if ok == 1234:                            
+                                board_ready = True
+                                break
+                            else:
+                                print("Error: the board seems to have a error when restarting.", file=sys.stderr)
+                                break
+                        sleep(1)
+
+                    if not board_ready:
+                        continue                                            
 
                     send_rts_to_mbed(rts["tasks"], ser)
+                    
+                    # check if the card received all the data
+                    board_ready = False
+                    wait_count = 0
+                    while not board_ready:
+                        if (ser.in_waiting > 0):
+                            ok = get_int(ser);
+                            if ok == 4321:     
+                                board_ready = True
+                                break
+                            else:
+                                print("Error: something went wrong when sending the tasks to the board.", file=sys.stderr)
+                                break
+                        wait_count += 1
+                        if wait_count > 10:
+                            print("Error: the board do not respond after sending the tasks.", file=sys.stderr)
+                            break
+                        sleep(1)
+
+                    if not board_ready:
+                        continue
                     
                     test_result, results, test, s1, s2, s3 = read_results_bytes(ser, args.taskcnt, args.instance_count)
 
