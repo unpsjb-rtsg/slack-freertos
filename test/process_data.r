@@ -6,17 +6,35 @@ library(reshape2)   # melt
 #
 # Load and prepare the data
 #
-cc1 <- read.table("u10-50_n10_i30_t1-100_ss-cycles.txt")
-cc2 <- read.table("u60-90_n10_i30_t1-100_ss-cycles.txt")
-cc1_k <- read.table("u10-50_n10_i30_t1-100_k-cycles.txt")
-cc2_k <- read.table("u60-90_n10_i30_t1-100_k-cycles.txt")
-cc <- rbind(cc1, cc2, cc1_k, cc2_k)
+cc1 <- read.table("u10-30_n10_i30_t001-100_ss_cycles.txt")
+cc2 <- read.table("u10-30_n10_i30_t101-200_ss_cycles.txt")
+cc3 <- read.table("u10-30_n10_i30_t201-300_ss_cycles.txt")
+cc4 <- read.table("u40-60_n10_i30_t001-100_ss_cycles.txt")
+cc5 <- read.table("u40-60_n10_i30_t101-200_ss_cycles.txt")
+cc6 <- read.table("u40-60_n10_i30_t201-300_ss_cycles.txt")
+cc7 <- read.table("u70-90_n10_i30_t001-100_ss_cycles.txt")
+cc8 <- read.table("u70-90_n10_i30_t101-200_ss_cycles.txt")
+cc9 <- read.table("u70-90_n10_i30_t201-300_ss_cycles.txt")
+
+cc1k <- read.table("u10-30_n10_i30_t001-100_k_cycles.txt")
+cc2k <- read.table("u10-30_n10_i30_t101-200_k_cycles.txt")
+cc3k <- read.table("u10-30_n10_i30_t201-300_k_cycles.txt")
+cc4k <- read.table("u40-60_n10_i30_t001-100_k_cycles.txt")
+cc5k <- read.table("u40-60_n10_i30_t101-200_k_cycles.txt")
+cc6k <- read.table("u40-60_n10_i30_t201-300_k_cycles.txt")
+cc7k <- read.table("u70-90_n10_i30_t001-100_k_cycles.txt")
+cc8k <- read.table("u70-90_n10_i30_t101-200_k_cycles.txt")
+cc9k <- read.table("u70-90_n10_i30_t201-300_k_cycles.txt")
+
+cc <- rbind(cc1, cc2, cc3, cc4, cc5, cc6, cc7, cc8, cc9,
+            cc1k, cc2k, cc3k, cc4k, cc5k, cc6k, cc7k, cc8k, cc9k)
 cc$u <- strtoi(gsub("^u*", "", str_extract(cc$V33, "u[0-9]*")))
 cc$n <- strtoi(gsub("^n*", "", str_extract(cc$V33, "n[0-9]*")))
 cc$V33 <- NULL
 colnames(cc) <- c("id", "task", 1:30, "slack","method","calc","u","n")
 rm <- melt(cc, id.vars=c("n","u","id","task","slack","method","calc")) # melt for easier plotting
 rm$m <- paste(cc$slack, cc$calc, sep='-')
+rm$m <- factor(rm$m, levels=c("ss-d", "ss-k"), labels=c("Online", "Counters"))
 
 ################################################################################
 #
@@ -24,7 +42,7 @@ rm$m <- paste(cc$slack, cc$calc, sep='-')
 #
 
 # reminder to myself: %>% is the pipe operator
-rm[ which(rm$slack=='ss' & rm$calc=='d'), ][c('u','value')] %>%
+rm[ which(rm$m=='ss-d'), ][c('u','value')] %>%
   group_by(u) %>%
   summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value))
 
@@ -32,16 +50,60 @@ rm[ which(rm$slack=='ss' & rm$calc=='d'), ][c('u','value')] %>%
 #
 # Plots
 #
-rm[ which(rm$m=='ss-d'), ][c('u', 'task', 'variable', 'value')] %>%
+
+# lineplots with the (mean, max) context switch cost by u.f for all tasks.
+sgdata1 <- rm[ which(rm$task>=0 & rm$m=="Online"), ][c('u', 'm', 'variable', 'value')] %>%
+  group_by(u, m) %>% summarise(value=max(value))
+sgdata1$desc = "Online worst"
+sgdata2 <- rm[ which(rm$task>=0 & rm$m=="Online"), ][c('u', 'm', 'variable', 'value')] %>%
+  group_by(u, m) %>% summarise(value=mean(value))
+sgdata2$desc = "Online mean"
+sgdata3 <- rm[ which(rm$task>=0 & rm$m=="Counters"), ][c('u', 'm', 'variable', 'value')] %>%
+  group_by(u, m) %>% summarise(value=max(value))
+sgdata3$desc = "Counters worst"
+sgdata <- rbind(sgdata1, sgdata2, sgdata3)
+ggplot(sgdata, aes(x=u, y=value, group=desc)) +
+  geom_line() +
+  geom_point(aes(shape=desc), size=3) +
+  scale_x_continuous(breaks = seq(10, 90, by=10)) +
+  scale_y_continuous(trans='log10') +
+  #geom_label(aes(x=u, y=value, label = sprintf("%1.0f", value)), nudge_y = 0.1, alpha = 0.5) +
+  labs(
+    x = "U.F.",
+    y = "CPU cycles",
+    title = paste("Context switch cost"),
+    shape = "Calculation cost"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+  )
+
+# lineplots with the context switch cost by release for al u.f, grouped by task
+rm[ which(rm$m=='Online' & rm$task > 4 & rm$u>50), ][c('u', 'task', 'variable', 'value')] %>%
   group_by(u, task, variable) %>%
   summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value)) %>%
-  ggplot(aes(x=variable, y=mean_value, group=task)) +
+  ggplot(aes(x=variable, y=max_value, group=task)) +
   geom_line() +
-  geom_point(size=2.5) +
+  geom_point(aes(shape=factor(task)), size=1.5) +
+  scale_x_discrete(breaks = c(1, 5, 10, 15, 20, 25, 30)) +
+  #scale_y_continuous(trans='log10') +
+  labs(
+    x = "Instance",
+    y = "CPU cycles",
+    title = paste(
+      "Maximum context switch costs of tasks 6 to 10"
+    ),
+    shape="Task"
+  ) +
   theme_bw() +
-  facet_wrap(~u, nrow=3)
+  theme(
+    plot.title = element_text(hjust = 0.5),
+  ) +
+  facet_wrap(~u, nrow=2)
 
-rm[ which(rm$m=='ss-d' & rm$u==70 & rm$task==9), ][c('variable', 'value')] %>%
+# scatterplot of each release context-switch cost for a specific u.f. and task
+rm[ which(rm$m=='ss-d' & rm$u==90 & rm$task==9), ][c('variable', 'value')] %>%
   ggplot(aes(x=variable, y=value)) +
   geom_point(size=2.5) +
   theme_bw() +
@@ -53,10 +115,31 @@ rm[ which(rm$m=='ss-d' & rm$u==70 & rm$task==9), ][c('variable', 'value')] %>%
     )
   )
 
-rm[ which(rm$m=='ss-d' & rm$task==9), ][c('value')] %>%
-  ggplot() +
-  geom_bar(mapping = aes(x=value)) +
+# linepoint of each release context-switch cost for a specific u.f. and task
+rm[ which(rm$m=='ss-d' & rm$u==90 & rm$task==9), ][c('variable', 'value')] %>%
+  group_by(variable) %>%
+  summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value)) %>%
+  ggplot(aes(x=variable, y=max_value, group=1)) +
+  geom_line() +
+  geom_point(size=2.5) +
   theme_bw() +
+  labs(
+    x = "Instance",
+    y = "CPU cycles",
+    title = paste(
+      "Context switch cost per instance"
+    )
+  )
+
+# linepoint of each release context-switch cost for a task for all u.f
+rm[ which(rm$m=='ss-d' & rm$task==9), ][c('variable', 'u', 'value')] %>%
+  group_by(variable, u) %>%
+  summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value)) %>%
+  ggplot(aes(x=variable, y=mean_value, group=u, linetype=factor(u))) +
+  geom_line() +
+  #geom_point(size=2.5) +
+  theme_bw() +
+  #geom_text(aes(label = u)) +
   labs(
     x = "Instance",
     y = "CPU clyes",
@@ -65,7 +148,77 @@ rm[ which(rm$m=='ss-d' & rm$task==9), ][c('value')] %>%
     )
   )
 
-rm[ which(rm$m=='ss-k' & rm$u==10), ][c('task', 'variable', 'value')] %>%
+# Barplot which shows how much of the time-slice is used per U.F.
+# Change the `which` for other tasks or the total (>0).
+library(ggfittext)
+rm[ which(rm$m=='Online' & rm$task > 4), ][c('u', 'value')] %>%
+  mutate(pct=round(value/96000,2)) %>%
+  mutate(category=cut(pct, breaks=c(-Inf, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, +Inf), 
+                           labels=c("< 5%", "< 10%", "< 15%", "< 20%", "< 25%", "< 30%", ">"))) %>%
+  group_by(u, category) %>%
+  summarise(sales = n()) %>%
+  mutate(c=sum(sales)) %>%
+  mutate(pct2=round(sales/c,6)) %>%
+  ggplot(aes(fill=category, y=pct2, x=u)) + 
+  geom_col(colour = "black", position="fill") +
+  geom_bar_text(aes(label=paste0(sprintf("%1.0f", pct2*100),"%")), position = "stack", reflow = TRUE) +
+  theme_bw() +
+  scale_fill_grey(start=0.9, end=0.1) +
+  #scale_fill_brewer(palette = "Pastel2") +
+  scale_x_continuous(breaks = seq(10, 90, by=10), labels = c("10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%")) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    x = "U.F.",
+    y = "% of cases",
+    title = paste("Slack calculation cost as % of the time-slice for tasks 6 to 10"),
+    fill = "% of time-slice"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+  )
+
+# Barplot which shows how much of the time-slice is used per task.
+# Change the `which` for other tasks or the total (>0).
+library(ggfittext)
+rm[ which(rm$m=='Online'), ][c('task', 'value')] %>%
+  mutate(pct=round(value/96000,2)) %>%
+  mutate(category=cut(pct, breaks=c(-Inf, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, +Inf), 
+                      labels=c("< 5%", "< 10%", "< 15%", "< 20%", "< 25%", "< 30%", ">"))) %>%
+  group_by(task, category) %>%
+  summarise(sales = n()) %>%
+  mutate(c=sum(sales)) %>%
+  mutate(pct2=round(sales/c,6)) %>%
+  ggplot(aes(fill=category, y=pct2, x=task)) + 
+  geom_col(colour = "black", position="fill") +
+  geom_bar_text(aes(label=paste0(sprintf("%1.0f", pct2*100),"%")), position = "stack", reflow = TRUE)+#aes(label=paste0(sprintf("%1.0f", pct2*100),"%"))) +
+  theme_bw() +
+  scale_fill_grey(start=0.9, end=0.1) +
+  #scale_fill_brewer(palette = "Pastel2") +
+  scale_x_continuous(breaks = seq(0, 9, by=1), labels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    x = "Task",
+    y = "% of cases",
+    title = paste("Slack calculation cost as % of the time-slice"),
+    fill = "% of time-slice"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+  )
+
+rm[ which(rm$m=='Online' & rm$u==90 & rm$task==9), ][c('value')] %>%
+  ggplot() +
+  geom_histogram(mapping = aes(x=value), colour="black", fill="white", binwidth=1000) +
+  theme_bw() +
+  labs(
+    x = "CPU cycles",
+    y = "Count",
+    title = paste(
+      "Context switch cost per instance"
+    )
+  )
+
+rm[ which(rm$m=='Online' & rm$u==90), ][c('task', 'variable', 'value')] %>%
   group_by(variable, task) %>%
   summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value)) %>%
   ggplot(aes(x=variable, y=mean_value, group=task)) +
@@ -97,27 +250,8 @@ rm[c('m', 'u', 'task', 'variable', 'value')] %>%
   facet_wrap(~u, nrow=3) +
   theme(plot.title = element_text(hjust = 0.5))
 
-# Context switch cost per U.F
-rm[c('m', 'u','value')] %>%
-  group_by(u, m) %>%
-  summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value)) %>%
-  ggplot(aes(x=u, y=max_value, group=m, shape=m)) +
-  geom_line() +
-  geom_point(size=2.5) +
-  theme_bw() +
-  scale_x_continuous(breaks = seq(10, 90, by=10)) +
-  labs(
-    x = "U.F.",
-    y = "CPU clyes",
-    shape = "Test",
-    title = paste(
-      "Context switch mean cost per U.F."
-    )
-  ) +
-  theme(plot.title = element_text(hjust = 0.5))
-
 # context switch cost per task
-rm[c('m', 'u', 'task','value')] %>%
+rm[which(rm$m=='Counters'),][c('m', 'u', 'task','value')] %>%
   group_by(u, task, m) %>%
   summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value)) %>%
   ggplot() +
@@ -134,12 +268,12 @@ rm[c('m', 'u', 'task','value')] %>%
   theme(plot.title = element_text(hjust = 0.5))
     
 # task's context switch cost per U.F
-rm[c('m', 'u', 'task','value')] %>%
+rm[which(rm$m=='Online'),][c('m', 'u', 'task','value')] %>%
   group_by(u, task, m) %>%
   summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value)) %>%
   ggplot() +
-  geom_line(mapping = aes(x=u, y=mean_value, linetype=factor(task), group=task)) +
-  geom_point(mapping = aes(x=u, y=mean_value)) +
+  geom_line(mapping = aes(x=u, y=max_value, linetype=factor(task), group=task)) +
+  geom_point(mapping = aes(x=u, y=max_value)) +
   theme_bw() +
   scale_x_continuous(breaks = seq(10, 90, by=10)) +
   labs(
@@ -149,15 +283,6 @@ rm[c('m', 'u', 'task','value')] %>%
     linetype = "Task"
   ) +
   theme(plot.title = element_text(hjust = 0.5))
-
-rm[c('m', 'u', 'task','value')] %>%
-  group_by(u, task, m) %>%
-  summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value)) %>%
-  ggplot() +
-  geom_line(mapping = aes(x=task, y=mean_value, group=u)) +
-  geom_point(mapping = aes(x=task, y=mean_value, group=u)) +
-  theme_bw() +
-  facet_wrap(~u, nrow=3)
 
 rm[c('m', 'u','value')] %>% group_by(u,m) %>% summarise(mean_value=mean(value))
 
