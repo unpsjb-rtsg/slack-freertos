@@ -26,15 +26,26 @@ cc7k <- read.table("u70-90_n10_i30_t001-100_k_cycles.txt")
 cc8k <- read.table("u70-90_n10_i30_t101-200_k_cycles.txt")
 cc9k <- read.table("u70-90_n10_i30_t201-300_k_cycles.txt")
 
+cc1f <- read.table("u10-30_n10_i30_t001-100_f_cycles.txt")
+cc2f <- read.table("u10-30_n10_i30_t101-200_f_cycles.txt")
+cc3f <- read.table("u10-30_n10_i30_t201-300_f_cycles.txt")
+cc4f <- read.table("u40-60_n10_i30_t001-100_f_cycles.txt")
+cc5f <- read.table("u40-60_n10_i30_t101-200_f_cycles.txt")
+cc6f <- read.table("u40-60_n10_i30_t201-300_f_cycles.txt")
+cc7f <- read.table("u70-90_n10_i30_t001-100_f_cycles.txt")
+cc8f <- read.table("u70-90_n10_i30_t101-200_f_cycles.txt")
+cc9f <- read.table("u70-90_n10_i30_t201-300_f_cycles.txt")
+
 cc <- rbind(cc1, cc2, cc3, cc4, cc5, cc6, cc7, cc8, cc9,
-            cc1k, cc2k, cc3k, cc4k, cc5k, cc6k, cc7k, cc8k, cc9k)
+            cc1k, cc2k, cc3k, cc4k, cc5k, cc6k, cc7k, cc8k, cc9k,
+            cc1f, cc2f, cc3f, cc4f, cc5f, cc6f, cc7f, cc8f, cc9f)
 cc$u <- strtoi(gsub("^u*", "", str_extract(cc$V33, "u[0-9]*")))
 cc$n <- strtoi(gsub("^n*", "", str_extract(cc$V33, "n[0-9]*")))
 cc$V33 <- NULL
 colnames(cc) <- c("id", "task", 1:30, "slack","method","calc","u","n")
 rm <- melt(cc, id.vars=c("n","u","id","task","slack","method","calc")) # melt for easier plotting
 rm$m <- paste(cc$slack, cc$calc, sep='-')
-rm$m <- factor(rm$m, levels=c("ss-d", "ss-k"), labels=c("Online", "Counters"))
+rm$m <- factor(rm$m, levels=c("ss-d", "ss-k", "noss-k"), labels=c("Online", "Counters", "FreeRTOS"))
 
 ################################################################################
 #
@@ -46,10 +57,44 @@ rm[ which(rm$m=='ss-d'), ][c('u','value')] %>%
   group_by(u) %>%
   summarise(mean_value=mean(value), sd=sd(value), min_value=min(value), max_value=max(value))
 
+filter(rm, value==max(value))
+rm[ which(rm$m=='Online' & rm$n==10 & rm$u==90 & rm$id==96 & rm$task==9), ][c('variable', 'value')] %>%
+  ggplot(aes(x=variable, y=value)) +
+  geom_line(group=1) +
+  geom_point(size=1.5) +
+  scale_x_discrete(breaks = c(1, 5, 10, 15, 20, 25, 30)) +
+  theme_bw() +
+  labs(
+    x = "Instance",
+    y = "CPU cycles",
+    title = paste("Context swich cost of the Task 10"),
+    subtitle = paste("RTS 96 - UF 90 - N 10")
+  )
+
+rm[ which(rm$m=='Online' & rm$n==10 & rm$u==90 & rm$id==96), ][c('task', 'variable', 'value')] %>%
+  ggplot(aes(x=variable, y=value, group=task, linetype=factor(task))) +
+  geom_line() +
+  geom_point(size=1) +
+  #scale_x_discrete(breaks = c(1, 5, 10, 15, 20, 25, 30)) +
+  theme_bw() +
+  labs(
+    x = "Instance",
+    y = "CPU cycles",
+    title = paste("Context swich cost of the Task 10"),
+    subtitle = paste("RTS 96 - UF 90 - N 10")
+  )
+       
 ################################################################################
 #
 # Plots
 #
+
+
+# >> uncomment the following command to import tikzDevice to export the graph as tex file with vector data
+library(tikzDevice)
+
+# >> tex file with the plot
+tikz(file = "cc-mean-worst-plot.tex", width = 5, height = 3)
 
 # lineplots with the (mean, max) context switch cost by u.f for all tasks.
 sgdata1 <- rm[ which(rm$task>=0 & rm$m=="Online"), ][c('u', 'm', 'variable', 'value')] %>%
@@ -61,10 +106,13 @@ sgdata2$desc = "Online mean"
 sgdata3 <- rm[ which(rm$task>=0 & rm$m=="Counters"), ][c('u', 'm', 'variable', 'value')] %>%
   group_by(u, m) %>% summarise(value=max(value))
 sgdata3$desc = "Counters worst"
-sgdata <- rbind(sgdata1, sgdata2, sgdata3)
+sgdata4 <- rm[ which(rm$task>=0 & rm$m=="FreeRTOS"), ][c('u', 'm', 'variable', 'value')] %>%
+  group_by(u, m) %>% summarise(value=max(value))
+sgdata4$desc = "FreeRTOS worst"
+sgdata <- rbind(sgdata1, sgdata2, sgdata3, sgdata4)
 ggplot(sgdata, aes(x=u, y=value, group=desc)) +
   geom_line() +
-  geom_point(aes(shape=desc), size=3) +
+  geom_point(aes(shape=desc), size=2) +
   scale_x_continuous(breaks = seq(10, 90, by=10)) +
   scale_y_continuous(trans='log10') +
   #geom_label(aes(x=u, y=value, label = sprintf("%1.0f", value)), nudge_y = 0.1, alpha = 0.5) +
@@ -72,12 +120,15 @@ ggplot(sgdata, aes(x=u, y=value, group=desc)) +
     x = "U.F.",
     y = "CPU cycles",
     title = paste("Context switch cost"),
-    shape = "Calculation cost"
+    shape = "Cost"
   ) +
   theme_bw() +
   theme(
     plot.title = element_text(hjust = 0.5),
   )
+
+# close or the tikxDevice .tex file so the data is written
+dev.off()
 
 # lineplots with the context switch cost by release for al u.f, grouped by task
 rm[ which(rm$m=='Online' & rm$task > 4 & rm$u>50), ][c('u', 'task', 'variable', 'value')] %>%
@@ -103,7 +154,7 @@ rm[ which(rm$m=='Online' & rm$task > 4 & rm$u>50), ][c('u', 'task', 'variable', 
   facet_wrap(~u, nrow=2)
 
 # scatterplot of each release context-switch cost for a specific u.f. and task
-rm[ which(rm$m=='ss-d' & rm$u==90 & rm$task==9), ][c('variable', 'value')] %>%
+rm[ which(rm$m=='Online' & rm$u==90 & rm$task==9), ][c('variable', 'value')] %>%
   ggplot(aes(x=variable, y=value)) +
   geom_point(size=2.5) +
   theme_bw() +
@@ -150,61 +201,76 @@ rm[ which(rm$m=='ss-d' & rm$task==9), ][c('variable', 'u', 'value')] %>%
 
 # Barplot which shows how much of the time-slice is used per U.F.
 # Change the `which` for other tasks or the total (>0).
+
+# Change the `which` for other tasks or the total (>0).
+# >> tex file with the plot
+tikz(file = "pct-time-slice-tasks-6-10.tex", width = 5, height = 3)
+
 library(ggfittext)
 rm[ which(rm$m=='Online' & rm$task > 4), ][c('u', 'value')] %>%
   mutate(pct=round(value/96000,2)) %>%
   mutate(category=cut(pct, breaks=c(-Inf, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, +Inf), 
-                           labels=c("< 5%", "< 10%", "< 15%", "< 20%", "< 25%", "< 30%", ">"))) %>%
+                           labels=c("$<5$", "$<10$", "$<15$", "$<20$", "$<25$", "$<30$", "$>$"))) %>%
   group_by(u, category) %>%
   summarise(sales = n()) %>%
   mutate(c=sum(sales)) %>%
   mutate(pct2=round(sales/c,6)) %>%
   ggplot(aes(fill=category, y=pct2, x=u)) + 
   geom_col(colour = "black", position="fill") +
-  geom_bar_text(aes(label=paste0(sprintf("%1.0f", pct2*100),"%")), position = "stack", reflow = TRUE) +
+  geom_bar_text(aes(label=paste0(sprintf("%1.0f", pct2*100))), position = "stack", reflow = TRUE) +
   theme_bw() +
   scale_fill_grey(start=0.9, end=0.1) +
-  #scale_fill_brewer(palette = "Pastel2") +
-  scale_x_continuous(breaks = seq(10, 90, by=10), labels = c("10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%")) +
-  scale_y_continuous(labels = scales::percent) +
+  scale_x_continuous(breaks = seq(10, 90, by=10), labels = c("10", "20", "30", "40", "50", "60", "70", "80", "90")) +
+  #scale_y_continuous(labels = scales::percent) +
+  scale_y_continuous(labels = c("0", "25", "50", "75", "100")) +
   labs(
     x = "U.F.",
-    y = "% of cases",
-    title = paste("Slack calculation cost as % of the time-slice for tasks 6 to 10"),
-    fill = "% of time-slice"
+    y = "\\% of cases",
+    title = paste("Cost as \\% of the time-slice for tasks 6 to 10"),
+    fill = "\\% of time-slice"
   ) +
   theme(
     plot.title = element_text(hjust = 0.5),
   )
 
+# close or the tikxDevice .tex file so the data is written
+dev.off()
+
 # Barplot which shows how much of the time-slice is used per task.
+
 # Change the `which` for other tasks or the total (>0).
+# >> tex file with the plot
+tikz(file = "pct-time-slice-all-tasks.tex", width = 5, height = 3)
+
 library(ggfittext)
 rm[ which(rm$m=='Online'), ][c('task', 'value')] %>%
   mutate(pct=round(value/96000,2)) %>%
   mutate(category=cut(pct, breaks=c(-Inf, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, +Inf), 
-                      labels=c("< 5%", "< 10%", "< 15%", "< 20%", "< 25%", "< 30%", ">"))) %>%
+                      labels=c("$<$ 5 \\,\\%", "$<$ 10 \\,\\%", "$<$ 15 \\,\\%", "$<$ 20 \\,\\%", "$<$ 25 \\,\\%", "$<$ 30 \\,\\%", "$>$"))) %>%
   group_by(task, category) %>%
   summarise(sales = n()) %>%
   mutate(c=sum(sales)) %>%
   mutate(pct2=round(sales/c,6)) %>%
   ggplot(aes(fill=category, y=pct2, x=task)) + 
   geom_col(colour = "black", position="fill") +
-  geom_bar_text(aes(label=paste0(sprintf("%1.0f", pct2*100),"%")), position = "stack", reflow = TRUE)+#aes(label=paste0(sprintf("%1.0f", pct2*100),"%"))) +
+  geom_bar_text(aes(label=paste0(sprintf("%1.0f", pct2*100))), position = "stack", reflow = TRUE) +
   theme_bw() +
   scale_fill_grey(start=0.9, end=0.1) +
-  #scale_fill_brewer(palette = "Pastel2") +
   scale_x_continuous(breaks = seq(0, 9, by=1), labels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")) +
-  scale_y_continuous(labels = scales::percent) +
+  #scale_y_continuous(labels = scales::percent) +
+  scale_y_continuous(labels = c("0", "25", "50", "75", "100")) +
   labs(
     x = "Task",
-    y = "% of cases",
-    title = paste("Slack calculation cost as % of the time-slice"),
-    fill = "% of time-slice"
+    y = "\\% of cases",
+    title = paste("Slack calculation cost as \\% of the time-slice"),
+    fill = "\\% of time-slice"
   ) +
   theme(
     plot.title = element_text(hjust = 0.5),
   )
+
+# close or the tikxDevice .tex file so the data is written
+dev.off()
 
 rm[ which(rm$m=='Online' & rm$u==90 & rm$task==9), ][c('value')] %>%
   ggplot() +
