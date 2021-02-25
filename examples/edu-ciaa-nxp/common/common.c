@@ -139,7 +139,7 @@ void vCommonPeriodicTask( void* params )
 	SsTCB_t *pxTaskSsTCB;
 
 #if( tskKERNEL_VERSION_MAJOR >= 10 )
-	pxTaskSsTCB = getTaskSsTCB( NULL );
+	pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 #endif
 
     int32_t slackArray[ 6 ];

@@ -8,7 +8,7 @@
 #if ( configUSE_SLACK_STEALING == 1 )
 #include "slack.h"
 #else
-#define getTaskSsTCB( x ) ( ( SsTCB_t * ) pvTaskGetThreadLocalStoragePointer( ( TaskHandle_t ) x, 0 ) )
+#define pvSlackGetTaskSsTCB( x ) ( ( SsTCB_t * ) pvTaskGetThreadLocalStoragePointer( ( TaskHandle_t ) x, 0 ) )
 #endif
 
 #if ( configKERNEL_TEST > 0 )
@@ -151,7 +151,7 @@ static void prvPeriodicTask( void *pvParameters )
 {
 	int id = ( int ) pvParameters;
 
-    SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
+    SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 
     for(;;)
 	{               
