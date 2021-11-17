@@ -42,6 +42,11 @@ SECTIONS
         _etext = .;
     } > FLASH
 
+    /DISCARD/ :
+    {
+        *(.ARM.exidx*)
+    }
+
     .data : AT (ADDR(.text) + SIZEOF(.text))
     {
         _data = .;

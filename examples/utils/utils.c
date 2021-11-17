@@ -5,7 +5,7 @@
 
 /* The prototype shows it is a naked function - in effect this is just an
 assembly function. */
-void HardFault_Handler( void ) __attribute__( ( naked ) );
+void HardFault_Handler( void ) __attribute__( ( naked, aligned(8) ) );
 
 /* The fault handler implementation calls a function called
 prvGetRegistersFromStack(). */
