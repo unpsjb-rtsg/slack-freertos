@@ -13,7 +13,7 @@
 #define FREERTOS_TASKS_C_ADDITIONS_INIT() vSlackSchedulerSetup()
 
 /* Required for identify the IDLE task in slacks methods and deadline check. */
-#define INCLUDE_xTaskGetIdleTaskHandle  1
+#define INCLUDE_xTaskGetIdleTaskHandle  0
 
 /*
  * Slack methods available:

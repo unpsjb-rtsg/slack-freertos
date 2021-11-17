@@ -62,7 +62,7 @@ void vMacroTaskDelay()
 {
 	STOPWATCH_RESET();
     uint32_t cycles = CPU_CYCLES;
-    BaseType_t xId = (( SsTCB_t* ) getTaskSsTCB( xTaskGetCurrentTaskHandle() ))->xId;
+    BaseType_t xId = (( SsTCB_t* ) pvSlackGetTaskSsTCB( xTaskGetCurrentTaskHandle() ))->xId;
     if ( cs_costs[xId][0] < RELEASE_COUNT )
 	{
         cs_costs[xId][ cs_costs[ xId ][0] + 1 ] = cycles;
@@ -75,7 +75,7 @@ void vMacroTaskSwitched()
 {
     uint32_t cycles = CPU_CYCLES;
 	if ( ulDelayUntilFlag == pdTRUE ) {
-        BaseType_t xId = (( SsTCB_t* ) getTaskSsTCB( xTaskGetCurrentTaskHandle() ))->xId;
+        BaseType_t xId = (( SsTCB_t* ) pvSlackGetTaskSsTCB( xTaskGetCurrentTaskHandle() ))->xId;
         if ( cs_costs[xId][0] < RELEASE_COUNT )
         {
             cs_costs[xId][ cs_costs[ xId ][0] + 1] = cycles - cs_costs[xId][ cs_costs[xId][0] + 1];

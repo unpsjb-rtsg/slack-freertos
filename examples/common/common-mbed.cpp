@@ -27,7 +27,7 @@ void vCommonPeriodicTask( void* params )
     SsTCB_t *pxTaskSsTCB;
 
 #if(configUSE_SLACK_STEALING == 1)
-	pxTaskSsTCB = getTaskSsTCB( NULL );
+	pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 #endif
 
 #if EXAMPLE == 1
@@ -116,7 +116,7 @@ void vCommonAperiodicTask( void* params )
     SsTCB_t *pxTaskSsTCB;
 
 #if( tskKERNEL_VERSION_MAJOR >= 9 )
-    pxTaskSsTCB = getTaskSsTCB( NULL );
+    pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 #endif
 
     vTaskDelay( rand() % pxTaskSsTCB->xPeriod );

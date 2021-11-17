@@ -86,7 +86,7 @@ void vPeriodicTask( void* params )
 {
     ( void ) params;
 
-    SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
+    SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 
     int32_t slackArray[ 6 ];
 

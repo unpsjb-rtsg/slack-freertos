@@ -106,7 +106,7 @@ static void vAperiodicTask( void* params )
 {
     SsTCB_t *pxTaskSsTCB;
 
-    pxTaskSsTCB = getTaskSsTCB( NULL );
+    pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 
     vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
 
@@ -149,7 +149,7 @@ static void vPeriodicTask( void* params )
 {
     ( void ) params;
 
-    SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
+    SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 
     UBaseType_t xRndRun = 0;
 

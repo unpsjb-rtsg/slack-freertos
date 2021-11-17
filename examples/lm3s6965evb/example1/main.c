@@ -236,7 +236,7 @@ static void prvPeriodicTask( void *pvParameters )
 {
     int id = ( int ) pvParameters;
 
-    SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
+    SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 
     for( ;; )
     {
@@ -278,7 +278,7 @@ static void prvAperiodicTask( void *pvParameters )
 
     SsTCB_t *pxTaskSsTCB;
 
-    pxTaskSsTCB = getTaskSsTCB( NULL );
+    pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 
     vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
 

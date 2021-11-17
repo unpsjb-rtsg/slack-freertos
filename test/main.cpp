@@ -7,6 +7,11 @@
 
 #if ( configUSE_SLACK_STEALING == 1 )
 #include "slack.h"
+#else
+#define pvSlackGetTaskSsTCB( x ) ( ( SsTCB_t * ) pvTaskGetThreadLocalStoragePointer( ( TaskHandle_t ) x, 0 ) )
+#endif
+
+#if ( configKERNEL_TEST > 0 )
 #include "slack_tests.h"
 #endif
 
@@ -146,7 +151,7 @@ static void prvPeriodicTask( void *pvParameters )
 {
 	int id = ( int ) pvParameters;
 
-    SsTCB_t *pxTaskSsTCB = getTaskSsTCB( NULL );
+    SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 
     for(;;)
 	{               
@@ -243,6 +248,8 @@ static void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
 int main()
 {
     pc.baud(9600);
+    
+    putc(1234);
 
     while (pc.readable() == 0) {
     	;
@@ -259,6 +266,8 @@ int main()
 		str[j].t = getc();
 		str[j].d = getc();
     }
+    
+    putc(4321);
     
     /* Reserve memory for task_handle array. */
     TaskHandle_t *task_handle = ( TaskHandle_t * ) pvPortMalloc( 
