@@ -211,9 +211,9 @@ static void vPrintSlacks( char *buf, char s, int32_t * slackArray, TickType_t xC
 {
     sprintf(buf, "%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
             pcTaskGetTaskName(NULL), s,
-            slackArray[0], slackArray[2], slackArray[3],
-            slackArray[4], slackArray[5], slackArray[6],
-            xCur);
+            (int) slackArray[0], (int) slackArray[2], (int) slackArray[3],
+            (int) slackArray[4], (int) slackArray[5], (int) slackArray[6],
+            (int) xCur);
     prvPrintString( buf );
 }
 /*-----------------------------------------------------------*/
@@ -251,7 +251,7 @@ static void prvPeriodicTask( void *pvParameters )
             prvPrintString("!");
         }
 
-        sprintf( cMessage, "%s - %u", pcTaskGetTaskName( NULL ), pxTaskSsTCB->uxReleaseCount );
+        sprintf( cMessage, "%s - %d", pcTaskGetTaskName( NULL ), (int) pxTaskSsTCB->uxReleaseCount );
         vOLEDStringDraw( cMessage, 0, (mainCHARACTER_HEIGHT+1)*(id-1), mainFULL_SCALE );
 
         vBusyWait( pxTaskSsTCB->xWcet - 10 );
@@ -384,7 +384,7 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
         TickType_t xTickCount )
 {
     taskDISABLE_INTERRUPTS();
-    sprintf(cMessage, "\n\r%s missed its deadline at %d\n\r", pcTaskName, xTickCount);
+    sprintf(cMessage, "\n\r%s missed its deadline at %d\n\r", pcTaskName, (int) xTickCount);
     prvPrintString( cMessage );
     for (;; ) {}
 }
