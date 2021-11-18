@@ -8,7 +8,8 @@ PROJECT = libfreertos
 #
 # FreeRTOS source code.
 #
-OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/queue.o 
+OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/queue.o
+OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
 OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/list.o
 OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/timers.o
 OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/MemMang/heap_1.o 
@@ -55,14 +56,8 @@ endif
 #
 # Slack Stealing framework source and headers.
 #
-ifeq ($(USE_SLACK), 1)  
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
-    OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
-    CC_SYMBOLS += -DSS_ALGORITHM=$(SS_ALGORITHM)
-  endif
-  INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)  
-else
-  OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
+ifeq ($(USE_SLACK), 1)
+  INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 endif
 
 ###############################################################################
