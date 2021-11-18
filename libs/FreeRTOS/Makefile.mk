@@ -30,12 +30,6 @@ endif
 #
 # Paths to the required headers.
 #
-ifeq ($(TEST), 0)
-    INCLUDE_PATHS += -I../../examples/$(TARGET)/
-    INCLUDE_PATHS += -I../../examples/$(TARGET)/$(APP_NAME)
-else
-    INCLUDE_PATHS += -I../../test/$(TEST_PATH)
-endif
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/include
 ifeq ($(TARGET), lpc1768)
@@ -50,6 +44,12 @@ ifeq ($(TARGET), edu-ciaa-nxp)
 endif
 ifeq ($(TARGET), frdm-k64f)
   INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM4F
+endif
+ifeq ($(TEST), 0)
+    INCLUDE_PATHS += -I../../examples/$(TARGET)/
+    INCLUDE_PATHS += -I../../examples/$(TARGET)/$(APP_NAME)
+else
+    INCLUDE_PATHS += -I../../test/$(TEST_PATH)
 endif
 
 ###############################################################################
@@ -94,8 +94,8 @@ ifeq ($(TZ), 1)
     INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
     
     ifeq ($(TARGET), frdm-k64f)      
-      OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/SEGGER_RTT.o
-      INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/include
+      OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/Jlink_RTT/SEGGER_RTT.o
+      INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/Jlink_RTT/include
     endif
     
     CC_SYMBOLS += -DTRACEALYZER_v3_3_1
