@@ -17,7 +17,7 @@ extern "C" {
 /**
  * \brief Return a pointer to the `SsTCB` associated to the task.
  */
-#define pvSlackGetTaskSsTCB( x ) 	( ( SsTCB_t * ) pvTaskGetThreadLocalStoragePointer( ( TaskHandle_t ) x, 0 ) )
+#define pvSlackGetTaskSsTCB( x ) 	( ( SsTCB_t * ) pvTaskGetThreadLocalStoragePointer( ( TaskHandle_t ) x, configSS_STORAGE_POINTER_INDEX ) )
 
 #define SS_FIXED 0
 #define SS_DAVIS 1

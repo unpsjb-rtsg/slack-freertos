@@ -12,7 +12,7 @@
  * This macro does not use `pvTaskGetThreadLocalStoragePointer()`. Instead it
  * uses the TCB_t structure directly.
  */
-#define getSsTCB( x ) ( ( SsTCB_t * )( ( TCB_t * ) x )->pvThreadLocalStoragePointers[ 0 ] )
+#define getSsTCB( x ) ( ( SsTCB_t * )( ( TCB_t * ) x )->pvThreadLocalStoragePointers[ configSS_STORAGE_POINTER_INDEX ] )
 
 /**
  * \brief Return the system available slack.
@@ -395,23 +395,23 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
             {
                 vSlackGainSlack( pxCurrentTCB, pxCurrentSsTCB->xWcet - pxCurrentSsTCB->xCur );
             }
-        }
 
-        if( xShouldDelay != pdFALSE )
-        {
-            /* Update the flag to indicate that the task was blocked by
-            an invocation to vTaskDelayUntil(). The release count will
-            be incremented when the task is unblocked at
-            xTaskIncrementTick(). */
-            pxCurrentSsTCB->uxDelayUntil = ( UBaseType_t ) pdTRUE;
-        }
-        else
-        {
-            /* The task was not blocked, because the wake time is in
-            the past. Update the flag and increment the release count.
-            The function will return to the task. */
-            pxCurrentSsTCB->uxDelayUntil = ( UBaseType_t ) pdFALSE;
-            pxCurrentSsTCB->uxReleaseCount = pxCurrentSsTCB->uxReleaseCount + 1UL;
+            if( xShouldDelay != pdFALSE )
+            {
+                /* Update the flag to indicate that the task was blocked by
+                an invocation to vTaskDelayUntil(). The release count will
+                be incremented when the task is unblocked at
+                xTaskIncrementTick(). */
+                pxCurrentSsTCB->uxDelayUntil = ( UBaseType_t ) pdTRUE;
+            }
+            else
+            {
+                /* The task was not blocked, because the wake time is in
+                the past. Update the flag and increment the release count.
+                The function will return to the task. */
+                pxCurrentSsTCB->uxDelayUntil = ( UBaseType_t ) pdFALSE;
+                pxCurrentSsTCB->uxReleaseCount = pxCurrentSsTCB->uxReleaseCount + 1UL;
+            }
         }
         #endif
     }
@@ -1127,7 +1127,7 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
         listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xSsTaskBlockedListItem ), 0 );
     }
 
-    vTaskSetThreadLocalStoragePointer( xTask, 0, ( void * ) pxNewSsTCB );
+    vTaskSetThreadLocalStoragePointer( xTask, configSS_STORAGE_POINTER_INDEX, ( void * ) pxNewSsTCB );
 }
 /*-----------------------------------------------------------*/
 

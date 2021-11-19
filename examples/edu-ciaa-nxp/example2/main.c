@@ -105,10 +105,6 @@ static void vAperiodicTask( void* params )
 
     for(;;)
     {
-#if defined( TRACEALYZER_v3_3_1 )
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
-#endif
-
         pxTaskSsTCB->xCur = ( TickType_t ) 0;
 
         gpioWrite( aleds[ pxTaskSsTCB->xId - 1], ON );
@@ -120,10 +116,6 @@ static void vAperiodicTask( void* params )
         vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
 
         gpioWrite( aleds[ pxTaskSsTCB->xId - 1], OFF );
-
-#if defined( TRACEALYZER_v3_3_1 )
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
-#endif
 
         vTaskDelay( rand() % ATASK_MAX_DELAY );
     }
