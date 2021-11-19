@@ -317,11 +317,6 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
         block. */
         const TickType_t xConstTickCount = xTickCount;
 
-        #if ( configUSE_SLACK_STEALING == 1 )
-            /* SS: end tick count. */
-            pxCurrentSsTCB->xEndTick = xConstTickCount;
-        #endif
-
         /* Generate the tick time at which the task wants to wake. */
         xTimeToWake = *pxPreviousWakeTime + xTimeIncrement;
 
@@ -1099,7 +1094,6 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
     pxNewSsTCB->xPreviousWakeTime = ( TickType_t ) 0U;
     pxNewSsTCB->xTimeToWake = ( TickType_t ) 0U;
     pxNewSsTCB->xWcrt = 0U;
-    pxNewSsTCB->xEndTick = ( TickType_t ) 0U;
     pxNewSsTCB->xSlack = 0U;
     pxNewSsTCB->xTtma = 0U;
     pxNewSsTCB->xDi = 0U;

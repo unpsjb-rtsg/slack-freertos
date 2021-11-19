@@ -74,10 +74,6 @@ struct SsTCB
 	TickType_t xTtma;               /**< Maximally delayed completion time. */
 	TickType_t xDi;                 /**< Absolute deadline of the next release. */
 
-	TickType_t  xEndTick;
-	/**< Stores the tick at which the task release ended. This a dirty way to
-	 * know if we must decrement the available slack of the task at xTaskIncrementTick(). */
-
 	BaseType_t xId;                 /**< Task id. */
 };
 

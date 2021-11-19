@@ -46,7 +46,6 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
     pxNewSsTCB->xPreviousWakeTime = ( TickType_t ) 0U;
     pxNewSsTCB->xTimeToWake = ( TickType_t ) 0U;
     pxNewSsTCB->xWcrt = 0U;
-    pxNewSsTCB->xEndTick = ( TickType_t ) 0U;
     pxNewSsTCB->xSlack = 0U;
     pxNewSsTCB->xTtma = 0U;
     pxNewSsTCB->xDi = 0U;
