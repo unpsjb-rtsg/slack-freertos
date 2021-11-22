@@ -735,13 +735,16 @@ void vSlackSchedulerSetup( void )
 {
     xSlackSD = 0;
 
+    #if ( configSS_VERIFY_SCHEDULABILITY == 1 )
     /* Calculate worst case execution times of tasks. */
     BaseType_t xSchedulable = xSlackCalculateTasksWcrt( &xSsTaskList );
-
     if( xSchedulable == pdFALSE )
     {
         vApplicationNotSchedulable();
     }
+    #else
+    xSlackCalculateTasksWcrt( &xSsTaskList );
+    #endif
 
     ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
 

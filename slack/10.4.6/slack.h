@@ -55,8 +55,8 @@ struct SsTCB
 
 	TickType_t xTimeToWake;         /**< Time at which the task wants to wake. */
 
+	TickType_t xWcet;               /**< Worst case execution time. */
 	TickType_t xWcrt;				/**< Worst case response time. */
-	TickType_t xWcet;				/**< Worst case execution time. */
 	TickType_t xPeriod;			    /**< Task period. */
 	TickType_t xDeadline;		 	/**< Task relative deadline. */
 	TickType_t xA;					/**< Used by RTA3. */
