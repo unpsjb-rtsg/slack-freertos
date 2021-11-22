@@ -127,8 +127,10 @@ extern "C" {
  * TRC_FREERTOS_VERSION_9_0_1					If using FreeRTOS v9.0.1
  * TRC_FREERTOS_VERSION_9_0_2					If using FreeRTOS v9.0.2
  * TRC_FREERTOS_VERSION_10_0_0					If using FreeRTOS v10.0.0 or later
+ * TRC_FREERTOS_VERSION_10_3_0                  If using FreeRTOS v10.3.0 - v10.3.1
+ * TRC_FREERTOS_VERSION_10_4_0                  If using FreeRTOS v10.4.0 or later
  *****************************************************************************/
-#define TRC_CFG_FREERTOS_VERSION TRC_FREERTOS_VERSION_10_0_0
+#define TRC_CFG_FREERTOS_VERSION TRC_FREERTOS_VERSION_10_4_0
 
 /*******************************************************************************
  * TRC_CFG_SCHEDULING_ONLY
