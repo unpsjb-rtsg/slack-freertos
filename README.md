@@ -16,6 +16,7 @@ This project add Slack Stealing (SS) support into the [FreeRTOS Real-Time Operat
 
 ## Publications
 
+* Páez F.E., Urriza J.M., Orozco J.D. (2021) *Idle Time Administration on FreeRTOS Using Slack Stealing*. In: Pesado P., Eterovic J. (eds) Computer Science – CACIC 2020. CACIC 2020. Communications in Computer and Information Science, vol 1409. Springer, Cham. https://doi.org/10.1007/978-3-030-75836-3_19
 * *Administración del Tiempo Ocioso Mediante Slack Stealing en FreeRTOS*, Francisco E. Páez, José M. Urriza, Javier D. Orozco. XXVI Congreso Argentino de Ciencias de la Computación (CACIC) (Modalidad virtual, 5 al 9 de octubre de 2020). ISBN 978-987-4417-90-9, pp. 629-638. [Download](http://sedici.unlp.edu.ar/handle/10915/113243).
 * *Métodos de Slack Stealing en FreeRTOS*, Francisco E. Páez, José M. Urriza, Ricardo Cayssials, Javier D. Orozco. 44 Jornadas Argentinas de Informática (JAIIO) – SII 2015. ISSN 2451-7542, pp. 216-227. [Download](http://44jaiio.sadio.org.ar/sites/default/files/sii216-227.pdf).
 
