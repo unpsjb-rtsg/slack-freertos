@@ -8,7 +8,8 @@ PROJECT = libfreertos
 #
 # FreeRTOS source code.
 #
-OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/queue.o 
+OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/queue.o
+OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
 OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/list.o
 OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/timers.o
 OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/MemMang/heap_1.o 
@@ -29,12 +30,6 @@ endif
 #
 # Paths to the required headers.
 #
-ifeq ($(TEST), 0)
-    INCLUDE_PATHS += -I../../examples/$(TARGET)/
-    INCLUDE_PATHS += -I../../examples/$(TARGET)/$(APP_NAME)
-else
-    INCLUDE_PATHS += -I../../test/$(TEST_PATH)
-endif
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)
 INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/include
 ifeq ($(TARGET), lpc1768)
@@ -50,19 +45,19 @@ endif
 ifeq ($(TARGET), frdm-k64f)
   INCLUDE_PATHS += -I./$(FREERTOS_KERNEL_VERSION_NUMBER)/portable/GCC/ARM_CM4F
 endif
+ifeq ($(TEST), 0)
+    INCLUDE_PATHS += -I../../examples/$(TARGET)/
+    INCLUDE_PATHS += -I../../examples/$(TARGET)/$(APP_NAME)
+else
+    INCLUDE_PATHS += -I../../test/$(TEST_PATH)
+endif
 
 ###############################################################################
 #
 # Slack Stealing framework source and headers.
 #
-ifeq ($(USE_SLACK), 1)  
-  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
-    OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
-    CC_SYMBOLS += -DSS_ALGORITHM=$(SS_ALGORITHM)
-  endif
-  INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)  
-else
-  OBJECTS += ./$(FREERTOS_KERNEL_VERSION_NUMBER)/tasks.o
+ifeq ($(USE_SLACK), 1)
+  INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 endif
 
 ###############################################################################
@@ -89,6 +84,16 @@ endif
 #
 ifeq ($(TZ), 1)
   INCLUDE_PATHS += $(MBED_INCLUDE_PATHS)
+  
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.0.1)
+    CC_SYMBOLS += -DTRC_CFG_FREERTOS_VERSION=TRC_FREERTOS_VERSION_10_0_0 
+  endif
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
+    CC_SYMBOLS += -DTRC_CFG_FREERTOS_VERSION=TRC_FREERTOS_VERSION_10_4_0 
+  endif
+  ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.6)
+    CC_SYMBOLS += -DTRC_CFG_FREERTOS_VERSION=TRC_FREERTOS_VERSION_10_4_0 
+  endif
     
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
     OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernelPort.o
@@ -99,8 +104,8 @@ ifeq ($(TZ), 1)
     INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
     
     ifeq ($(TARGET), frdm-k64f)      
-      OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/SEGGER_RTT.o
-      INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/include
+      OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/Jlink_RTT/SEGGER_RTT.o
+      INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/Jlink_RTT/include
     endif
     
     CC_SYMBOLS += -DTRACEALYZER_v3_3_1

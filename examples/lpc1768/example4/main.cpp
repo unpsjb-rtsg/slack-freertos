@@ -98,10 +98,6 @@ static void vPeriodicTask( void* params )
 
     for(;;)
     {
-        #ifdef TZ == 1
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
-        #endif
-
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
             vTasksGetSlacks( slackArray );
@@ -124,10 +120,6 @@ static void vPeriodicTask( void* params )
             vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
             xSemaphoreGive( xMutex );
         }
-
-        #ifdef TZ == 1
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
-        #endif
 
         vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }

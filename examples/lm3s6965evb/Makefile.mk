@@ -81,8 +81,14 @@ LD_FLAGS += -Wl,-gc-sections
 LD_FLAGS += $(foreach l, $(LIBS), -l$(l))
 
 # Replace these functions
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.0.1)
+WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
 ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
 WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.6)
+WRAP = -Wl,--wrap=xTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
 endif
 
 ###############################################################################

@@ -69,6 +69,8 @@ extern "C" {
 #define TRC_FREERTOS_VERSION_9_0_1				6 
 #define TRC_FREERTOS_VERSION_9_0_2				7
 #define TRC_FREERTOS_VERSION_10_0_0				8 /* If using FreeRTOS v10.0.0 or later version */
+#define TRC_FREERTOS_VERSION_10_3_0             9 /* If using FreeRTOS v10.3.0 or later version */
+#define TRC_FREERTOS_VERSION_10_4_0             10 /* If using FreeRTOS v10.4.0 or later version */
 
 #define TRC_FREERTOS_VERSION_9_X				42 /* Not allowed anymore */
 
@@ -837,6 +839,12 @@ extern traceObjectClass TraceQueueClassTable[5];
 	if (uxSchedulerSuspended == ( unsigned portBASE_TYPE ) pdTRUE || uxMissedTicks == 0) { trcKERNEL_HOOKS_INCREMENT_TICK(); } \
 	if (uxSchedulerSuspended == ( unsigned portBASE_TYPE ) pdFALSE) { trcKERNEL_HOOKS_NEW_TIME(DIV_NEW_TIME, xTickCount + 1); }
 
+#elif (TRC_CFG_FREERTOS_VERSION <= TRC_FREERTOS_VERSION_10_3_0)
+
+#define traceTASK_INCREMENT_TICK( xTickCount ) \
+    if (uxSchedulerSuspended == ( unsigned portBASE_TYPE ) pdTRUE || uxPendedTicks == 0) { trcKERNEL_HOOKS_INCREMENT_TICK(); } \
+    if (uxSchedulerSuspended == ( unsigned portBASE_TYPE ) pdFALSE) { trcKERNEL_HOOKS_NEW_TIME(DIV_NEW_TIME, xTickCount + 1); }
+
 #else
 
 #define traceTASK_INCREMENT_TICK( xTickCount ) \
@@ -1220,9 +1228,17 @@ extern void vTraceStoreMemMangEvent(uint32_t ecode, uint32_t address, int32_t si
 	else{ \
 		trcKERNEL_HOOKS_KERNEL_SERVICE_WITH_PARAM(TRACE_TASK_NOTIFY_TAKE_FAILED, TASK, pxCurrentTCB, xTicksToWait); \
 	}
+#elif (TRC_CFG_FREERTOS_VERSION < TRC_FREERTOS_VERSION_10_4_0)
+#define traceTASK_NOTIFY_TAKE() \
+    if (pxCurrentTCB->ucNotifyState == taskNOTIFICATION_RECEIVED){ \
+        trcKERNEL_HOOKS_KERNEL_SERVICE_WITH_PARAM(TRACE_TASK_NOTIFY_TAKE, TASK, pxCurrentTCB, xTicksToWait); \
+    } \
+    else{ \
+        trcKERNEL_HOOKS_KERNEL_SERVICE_WITH_PARAM(TRACE_TASK_NOTIFY_TAKE_FAILED, TASK, pxCurrentTCB, xTicksToWait); \
+    }
 #else /* TRC_CFG_FREERTOS_VERSION < TRC_FREERTOS_VERSION_9_0_0 */
 #define traceTASK_NOTIFY_TAKE(x) \
-	if (pxCurrentTCB->ucNotifyState == taskNOTIFICATION_RECEIVED){ \
+	if (pxCurrentTCB->ucNotifyState[ uxIndexToWait ] == taskNOTIFICATION_RECEIVED){ \
 		trcKERNEL_HOOKS_KERNEL_SERVICE_WITH_PARAM(TRACE_TASK_NOTIFY_TAKE, TASK, pxCurrentTCB, xTicksToWait); \
 	}else{ \
 		trcKERNEL_HOOKS_KERNEL_SERVICE_WITH_PARAM(TRACE_TASK_NOTIFY_TAKE_FAILED, TASK, pxCurrentTCB, xTicksToWait);}
@@ -1240,9 +1256,15 @@ extern void vTraceStoreMemMangEvent(uint32_t ecode, uint32_t address, int32_t si
 		prvTraceStoreKernelCallWithParam(TRACE_TASK_NOTIFY_WAIT, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(pxCurrentTCB), xTicksToWait); \
 	}else{ \
 		prvTraceStoreKernelCallWithParam(TRACE_TASK_NOTIFY_WAIT_FAILED, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(pxCurrentTCB), xTicksToWait);}
+#elif (TRC_CFG_FREERTOS_VERSION < TRC_FREERTOS_VERSION_10_4_0)
+#define traceTASK_NOTIFY_WAIT(x) \
+    if (pxCurrentTCB->ucNotifyState == taskNOTIFICATION_RECEIVED){ \
+        prvTraceStoreKernelCallWithParam(TRACE_TASK_NOTIFY_WAIT, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(pxCurrentTCB), xTicksToWait); \
+    }else{ \
+        prvTraceStoreKernelCallWithParam(TRACE_TASK_NOTIFY_WAIT_FAILED, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(pxCurrentTCB), xTicksToWait);}
 #else /* TRC_CFG_FREERTOS_VERSION < TRC_FREERTOS_VERSION_9_0_0 */
 #define traceTASK_NOTIFY_WAIT(x) \
-	if (pxCurrentTCB->ucNotifyState == taskNOTIFICATION_RECEIVED){ \
+	if (pxCurrentTCB->ucNotifyState[ uxIndexToWait ] == taskNOTIFICATION_RECEIVED){ \
 		prvTraceStoreKernelCallWithParam(TRACE_TASK_NOTIFY_WAIT, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(pxCurrentTCB), xTicksToWait); \
 	}else{ \
 		prvTraceStoreKernelCallWithParam(TRACE_TASK_NOTIFY_WAIT_FAILED, TRACE_CLASS_TASK, TRACE_GET_TASK_NUMBER(pxCurrentTCB), xTicksToWait); }
