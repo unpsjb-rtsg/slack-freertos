@@ -99,7 +99,9 @@ static void vSlackSchedulerSetup( void );
  *
  * If a deadline miss is detected \ref vApplicationDeadlineMissedHook() is called.
  */
+#if ( configSS_VERIFY_DEADLINE == 1 )
 static inline void vSlackDeadlineCheck( void ) __attribute__((always_inline)) __attribute__((always_inline));
+#endif
 
 /**
  * \brief Updates the absolute deadline of \p pxTask.
@@ -109,7 +111,9 @@ static inline void vSlackDeadlineCheck( void ) __attribute__((always_inline)) __
  * @param pxTask The task to which update its deadline.
  * @param xTimeToWake The task release time from which calculate the absolute deadline.
  */
+#if ( configSS_VERIFY_DEADLINE == 1 )
 static inline void vSlackUpdateDeadline( SsTCB_t *pxTask, TickType_t xTimeToWake ) __attribute__((always_inline));
+#endif
 
 /**
  * \brief Add \p xTicks to all lower priority tasks than \p xTask .
@@ -354,7 +358,7 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
         /* Update the wake time ready for the next call. */
         *pxPreviousWakeTime = xTimeToWake;
 
-        #if ( configUSE_SLACK_STEALING == 1 )
+        #if ( ( configUSE_SLACK_STEALING == 1 ) && ( configSS_VERIFY_DEADLINE == 1 ) )
         {
             vSlackUpdateDeadline( pxCurrentSsTCB, xTimeToWake );
         }
@@ -614,7 +618,7 @@ BaseType_t xSwitchRequired = pdFALSE;
         }
         #endif /* configUSE_TICK_HOOK */
 
-        #if ( configUSE_SLACK_STEALING == 1 )
+        #if ( ( configUSE_SLACK_STEALING == 1 ) && ( configSS_VERIFY_DEADLINE == 1 ) )
         {
             vSlackDeadlineCheck();
         }
@@ -751,6 +755,7 @@ void vSlackSchedulerSetup( void )
         pxTaskSs->xSlackK = pxTaskSs->xSlack;
 
         /* Deadline */
+        #if ( configSS_VERIFY_DEADLINE == 1 )
         UBaseType_t uxTaskPriority = uxTaskPriorityGet( xTask );
         if( uxTaskPriority != tskIDLE_PRIORITY )
         {
@@ -758,6 +763,7 @@ void vSlackSchedulerSetup( void )
                     pxTaskSs->xDeadline );
             vListInsert( &xDeadlineTaskList, &( ( pxTaskSs )->xDeadlineTaskListItem ) );
         }
+        #endif
 
         pxTaskListItem = listGET_NEXT( pxTaskListItem );
     }
@@ -840,6 +846,7 @@ static BaseType_t xSlackCalculateTasksWcrt()
 }
 /*-----------------------------------------------------------*/
 
+#if ( configSS_VERIFY_DEADLINE == 1 )
 void vSlackDeadlineCheck()
 {
     TickType_t xTickCount = xTaskGetTickCountFromISR();
@@ -871,8 +878,10 @@ void vSlackDeadlineCheck()
         }
     }
 }
+#endif
 /*-----------------------------------------------------------*/
 
+#if ( configSS_VERIFY_DEADLINE == 1 )
 inline void vSlackUpdateDeadline( SsTCB_t *pxTask, TickType_t xTimeToWake )
 {
     /* Remove the current release deadline and insert the deadline for the next
@@ -883,6 +892,7 @@ inline void vSlackUpdateDeadline( SsTCB_t *pxTask, TickType_t xTimeToWake )
     vListInsert( &xDeadlineTaskList, pxDeadlineTaskListItem );
     pxTask->xTimeToWake = xTimeToWake;
 }
+#endif
 /*-----------------------------------------------------------*/
 
 inline void vSlackGainSlack( const TaskHandle_t xTask, const TickType_t xTicks )
@@ -1107,11 +1117,13 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
         listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xSsTaskListItem ), xTask );
         vListInsert( &xSsTaskList, &( ( pxNewSsTCB )->xSsTaskListItem ) );
 
+        #if ( configSS_VERIFY_DEADLINE == 1 )
         vListInitialiseItem( &( pxNewSsTCB->xDeadlineTaskListItem ) );
         listSET_LIST_ITEM_OWNER( &( pxNewSsTCB->xDeadlineTaskListItem ), xTask );
         listSET_LIST_ITEM_VALUE( &( pxNewSsTCB->xDeadlineTaskListItem ), pxNewSsTCB->xDeadline );
         /* The list item value of xDeadlineTaskListItem is updated when the
             task is moved into the ready list. */
+        #endif
     }
 
     if( xTaskType == APERIODIC_TASK )

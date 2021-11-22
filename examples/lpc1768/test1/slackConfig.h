@@ -27,7 +27,8 @@
 #define configUSE_SLACK_K               0 /* Only calculate slack at the scheduler start */
 #define configMAX_SLACK_PRIO            1 /* priority levels that are used for slack. */
 #define configMIN_SLACK_SD              0 /* Minimum amount of available slack. */
-
+#define configSS_STORAGE_POINTER_INDEX  0 /* Which index use on TLS. */
+#define configSS_VERIFY_DEADLINE        1 /* Verify deadlines on each tick interrupt. */
 /*
  * How the task simulate the execution time.
  * 0 = execute asm nops

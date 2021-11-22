@@ -64,7 +64,9 @@ struct SsTCB
 
 	ListItem_t xSsTaskListItem;         /**< Task reference in \ref xSsTaskList . */
 	ListItem_t xSsTaskBlockedListItem;  /**< Task reference in \ref xSlackDelayedTaskList . */
+#if ( configSS_VERIFY_DEADLINE == 1 )
 	ListItem_t xDeadlineTaskListItem;   /**< Task reference in \ref xDeadlineTaskList . */
+#endif
 
 	volatile TickType_t xCur;   	/**< Accumulated execution time. */
 
