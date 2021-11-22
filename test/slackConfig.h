@@ -25,9 +25,9 @@
  * 1 = Davis
  */
 #define configUSE_SLACK_STEALING 		SLACK /* 1: Use slack stealing methods, 0: No slack. */
-#define configUSE_SLACK_METHOD          SLACK_METHOD /* Slack method to use */
-#define configUSE_SLACK_K               SLACK_K /* Only calculate slack at the scheduler start */
-#define configMAX_SLACK_PRIO            MAX_PRIO /* priority levels that are used for slack. */
-#define configMIN_SLACK_SD              0 /* Minimum amount of available slack. */
+#define configSS_SLACK_METHOD          SLACK_METHOD /* Slack method to use */
+#define configSS_SLACK_K               SLACK_K /* Only calculate slack at the scheduler start */
+#define configSS_SLACK_PRIOS            MAX_PRIO /* priority levels that are used for slack. */
+#define configSS_MIN_SLACK_SD              0 /* Minimum amount of available slack. */
 
 #endif /* SLACKCONFIG_H_ */

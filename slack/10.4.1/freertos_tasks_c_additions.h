@@ -164,11 +164,11 @@ static inline TickType_t xSlackGetWorkLoad( TaskHandle_t xTask, const TickType_t
  */
 static inline void vSlackCalculateSlack( TaskHandle_t xTask, const TickType_t xTc );
 
-#if ( configUSE_SLACK_METHOD == 0 )
+#if ( configSS_SLACK_METHOD == SLACK_METHOD_URRIZA_2010 )
 static inline void vSlackCalculateSlack_fixed( TaskHandle_t xTask, const TickType_t xTc,
         const List_t * pxTasksList );
 #endif
-#if ( configUSE_SLACK_METHOD == 1 )
+#if ( configSS_SLACK_METHOD == SLACK_METHOD_DAVIS_1993 )
 static inline void vSlackCalculateSlack_davis( TaskHandle_t xTask, const TickType_t xTc,
         const List_t * pxTasksList );
 #endif
@@ -251,7 +251,7 @@ static BaseType_t xTaskSlackSuspend( void )
 
     UBaseType_t x;
 
-    for( x = 1; x <= configMAX_SLACK_PRIO; x++ )
+    for( x = 1; x <= configSS_SLACK_PRIOS; x++ )
     {
         if( listLIST_IS_EMPTY( &pxReadyTasksLists[ configMAX_PRIORITIES - x ] ) == pdFALSE )
         {
@@ -376,7 +376,7 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
         #if ( configUSE_SLACK_STEALING == 1 )
         {
             /* SS: The current tick is considered as consumed. */
-            #if ( configUSE_SLACK_K == 0 )
+            #if ( configSS_SLACK_K == 0 )
             {
                 vSlackCalculateSlack( pxCurrentTCB, xConstTickCount );
             }
@@ -413,7 +413,7 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
 
     #if( configUSE_SLACK_STEALING == 1 )
     {
-        if( xTaskGetAvailableSlack() > configMIN_SLACK_SD )
+        if( xTaskGetAvailableSlack() > configSS_MIN_SLACK_SD )
         {
             /* Resume slack-delayed tasks if there is enough
             available slack. */
@@ -657,7 +657,7 @@ BaseType_t xSwitchRequired = pdFALSE;
             }
 
             // Decrement real-time tasks slack counter by one tick
-            if( ( pxCurrentTCB->uxPriority == tskIDLE_PRIORITY ) || ( pxCurrentTCB->uxPriority >= ( ( UBaseType_t ) ( configMAX_PRIORITIES - configMAX_SLACK_PRIO ) ) ) )
+            if( ( pxCurrentTCB->uxPriority == tskIDLE_PRIORITY ) || ( pxCurrentTCB->uxPriority >= ( ( UBaseType_t ) ( configMAX_PRIORITIES - configSS_SLACK_PRIOS ) ) ) )
             {
                 vSlackDecrementAllTasksSlack( ONE_TICK );
             }
@@ -666,11 +666,11 @@ BaseType_t xSwitchRequired = pdFALSE;
                 vSlackDecrementTasksSlack( pxCurrentTCB, ONE_TICK );
             }
 
-            if( xTaskGetAvailableSlack() <= configMIN_SLACK_SD )
+            if( xTaskGetAvailableSlack() <= configSS_MIN_SLACK_SD )
             {
                 UBaseType_t x;
 
-                for( x = 1; x <= configMAX_SLACK_PRIO; x++ )
+                for( x = 1; x <= configSS_SLACK_PRIOS; x++ )
                 {
                     /* Block tasks if there is not enough available slack. */
                     if( listLIST_IS_EMPTY( &pxReadyTasksLists[ configMAX_PRIORITIES - x ] ) == pdFALSE )
@@ -1007,10 +1007,10 @@ void vSlackCalculateSlack( TaskHandle_t xTask, const TickType_t xTc )
     xLoopCost = 0;
 #endif
 
-#if ( configUSE_SLACK_METHOD == 0 )
+#if ( configSS_SLACK_METHOD == SLACK_METHOD_URRIZA_2010 )
     vSlackCalculateSlack_fixed( xTask, xTc, &xSsTaskList );
 #endif
-#if ( configUSE_SLACK_METHOD == 1 )
+#if ( configSS_SLACK_METHOD == SLACK_METHOD_DAVIS_1993 )
 #endif    
 
 #if ( configKERNEL_TEST == 2 )
@@ -1128,7 +1128,7 @@ TickType_t xSlackGetAvailableSlack() {
 }
 /*-----------------------------------------------------------*/
 
-#if ( configUSE_SLACK_METHOD == 0 )
+#if ( configSS_SLACK_METHOD == SLACK_METHOD_URRIZA_2010 )
 /**
  *
  * @param xTask
@@ -1305,7 +1305,7 @@ static inline BaseType_t prvTaskCalcSlack( const TaskHandle_t xTask,
 #endif
 
 
-#if ( configUSE_SLACK_METHOD == 1 )
+#if ( configSS_SLACK_METHOD == SLACK_METHOD_DAVIS_1993 )
 /* from "Scheduling Slack Time on Fixed Priority Pre-emptive Systems" paper */
 static inline void vSlackCalculateSlack_davis( TaskHandle_t xTask, const TickType_t xTc,
         const List_t * pxTasksList )

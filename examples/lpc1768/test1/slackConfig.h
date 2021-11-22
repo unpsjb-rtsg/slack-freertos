@@ -19,14 +19,15 @@
 
 /*
  * Slack methods available:
- * 0 = Fixed
- * 1 = Davis
  */
+#define SLACK_METHOD_URRIZA_2010        0
+#define SLACK_METHOD_DAVIS_1993         1
+
 #define configUSE_SLACK_STEALING        1 /* 1: Use slack stealing methods, 0: No slack. */
-#define configUSE_SLACK_METHOD          0 /* Slack method to use */
-#define configUSE_SLACK_K               0 /* Only calculate slack at the scheduler start */
-#define configMAX_SLACK_PRIO            1 /* priority levels that are used for slack. */
-#define configMIN_SLACK_SD              0 /* Minimum amount of available slack. */
+#define configSS_SLACK_METHOD           SLACK_METHOD_URRIZA_2010 /* Slack method to use */
+#define configSS_SLACK_K                0 /* Only calculate slack at the scheduler start */
+#define configSS_SLACK_PRIOS            1 /* priority levels that are used for slack. */
+#define configSS_MIN_SLACK_SD           0 /* Minimum amount of available slack. */
 #define configSS_STORAGE_POINTER_INDEX  0 /* Which index use on TLS. */
 #define configSS_VERIFY_DEADLINE        1 /* Verify deadlines on each tick interrupt. */
 #define configSS_VERIFY_SCHEDULABILITY  1 /* Verify that the task set is schedulable under RM/DM. */
@@ -69,8 +70,8 @@
 #define configDO_SLACK_TRACE 0
 
 #define SLACK			configUSE_SLACK_STEALING
-#define SLACK_METHOD 	configUSE_SLACK_METHOD
-#define SLACK_K			configUSE_SLACK_K
+#define SLACK_METHOD 	configSS_SLACK_METHOD
+#define SLACK_K			configSS_SLACK_K
 
 /* Test to perform.:
 1. Cost in CPU cycles of the vTaskDelayUntil() kernel function.

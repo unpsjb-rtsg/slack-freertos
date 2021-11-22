@@ -34,9 +34,9 @@ __attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP;
 #define TASK_1_PERIOD 3000
 #define TASK_2_PERIOD 4000
 #define TASK_3_PERIOD 6000
-#define TASK_1_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1
-#define TASK_2_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 2
-#define TASK_3_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 3
+#define TASK_1_PRIO configMAX_PRIORITIES - configSS_SLACK_PRIOS - 1
+#define TASK_2_PRIO configMAX_PRIORITIES - configSS_SLACK_PRIOS - 2
+#define TASK_3_PRIO configMAX_PRIORITIES - configSS_SLACK_PRIOS - 3
 
 /*****************************************************************************
  * Private data declaration

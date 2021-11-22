@@ -39,10 +39,10 @@ __attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP;
 #define TASK_2_PERIOD 4000
 #define TASK_3_PERIOD 6000
 #define TASK_4_PERIOD 12000
-#define TASK_1_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1
-#define TASK_2_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 2
-#define TASK_3_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 3
-#define TASK_4_PRIO configMAX_PRIORITIES - configMAX_SLACK_PRIO - 4
+#define TASK_1_PRIO configMAX_PRIORITIES - configSS_SLACK_PRIOS - 1
+#define TASK_2_PRIO configMAX_PRIORITIES - configSS_SLACK_PRIOS - 2
+#define TASK_3_PRIO configMAX_PRIORITIES - configSS_SLACK_PRIOS - 3
+#define TASK_4_PRIO configMAX_PRIORITIES - configSS_SLACK_PRIOS - 4
 #define ATASK_WCET 2000
 #define ATASK_MAX_DELAY 4000
 #define ATASK_1_PRIO configMAX_PRIORITIES - 1

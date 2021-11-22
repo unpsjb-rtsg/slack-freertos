@@ -104,10 +104,10 @@
 #define taskDEFAULT_STACK   ( configMINIMAL_STACK_SIZE + 40 )
 
 /* Task priorities. */
-#define TASK_1_PRIO     ( configMAX_PRIORITIES - configMAX_SLACK_PRIO - 1 )
-#define TASK_2_PRIO     ( configMAX_PRIORITIES - configMAX_SLACK_PRIO - 2 )
-#define TASK_3_PRIO     ( configMAX_PRIORITIES - configMAX_SLACK_PRIO - 3 )
-#define TASK_4_PRIO     ( configMAX_PRIORITIES - configMAX_SLACK_PRIO - 4 )
+#define TASK_1_PRIO     ( configMAX_PRIORITIES - configSS_SLACK_PRIOS - 1 )
+#define TASK_2_PRIO     ( configMAX_PRIORITIES - configSS_SLACK_PRIOS - 2 )
+#define TASK_3_PRIO     ( configMAX_PRIORITIES - configSS_SLACK_PRIOS - 3 )
+#define TASK_4_PRIO     ( configMAX_PRIORITIES - configSS_SLACK_PRIOS - 4 )
 #define ATASK_1_PRIO    ( configMAX_PRIORITIES - 1 )
 #define ATASK_2_PRIO    ( configMAX_PRIORITIES - 2 )
 #define ATASK_WCET      ( 200 )
