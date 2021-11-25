@@ -38,6 +38,8 @@ __attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP;
 #define TASK_2_PRIO configMAX_PRIORITIES - configSS_SLACK_PRIOS - 2
 #define TASK_3_PRIO configMAX_PRIORITIES - configSS_SLACK_PRIOS - 3
 
+#define mainMAX_MSG_LEN ( 150 )
+
 /*****************************************************************************
  * Private data declaration
  ****************************************************************************/
@@ -57,14 +59,12 @@ __attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP;
  * Private data
  ****************************************************************************/
 static TaskHandle_t task_handles[ TASK_CNT ];
+static char cMessage[ mainMAX_MSG_LEN ];
 
 /*****************************************************************************
  * Public data
  ****************************************************************************/
 gpioMap_t leds[] = { LED1, LED2, LED3 };
-#if defined( TRACEALYZER_v3_3_1 )
-traceString slack_channel;
-#endif
 
 /*****************************************************************************
  * Private functions
@@ -82,20 +82,26 @@ int main(void)
 {
 	vCommonSetupHardware();
 
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER )
     // Initializes the trace recorder, but does not start the tracing.
     vTraceEnable( TRC_INIT );
-    slack_channel = xTraceRegisterString("Slack Events");
 #endif
 
-    uartWriteString( UART_USB, "Example 1\r\n" );
+    uartWriteString( UART_USB, "EDU-CIAA-NXP -- Example 1\r\n" );
+    sprintf(cMessage, "> FreeRTOS %s\n\r", tskKERNEL_VERSION_NUMBER );
+    uartWriteString( UART_USB, cMessage);
+#if defined( TRACEALYZER )
+    uartWriteString( UART_USB, "> Tracealyzer compiled.\r\n");
+#else
+    uartWriteString( UART_USB, "> Tracealyzer not compiled.\r\n");
+#endif
 
     // Periodic tasks.
     xTaskCreate( vCommonPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
     xTaskCreate( vCommonPeriodicTask, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
     xTaskCreate( vCommonPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
 
-#if( configUSE_SLACK_STEALING == 1 )
+#if ( configUSE_SLACK_STEALING == 1 )
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
             TASK_1_PERIOD, TASK_1_WCET, 1 );
     vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD,
@@ -104,7 +110,7 @@ int main(void)
             TASK_3_PERIOD, TASK_3_WCET, 3 );
 #endif
 
-#if defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER )
     // Start the tracing.
     vTraceEnable( TRC_START );
 #endif

@@ -25,7 +25,7 @@
 #define configUSE_SLACK_STEALING        1 /* 1: Use slack stealing methods, 0: No slack. */
 #define configSS_SLACK_METHOD           SLACK_METHOD_URRIZA_2010 /* Slack method to use */
 #define configSS_SLACK_K                0 /* Only calculate slack at the scheduler start */
-#define configSS_SLACK_PRIOS            2 /* priority levels that are used for slack. */
+#define configSS_SLACK_PRIOS            3 /* priority levels that are used for slack. */
 #define configSS_MIN_SLACK_SD           1 /* Minimum amount of available slack. */
 #define configSS_STORAGE_POINTER_INDEX  0 /* Which index use on TLS. */
 #define configSS_VERIFY_DEADLINE        1 /* Verify deadlines on each tick interrupt. */

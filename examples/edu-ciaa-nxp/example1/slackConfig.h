@@ -3,7 +3,6 @@
 
 #define EXAMPLE 1
 
-
 /* ========================================================================= */
 /* Required for integrating the SsTCB into the task TCB. */
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS     1

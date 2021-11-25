@@ -22,6 +22,7 @@
  ****************************************************************************/
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 #include "slack.h"
 #include "utils.h"
 #include "common.h"
@@ -54,6 +55,10 @@ __attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP 
 #define ATASK_2_PRIO configMAX_PRIORITIES - 2
 #define ATASK_3_PRIO configMAX_PRIORITIES - 3
 
+#define mainMAX_MSG_LEN 50
+
+#define MUTEX_BLOCK_TIME 50
+
 /*****************************************************************************
  * Private data declaration
  ****************************************************************************/
@@ -67,6 +72,7 @@ __attribute__ ((used,section(".crp"))) const unsigned int CRP_WORD = CRP_NO_CRP 
 /*****************************************************************************
  * Private functions declaration
  ****************************************************************************/
+static void vPeriodicTask( void* params );
 static void vAperiodicTask( void* params );
 
 /*****************************************************************************
@@ -74,19 +80,52 @@ static void vAperiodicTask( void* params );
  ****************************************************************************/
 static TaskHandle_t task_handles[ TASK_CNT ];
 static TaskHandle_t atask_handles[ ATASK_CNT ];
+static char cMessage[ mainMAX_MSG_LEN ];
+static SemaphoreHandle_t mutex;
 
 /*****************************************************************************
  * Public data
  ****************************************************************************/
 gpioMap_t leds[] = { LED1, LED2, LED3 };
 gpioMap_t aleds[] = { LEDR, LEDG, LEDB };
-#if defined( TRACEALYZER_v3_3_1 )
-traceString slack_channel;
-#endif
 
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
+void vPeriodicTask( void* params )
+{
+    ( void ) params;
+
+    SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
+
+    int32_t slackArray[ 6 ];
+
+    for(;;)
+    {
+        gpioWrite( leds[ pxTaskSsTCB->xId - 1], ON);
+
+        vTasksGetSlacks( slackArray );
+        if ( xSemaphoreTake( mutex, MUTEX_BLOCK_TIME ) == pdTRUE ) {
+            vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB );
+            xSemaphoreGive( mutex );
+        }
+
+        vUtilsBusyWait( pxTaskSsTCB->xWcet - 300 );
+
+        vTasksGetSlacks( slackArray );
+
+        if ( xSemaphoreTake( mutex, MUTEX_BLOCK_TIME ) == pdTRUE ) {
+            vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB );
+            xSemaphoreGive( mutex );
+        }
+
+        gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
+
+        xTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
+    }
+}
+/*-----------------------------------------------------------*/
+
 /**
  * Aperiodic task.
  * @param params Not used.
@@ -95,11 +134,7 @@ static void vAperiodicTask( void* params )
 {
     int32_t slackArray[ 6 ];
 
-    SsTCB_t *pxTaskSsTCB;
-
-#if( tskKERNEL_VERSION_MAJOR >= 10 )
-    pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
-#endif
+    SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 
     vTaskDelay( rand() % ATASK_MAX_DELAY );
 
@@ -109,15 +144,26 @@ static void vAperiodicTask( void* params )
 
         gpioWrite( aleds[ pxTaskSsTCB->xId - 1], ON );
 
-        vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+        vTasksGetSlacks( slackArray );
+        if ( xSemaphoreTake( mutex, MUTEX_BLOCK_TIME ) == pdTRUE ) {
+            vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB );
+            xSemaphoreGive( mutex );
+        }
 
         vUtilsBusyWait( rand() % ATASK_WCET );
 
-        vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+        vTasksGetSlacks( slackArray );
+        if ( xSemaphoreTake( mutex, MUTEX_BLOCK_TIME ) == pdTRUE ) {
+            vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB );
+            xSemaphoreGive( mutex );
+        }
 
         gpioWrite( aleds[ pxTaskSsTCB->xId - 1], OFF );
 
         vTaskDelay( rand() % ATASK_MAX_DELAY );
+
+        // uxReleaseCount is not incremented when vTaskDelay() is used.
+        pxTaskSsTCB->uxReleaseCount += 1;
     }
 }
 
@@ -132,18 +178,32 @@ int main(void)
 {
 	vCommonSetupHardware();
 
-#if defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER )
     // Initializes the trace recorder, but does not start the tracing.
     vTraceEnable( TRC_INIT );
-    slack_channel = xTraceRegisterString("Slack Events");
 #endif
 
-    uartWriteString( UART_USB, "Example 2\r\n" );
+#if defined( TRACEALYZER )
+    // Initializes the trace recorder, but does not start the tracing.
+    vTraceEnable( TRC_INIT );
+#endif
+
+    uartWriteString( UART_USB, "EDU-CIAA-NXP -- Example 2\r\n" );
+    sprintf( cMessage, "> FreeRTOS %s\n\r", tskKERNEL_VERSION_NUMBER );
+    uartWriteString( UART_USB, cMessage);
+#if defined( TRACEALYZER )
+    uartWriteString( UART_USB, "> Tracealyzer compiled.\r\n");
+#else
+    uartWriteString( UART_USB, "> Tracealyzer not compiled.\r\n");
+#endif
+
+    // Initialize the mutex
+    mutex = xSemaphoreCreateMutex();
 
     // create periodic tasks
-    xTaskCreate( vCommonPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
-    xTaskCreate( vCommonPeriodicTask, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
-    xTaskCreate( vCommonPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
+    xTaskCreate( vPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
+    xTaskCreate( vPeriodicTask, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
+    xTaskCreate( vPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
 
     /* Aperiodic task */
     xTaskCreate ( vAperiodicTask, "TA1", 256, NULL, ATASK_1_PRIO, &atask_handles[ 0 ] );
@@ -167,7 +227,7 @@ int main(void)
             0, ATASK_WCET, 3 );
 #endif
 
-#if defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER )
     // Start the tracing.
     vTraceEnable( TRC_START );
 #endif
