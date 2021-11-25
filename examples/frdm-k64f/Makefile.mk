@@ -69,10 +69,10 @@ LINKER_SCRIPT = ../../board/frdm-k64f/TARGET_K64F/TOOLCHAIN_GCC_ARM/MK64FN1M0xxx
 # Tracealyzer sources, include paths and symbols.
 #
 ifeq ($(TZ), 1)
+  CPP_SYMBOLS += -DTRACEALYZER
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config    
-    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/JLink_RTT/include
+    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
     CPP_SYMBOLS += -DTRACEALYZER_v3_3_1
   endif
 endif
@@ -107,8 +107,14 @@ LD_FLAGS += $(CPU) -Wl,--gc-sections -Wl,--wrap,main
 LD_SYS_LIBS += -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
 # Replace these functions
-ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.4.1)
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.0.1)
 WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
+WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.6)
+WRAP = -Wl,--wrap=xTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
 endif
 
 ###############################################################################
