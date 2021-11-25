@@ -97,38 +97,17 @@ void vCommonSetupHardware(void)
 }
 /*-----------------------------------------------------------*/
 
-void vCommonPrintSlacks( char s, int32_t * slackArray, TickType_t xCur )
+void vCommonPrintSlacks( char s, int32_t * slackArray, SsTCB_t *pxTaskSsTCB )
 {
-	/* Buffer */
-	static char uartBuff[10];
-
-	vTaskSuspendAll();
-	vTasksGetSlacks( slackArray );
-
-	uartWriteString( UART_USB, pcTaskGetTaskName(NULL) );
-    uartWriteByte( UART_USB, '\t' );
-
-    uartWriteByte( UART_USB, s );
-    uartWriteByte( UART_USB, '\t' );
-
-    itoa( slackArray[0], uartBuff, 10 );
+    /* Buffer */
+    static char uartBuff[50];
+    vTaskSuspendAll();
+    sprintf(uartBuff, "%s\t[%4d] %c\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
+            pcTaskGetTaskName(NULL), pxTaskSsTCB->uxReleaseCount, s,
+            slackArray[0], slackArray[2], slackArray[3],
+            slackArray[4], slackArray[5], pxTaskSsTCB->xCur);
     uartWriteString( UART_USB, uartBuff );
-    uartWriteByte( UART_USB, '\t' );
-
-    int i;
-    for( i = 2; i <= 5; i++ ) {
-    	itoa( slackArray[i], uartBuff, 10 );
-    	uartWriteString( UART_USB, uartBuff );
-    	uartWriteByte( UART_USB, '\t' );
-    }
-
-    itoa( xCur, uartBuff, 10 );
-    uartWriteString( UART_USB, uartBuff );
-    uartWriteByte( UART_USB, '\t' );
-
-    uartWriteString( UART_USB, "\n\r" );
-
-	xTaskResumeAll();
+    xTaskResumeAll();
 }
 /*-----------------------------------------------------------*/
 
@@ -136,35 +115,27 @@ void vCommonPeriodicTask( void* params )
 {
     ( void ) params;
 
-	SsTCB_t *pxTaskSsTCB;
-
-#if( tskKERNEL_VERSION_MAJOR >= 10 )
-	pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
-#endif
+    SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 
     int32_t slackArray[ 6 ];
 
-	for(;;)
+    for(;;)
     {
-#if TZ == 1
-        vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
-#endif
+        gpioWrite( leds[ pxTaskSsTCB->xId - 1], ON);
 
-	    gpioWrite( leds[ pxTaskSsTCB->xId - 1], ON);
+        vTasksGetSlacks( slackArray );
 
-	    vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB->xCur );
+        vCommonPrintSlacks( 'S', slackArray, pxTaskSsTCB );
 
-		vUtilsBusyWait( pxTaskSsTCB->xWcet - 300 );
+        vUtilsBusyWait( pxTaskSsTCB->xWcet - 300 );
 
-		vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB->xCur );
+        vTasksGetSlacks( slackArray );
 
-		gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
+        vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB );
 
-#if TZ == 1
-		vTracePrintF( slack_channel, "%d - %d", xSlackSD, pxTaskSsTCB->xSlack );
-#endif
+        gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
 
-		vTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
+        xTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }
 }
 /*-----------------------------------------------------------*/
