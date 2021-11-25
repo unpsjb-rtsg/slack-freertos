@@ -98,16 +98,9 @@ ifeq ($(TZ), 1)
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
     OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcKernelPort.o
     OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcSnapshotRecorder.o
-    OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/trcStreamingRecorder.o
     
     INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
     INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
-    
-    ifeq ($(TARGET), frdm-k64f)      
-      OBJECTS += ../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/Jlink_RTT/SEGGER_RTT.o
-      INCLUDE_PATHS += -I../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/streamports/Jlink_RTT/include
-    endif
-    
     CC_SYMBOLS += -DTRACEALYZER_v3_3_1
   endif
   
