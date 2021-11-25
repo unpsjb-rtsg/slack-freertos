@@ -53,7 +53,7 @@ ifeq ($(DEBUG), 1)
   COMMON_FLAGS += -Og
   COMMON_FLAGS += -ggdb3
 else
-  COMMON_FLAGS += -DNDEBUG -Os  
+  COMMON_FLAGS += -DNDEBUG -Os
 endif
 
 C_COMMON_FLAGS += -std=gnu99
@@ -89,6 +89,7 @@ $(APP_NAME)_clean:
 	+@echo "-- Target: $(TARGET)"
 	+@echo "-- Cleaning: $(APP_NAME)"
 	@$(MAKE) $(MAKE_FLAGS) -C examples/$(TARGET)/ -f Makefile.mk clean APP_NAME=$(APP_NAME)
+	+@echo "Done!"
 
 all: $(APP_NAME)
 
