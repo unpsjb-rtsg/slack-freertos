@@ -64,6 +64,7 @@ LINKER_SCRIPT = ../../board/edu-ciaa-nxp/ldscript/ciaa_lpc4337.ld
 # Tracealyzer sources, include paths and symbols.
 #
 ifeq ($(TZ), 1)
+  CC_SYMBOLS += -DTRACEALYZER
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
@@ -96,9 +97,16 @@ LD_FLAGS += -Wl,-gc-sections
 LD_FLAGS += $(foreach l, $(LIBS), -l$(l))
 
 # Replace these functions
-ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), v10.4.1)
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.0.1)
 WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
 endif
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
+WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.6)
+WRAP = -Wl,--wrap=xTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
+
 
 ###############################################################################
 #
