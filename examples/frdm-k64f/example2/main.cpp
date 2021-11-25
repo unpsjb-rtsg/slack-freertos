@@ -81,9 +81,6 @@ static TaskHandle_t xApTaskHandle1, xApTaskHandle2;
 Serial pc( USBTX, USBRX );
 DigitalOut leds[] = { LED_RED, LED_GREEN, LED_BLUE, LED_RED };
 SemaphoreHandle_t xMutex = NULL;
-#if defined( TRACEALYZER_v3_3_1 )
-traceString slack_channel;
-#endif
 
 /*****************************************************************************
  * Private functions
@@ -95,16 +92,17 @@ traceString slack_channel;
  ****************************************************************************/
 int main()
 {
-#if defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER )
     // Initializes the trace recorder, but does not start the tracing.
     vTraceEnable( TRC_INIT );
-    slack_channel = xTraceRegisterString("Slack Events");
 #endif
 
     pc.baud( BAUDRATE );
-    pc.baud( BAUDRATE );
-    pc.printf( "Example %d\n\r", EXAMPLE );
-    pc.printf( "Using FreeRTOS %s\n\r", tskKERNEL_VERSION_NUMBER );
+    pc.printf( "FRMD-K64F -- Example %d\n\r", EXAMPLE );
+    pc.printf( "> FreeRTOS %s\n\r", tskKERNEL_VERSION_NUMBER );
+#if defined( TRACEALYZER )
+    pc.printf( "> Tracealyzer v3.3.1\n\r");
+#endif
 
     // Turn off all the on board LEDs.
     leds[0] = 1;
@@ -142,7 +140,7 @@ int main()
             ATASK_WCET, 2 );
 #endif
 
-#if defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER )
     // Start the tracing.
     vTraceEnable( TRC_START );
 #endif

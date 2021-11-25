@@ -12,10 +12,6 @@ extern Serial pc;
 extern DigitalOut leds[];
 extern SemaphoreHandle_t xMutex;
 
-#if defined( TRACEALYZER_v3_1_3 ) || defined( TRACEALYZER_v3_3_1 )
-extern traceString slack_channel;
-#endif
-
 /* The extern "C" is required to avoid name mangling between C and C++ code. */
 extern "C"
 {

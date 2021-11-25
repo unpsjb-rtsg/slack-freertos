@@ -10,7 +10,7 @@
  ****************************************************************************/
 static void vCommonPrintSlacks( char s, int32_t * slackArray, SsTCB_t *pxTaskSsTCB )
 {
-    pc.printf("%s [%3d] %c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
+    pc.printf("%s\t[%4d] %c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
             pcTaskGetTaskName(NULL), pxTaskSsTCB->uxReleaseCount, s,
             slackArray[0], slackArray[2], slackArray[3],
             slackArray[4], slackArray[5], slackArray[6],
@@ -30,7 +30,7 @@ void vCommonPeriodicTask( void* params )
 	pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 #endif
 
-#if EXAMPLE == 1
+#if EXAMPLE == 1 || EXAMPLE == 2
     int32_t slackArray[ 7 ];
 #endif
 
@@ -66,11 +66,7 @@ void vCommonPeriodicTask( void* params )
 	    }
 #endif
 
-#if defined( TRACEALYZER_v3_3_1 )
-        vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
-#endif
-
-#if EXAMPLE == 1
+#if EXAMPLE == 1 || EXAMPLE == 2
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
             vTasksGetSlacks( slackArray );
@@ -91,17 +87,13 @@ void vCommonPeriodicTask( void* params )
 #endif
 
 #if (configUSE_SLACK_STEALING == 1)
-#if EXAMPLE == 1
+#if EXAMPLE == 1 || EXAMPLE == 2
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
             vTasksGetSlacks( slackArray );
             vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB );
             xSemaphoreGive( xMutex );
         }
-#endif
-
-#if defined( TRACEALYZER_v3_3_1 )
-        vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
 #endif
 #endif
 
@@ -123,10 +115,6 @@ void vCommonAperiodicTask( void* params )
 
     for(;;)
     {
-#if defined( TRACEALYZER_v3_3_1 )
-        vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
-#endif
-
         pxTaskSsTCB->xCur = ( TickType_t ) 0;
 
         vTasksGetSlacks( slackArray );
@@ -144,10 +132,6 @@ void vCommonAperiodicTask( void* params )
             vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB );
             xSemaphoreGive( xMutex );
         }
-
-#if defined( TRACEALYZER_v3_3_1 )
-        vTracePrintF( slack_channel, "%d - %d", xSlackGetAvailableSlack(), pxTaskSsTCB->xSlack );
-#endif
 
         vTaskDelay( rand() % pxTaskSsTCB->xPeriod );
 
