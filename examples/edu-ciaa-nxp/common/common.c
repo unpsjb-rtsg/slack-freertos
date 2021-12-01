@@ -78,22 +78,10 @@ char* itoa(int value, char* result, int base)
 
 void vCommonSetupHardware(void)
 {
-	// Configure board.
-	boardConfig();
+	boardInit();
 
-	// Initialize GPIO.
-	gpioConfig( 0, GPIO_ENABLE );
-
-	// Output LEDs.
-	gpioConfig( LEDR, GPIO_OUTPUT );
-	gpioConfig( LEDG, GPIO_OUTPUT );
-	gpioConfig( LEDB, GPIO_OUTPUT );
-	gpioConfig( LED1, GPIO_OUTPUT );
-	gpioConfig( LED2, GPIO_OUTPUT );
-	gpioConfig( LED3, GPIO_OUTPUT );
-
-   // Initialize UART @ 115200 bauds.
-   uartConfig( UART_USB, 115200 );
+	// Initialize UART @ 115200 bauds.
+	uartConfig( UART_USB, 115200 );
 }
 /*-----------------------------------------------------------*/
 
