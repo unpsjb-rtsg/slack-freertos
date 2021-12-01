@@ -65,11 +65,11 @@ LINKER_SCRIPT = ../../board/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/LPC1768.ld
 # Tracealyzer sources, include paths and symbols
 #
 ifeq ($(TZ), 1)
-  CC_SYMBOLS += -DTZ=1
+  CPP_SYMBOLS += -DTRACEALYZER
   ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
-    CC_SYMBOLS += -DTRACEALYZER_v3_3_1
+    CPP_SYMBOLS += -DTRACEALYZER_v3_3_1
   endif
 endif
 
@@ -98,8 +98,14 @@ LD_FLAGS = $(CPU) -Wl,--gc-sections -u _printf_float -u _scanf_float
 LD_SYS_LIBS = -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
 # Replace these functions
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.0.1)
+WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
 ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.1)
 WRAP = -Wl,--wrap=vTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
+endif
+ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.6)
+WRAP = -Wl,--wrap=xTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
 endif
 
 export CPU CC_SYMBOLS MBED_INCLUDE_PATHS
@@ -121,7 +127,7 @@ clean:
 
 .cpp.o:
 	+@echo "[App] Compile: $<"
-	@$(CPP) $(COMMON_FLAGS) $(CPP_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
+	@$(CPP) $(COMMON_FLAGS) $(CPP_COMMON_FLAGS) $(CC_FLAGS) $(CC_SYMBOLS) $(CPP_SYMBOLS) $(INCLUDE_PATHS) -o $@ $<	
 
 $(BUILD_DIR)/$(EXAMPLE).elf: $(OBJECTS) $(SYS_OBJECTS)
 	@$(MAKE) $(MAKE_FLAGS) -C $(FREERTOS_LIBRARY_PATH) -f Makefile.mk APP_DIR=$(APP_NAME) USE_SLACK=1 TZ=$(TZ) TEST=0
