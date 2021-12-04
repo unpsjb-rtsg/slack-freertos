@@ -18,11 +18,6 @@ static BaseType_t xLoopCost = 0;
 #endif
 
 /**
- * \brief Flag used to check if the list of tasks required to be initialized.
- */
-static UBaseType_t uxListInitializeFlag = pdTRUE;
-
-/**
  * \brief Task's deadlines list.
  *
  * This list contains references to all the ready tasks, ordered by their
@@ -576,9 +571,8 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
     }
 
     // Initialize the list of tasks if required.
-    if ( uxListInitializeFlag == pdTRUE ) {
+    if ( !listLIST_IS_INITIALISED( &xSsTaskList ) ) {
         vSlackSystemSetup();
-        uxListInitializeFlag = pdFALSE;
     }
 
     pxNewSsTCB->xTaskType = xTaskType;
