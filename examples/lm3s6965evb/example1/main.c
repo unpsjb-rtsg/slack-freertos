@@ -310,6 +310,11 @@ static void prvAperiodicTask( void *pvParameters )
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
+void vApplicationTickHook( void )
+{
+	vSlackDeadlineCheck();
+}
+
 int main( void )
 {
     // Verify that configUSE_SLACK_STEALING is enabled

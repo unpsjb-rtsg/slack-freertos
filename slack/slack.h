@@ -86,17 +86,31 @@ typedef struct SsTCB SsTCB_t;
  ****************************************************************************/
 
 /**
+ * \brief Perform the deadline check of the RTTs.
+ *
+ * If a deadline miss is detected \ref vApplicationDeadlineMissedHook() is called.
+ *
+ * For a precise deadline verification this function should be called from the
+ * tick hook.
+ */
+#if ( configSS_VERIFY_DEADLINE == 1 )
+void vSlackDeadlineCheck( void );
+#endif
+
+/**
  * \brief Hook function called when a task miss its deadline.
  *
- * This application defined hook (callback) function is called whenever a task
- * miss its deadline.
+ * This application defined hook (callback) function is called when a task
+ * deadline miss is detected.
  *
  * @param pcTaskName Name of the task.
  * @param xSsTCB Pointer to the \ref SsTCB of the task.
  * @param xTickCount Tick value at which the deadline was missed.
  */
+#if ( configSS_VERIFY_DEADLINE == 1 )
 void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
         TickType_t xTickCount );
+#endif
 
 /**
  * \brief Hook function called when the task group is not schedulable.
@@ -105,7 +119,9 @@ void vApplicationDeadlineMissedHook( char *pcTaskName, const SsTCB_t *xSsTCB,
  * schedulability analysis performed on the task set shows that is not
  * schedulable.
  */
+#if ( configSS_VERIFY_SCHEDULABILITY == 1 )
 void vApplicationNotSchedulable( void );
+#endif
 
 /**
  * \brief Set additional task parameters.

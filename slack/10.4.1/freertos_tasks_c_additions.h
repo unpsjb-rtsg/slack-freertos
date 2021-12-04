@@ -12,7 +12,7 @@
  * This macro does not use `pvTaskGetThreadLocalStoragePointer()`. Instead it
  * uses the TCB_t structure directly.
  */
-#define getSsTCB( x ) ( ( SsTCB_t * )( ( TCB_t * ) x )->pvThreadLocalStoragePointers[ 0 ] )
+#define getSsTCB( x ) ( ( SsTCB_t * )( ( TCB_t * ) x )->pvThreadLocalStoragePointers[ configSS_STORAGE_POINTER_INDEX ] )
 
 /**
  * \brief Return the system available slack.
@@ -93,13 +93,6 @@ static void prvTaskRecSlack() PRIVILEGED_FUNCTION;
  * This function is called with the FREERTOS_TASKS_C_ADDITIONS_INIT() macro.
  */
 static void vSlackSchedulerSetup( void );
-
-/**
- * \brief Perform the deadline check of the RTTs.
- *
- * If a deadline miss is detected \ref vApplicationDeadlineMissedHook() is called.
- */
-static inline void vSlackDeadlineCheck( void ) __attribute__((always_inline)) __attribute__((always_inline));
 
 /**
  * \brief Updates the absolute deadline of \p pxTask.
@@ -611,12 +604,6 @@ BaseType_t xSwitchRequired = pdFALSE;
             }
         }
         #endif /* configUSE_TICK_HOOK */
-
-        #if ( configUSE_SLACK_STEALING == 1 )
-        {
-            vSlackDeadlineCheck();
-        }
-        #endif
 
         #if ( configUSE_PREEMPTION == 1 )
         {

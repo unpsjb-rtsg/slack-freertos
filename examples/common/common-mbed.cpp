@@ -191,6 +191,11 @@ void vApplicationDebugAction( void *param )
 	}
 }
 
+void vApplicationTickHook( void )
+{
+	vSlackDeadlineCheck();
+}
+
 void vApplicationNotSchedulable( void )
 {
 	taskDISABLE_INTERRUPTS();

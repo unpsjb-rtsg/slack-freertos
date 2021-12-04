@@ -74,6 +74,11 @@ gpioMap_t leds[] = { LED1, LED2, LED3 };
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
+void vApplicationTickHook( void )
+{
+	vSlackDeadlineCheck();
+}
+
 /**
  * @brief	main routine for FreeRTOS blinky example
  * @return	Nothing, function should not exit

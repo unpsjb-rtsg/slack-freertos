@@ -170,6 +170,11 @@ static void vAperiodicTask( void* params )
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
+void vApplicationTickHook( void )
+{
+	vSlackDeadlineCheck();
+}
+
 /**
  * @brief	main routine for FreeRTOS blinky example
  * @return	Nothing, function should not exit

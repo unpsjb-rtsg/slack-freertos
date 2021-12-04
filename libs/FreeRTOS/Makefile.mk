@@ -57,6 +57,7 @@ endif
 # Slack Stealing framework source and headers.
 #
 ifeq ($(USE_SLACK), 1)
+  INCLUDE_PATHS += -I../../slack/
   INCLUDE_PATHS += -I../../slack/$(FREERTOS_KERNEL_VERSION_NUMBER)
 endif
 

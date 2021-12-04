@@ -95,15 +95,6 @@ static void prvTaskRecSlack() PRIVILEGED_FUNCTION;
 static void vSlackSchedulerSetup( void );
 
 /**
- * \brief Perform the deadline check of the RTTs.
- *
- * If a deadline miss is detected \ref vApplicationDeadlineMissedHook() is called.
- */
-#if ( configSS_VERIFY_DEADLINE == 1 )
-static inline void vSlackDeadlineCheck( void ) __attribute__((always_inline)) __attribute__((always_inline));
-#endif
-
-/**
  * \brief Updates the absolute deadline of \p pxTask.
  *
  * Remove the current release deadline and insert the deadline for the next release of \p pxTask.
@@ -617,12 +608,6 @@ BaseType_t xSwitchRequired = pdFALSE;
             }
         }
         #endif /* configUSE_TICK_HOOK */
-
-        #if ( ( configUSE_SLACK_STEALING == 1 ) && ( configSS_VERIFY_DEADLINE == 1 ) )
-        {
-            vSlackDeadlineCheck();
-        }
-        #endif
 
         #if ( configUSE_PREEMPTION == 1 )
         {
