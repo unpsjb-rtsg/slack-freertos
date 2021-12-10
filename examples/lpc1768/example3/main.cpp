@@ -96,37 +96,37 @@ int main(void)
     xMutex = xSemaphoreCreateMutex();
 
     /* Reserve memory for cs_cost[][] array */
-    sdArray = ( xType* ) pvPortMalloc( sizeof( int32_t ) * ( 250 * 7));
-    sdArray2 = ( xType2* ) pvPortMalloc( sizeof( int32_t ) * ( 50 * 7));
+    sdArray = ( xType* ) pvPortMalloc( sizeof( int32_t ) * ( 250 * 6));
+    sdArray2 = ( xType2* ) pvPortMalloc( sizeof( int32_t ) * ( 50 * 6));
 
     // Initialize sd array
     int i = 0; int j = 0;
     for(i = 0; i < 250; i++) {
-        for(j = 0; j < 7; j++) {
+        for(j = 0; j < 6; j++) {
             (*sdArray)[i][j] = 0;
         }
     }
     for(i = 0; i < 50; i++) {
-        for(j = 0; j < 7; j++) {
+        for(j = 0; j < 6; j++) {
             (*sdArray2)[i][j] = 0;
         }
     }
 
     // Periodic tasks.
-	xTaskCreate( vCommonPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
-	xTaskCreate( vCommonPeriodicTask, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
-	xTaskCreate( vCommonPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
-	xTaskCreate( vCommonPeriodicTask, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
+	xTaskCreate( vCommonPeriodicTask, "T1", 256, (void*) 1, TASK_1_PRIO, &task_handles[ 0 ] );
+	xTaskCreate( vCommonPeriodicTask, "T2", 256, (void*) 2, TASK_2_PRIO, &task_handles[ 1 ] );
+	xTaskCreate( vCommonPeriodicTask, "T3", 256, (void*) 3, TASK_3_PRIO, &task_handles[ 2 ] );
+	xTaskCreate( vCommonPeriodicTask, "T4", 256, (void*) 4, TASK_4_PRIO, &task_handles[ 3 ] );
 
     // Aperiodic tasks.
-    xTaskCreate( vCommonAperiodicTask, "TA1", 256, NULL, ATASK_1_PRIO, &xApTaskHandle1 );
+    xTaskCreate( vCommonAperiodicTask, "TA1", 256, (void*) 1, ATASK_1_PRIO, &xApTaskHandle1 );
 
 #if( configUSE_SLACK_STEALING == 1 )
-    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
-    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
-    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
-    vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
-    vSlackSetTaskParams( xApTaskHandle1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 1 );
+    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET );
+    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET );
+    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET );
+    vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET );
+    vSlackSetTaskParams( xApTaskHandle1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET );
 #endif
 
 #if defined( TRACEALYZER_v3_3_1 )

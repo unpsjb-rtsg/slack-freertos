@@ -81,18 +81,18 @@ static void vCommonPrintSlacks( char s, int32_t * slackArray, TickType_t xCur )
 {
     pc.printf("%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
             pcTaskGetTaskName(NULL), s,
-            slackArray[0], slackArray[2], slackArray[3],
-            slackArray[4], slackArray[5], slackArray[6],
+            slackArray[0], slackArray[1], slackArray[2],
+            slackArray[3], slackArray[4], slackArray[5],
             xCur);
 }
 
 static void vPeriodicTask( void* params )
 {
-    ( void ) params;
+    int32_t taskId = (int32_t) params;
 
     SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 
-    int32_t slackArray[ 7 ];
+    int32_t slackArray[ 6 ];
 
     UBaseType_t xRndRun = 0;
 
@@ -105,14 +105,14 @@ static void vPeriodicTask( void* params )
             xSemaphoreGive( xMutex );
         }
 
-        leds[ pxTaskSsTCB->xId - 1] = 1;
+        leds[ taskId - 1] = 1;
 
 
 
         xRndRun = (UBaseType_t) rand() % ( pxTaskSsTCB->xWcet - 200 );
         vUtilsBusyWait( xRndRun );
 
-        leds[ pxTaskSsTCB->xId - 1] = 0;
+        leds[ taskId - 1] = 0;
 
         if ( xSemaphoreTake( xMutex, portMAX_DELAY ) )
         {
@@ -158,21 +158,21 @@ int main(void)
     xMutex = xSemaphoreCreateMutex();
 
     // Periodic tasks.
-    xTaskCreate( vPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
-    xTaskCreate( vPeriodicTask, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
-    xTaskCreate( vPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
-    xTaskCreate( vPeriodicTask, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
+    xTaskCreate( vPeriodicTask, "T1", 256, (void*) 1, TASK_1_PRIO, &task_handles[ 0 ] );
+    xTaskCreate( vPeriodicTask, "T2", 256, (void*) 2, TASK_2_PRIO, &task_handles[ 1 ] );
+    xTaskCreate( vPeriodicTask, "T3", 256, (void*) 3, TASK_3_PRIO, &task_handles[ 2 ] );
+    xTaskCreate( vPeriodicTask, "T4", 256, (void*) 4, TASK_4_PRIO, &task_handles[ 3 ] );
 
 #if configUSE_SLACK_STEALING == 1
     // additional parameters needed by the slack stealing framework
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
-            TASK_1_PERIOD, TASK_1_WCET, 1 );
+            TASK_1_PERIOD, TASK_1_WCET );
     vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD,
-            TASK_2_PERIOD, TASK_2_WCET, 2 );
+            TASK_2_PERIOD, TASK_2_WCET );
     vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD,
-            TASK_3_PERIOD, TASK_3_WCET, 3 );
+            TASK_3_PERIOD, TASK_3_WCET );
     vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD,
-            TASK_4_PERIOD, TASK_4_WCET, 4 );
+            TASK_4_PERIOD, TASK_4_WCET );
 #endif
 
     // Start the tracing.

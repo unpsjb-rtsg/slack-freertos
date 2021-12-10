@@ -172,8 +172,8 @@ static SemaphoreHandle_t xMutex = NULL;
 
 static char cMessage[ mainMAX_MSG_LEN ];
 
-// tick, task id, system available slack, 4 periodic tasks slacks
-static int32_t slackArray[ 7 ];
+// tick, system available slack, 4 periodic tasks slacks
+static int32_t slackArray[ 6 ];
 
 /*****************************************************************************
  * Public data
@@ -209,11 +209,10 @@ static void prvPrintString( const char * pcString )
 
 static void vPrintSlacks( char *buf, char s, int32_t * slackArray, TickType_t xCur )
 {
-    sprintf(buf, "%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
+    sprintf(buf, "%s\t%c\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
             pcTaskGetTaskName(NULL), s,
             (int) slackArray[0], (int) slackArray[2], (int) slackArray[3],
-            (int) slackArray[4], (int) slackArray[5], (int) slackArray[6],
-            (int) xCur);
+            (int) slackArray[4], (int) slackArray[5], (int) xCur);
     prvPrintString( buf );
 }
 /*-----------------------------------------------------------*/
@@ -350,12 +349,12 @@ int main( void )
     xTaskCreate( prvAperiodicTask, "TA2", 256, NULL, ATASK_2_PRIO, &atask2 );
 
     // Configure additional parameters needed by the slack stealing framework.
-    vSlackSetTaskParams( task1, PERIODIC_TASK, 300,  300,  100, 1 );
-    vSlackSetTaskParams( task2, PERIODIC_TASK, 400,  400,  100, 2 );
-    vSlackSetTaskParams( task3, PERIODIC_TASK, 600,  600,  100, 3 );
-    vSlackSetTaskParams( task4, PERIODIC_TASK, 1200, 1200, 100, 4 );
-    vSlackSetTaskParams( atask1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 1 );
-    vSlackSetTaskParams( atask2, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET, 2 );
+    vSlackSetTaskParams( task1, PERIODIC_TASK, 300,  300,  100 );
+    vSlackSetTaskParams( task2, PERIODIC_TASK, 400,  400,  100 );
+    vSlackSetTaskParams( task3, PERIODIC_TASK, 600,  600,  100 );
+    vSlackSetTaskParams( task4, PERIODIC_TASK, 1200, 1200, 100 );
+    vSlackSetTaskParams( atask1, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET );
+    vSlackSetTaskParams( atask2, APERIODIC_TASK, ATASK_MAX_DELAY, 0, ATASK_WCET );
 
     /* Map the OLED access functions to the driver functions that are appropriate
     for the evaluation kit being used. */

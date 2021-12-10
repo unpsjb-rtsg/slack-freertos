@@ -108,11 +108,11 @@ int main(void)
 
 #if ( configUSE_SLACK_STEALING == 1 )
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
-            TASK_1_PERIOD, TASK_1_WCET, 1 );
+            TASK_1_PERIOD, TASK_1_WCET );
     vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD,
-            TASK_2_PERIOD, TASK_2_WCET, 2 );
+            TASK_2_PERIOD, TASK_2_WCET );
     vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD,
-            TASK_3_PERIOD, TASK_3_WCET, 3 );
+            TASK_3_PERIOD, TASK_3_WCET );
 #endif
 
 #if defined( TRACEALYZER )

@@ -94,15 +94,15 @@ gpioMap_t aleds[] = { LEDR, LEDG, LEDB };
  ****************************************************************************/
 void vPeriodicTask( void* params )
 {
-    ( void ) params;
-
-    SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
+    int32_t taskId = (int32_t) params;
 
     int32_t slackArray[ 6 ];
 
+    SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
+
     for(;;)
     {
-        gpioWrite( leds[ pxTaskSsTCB->xId - 1], ON);
+        gpioWrite( leds[ taskId - 1], ON);
 
         vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( mutex, MUTEX_BLOCK_TIME ) == pdTRUE ) {
@@ -119,7 +119,7 @@ void vPeriodicTask( void* params )
             xSemaphoreGive( mutex );
         }
 
-        gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
+        gpioWrite( leds[ taskId - 1], OFF);
 
         xTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }
@@ -132,6 +132,8 @@ void vPeriodicTask( void* params )
  */
 static void vAperiodicTask( void* params )
 {
+    int32_t taskId = (int32_t) params;
+
     int32_t slackArray[ 6 ];
 
     SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
@@ -142,7 +144,7 @@ static void vAperiodicTask( void* params )
     {
         pxTaskSsTCB->xCur = ( TickType_t ) 0;
 
-        gpioWrite( aleds[ pxTaskSsTCB->xId - 1], ON );
+        gpioWrite( aleds[ taskId - 1], ON );
 
         vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( mutex, MUTEX_BLOCK_TIME ) == pdTRUE ) {
@@ -158,7 +160,7 @@ static void vAperiodicTask( void* params )
             xSemaphoreGive( mutex );
         }
 
-        gpioWrite( aleds[ pxTaskSsTCB->xId - 1], OFF );
+        gpioWrite( aleds[ taskId - 1], OFF );
 
         vTaskDelay( rand() % ATASK_MAX_DELAY );
 
@@ -206,30 +208,30 @@ int main(void)
     mutex = xSemaphoreCreateMutex();
 
     // create periodic tasks
-    xTaskCreate( vPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
-    xTaskCreate( vPeriodicTask, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
-    xTaskCreate( vPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
+    xTaskCreate( vPeriodicTask, "T1", 256, (void*) 1, TASK_1_PRIO, &task_handles[ 0 ] );
+    xTaskCreate( vPeriodicTask, "T2", 256, (void*) 2, TASK_2_PRIO, &task_handles[ 1 ] );
+    xTaskCreate( vPeriodicTask, "T3", 256, (void*) 3, TASK_3_PRIO, &task_handles[ 2 ] );
 
     /* Aperiodic task */
-    xTaskCreate ( vAperiodicTask, "TA1", 256, NULL, ATASK_1_PRIO, &atask_handles[ 0 ] );
-    xTaskCreate ( vAperiodicTask, "TA2", 256, NULL, ATASK_2_PRIO, &atask_handles[ 1 ] );
-    xTaskCreate ( vAperiodicTask, "TA3", 256, NULL, ATASK_3_PRIO, &atask_handles[ 2 ] );
+    xTaskCreate ( vAperiodicTask, "TA1", 256, (void*) 1, ATASK_1_PRIO, &atask_handles[ 0 ] );
+    xTaskCreate ( vAperiodicTask, "TA2", 256, (void*) 2, ATASK_2_PRIO, &atask_handles[ 1 ] );
+    xTaskCreate ( vAperiodicTask, "TA3", 256, (void*) 3, ATASK_3_PRIO, &atask_handles[ 2 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
-            TASK_1_PERIOD, TASK_1_WCET, 1 );
+            TASK_1_PERIOD, TASK_1_WCET );
     vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD,
-            TASK_2_PERIOD, TASK_2_WCET, 2 );
+            TASK_2_PERIOD, TASK_2_WCET );
     vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD,
-            TASK_3_PERIOD, TASK_3_WCET, 3 );
+            TASK_3_PERIOD, TASK_3_WCET );
 
     /* Aperiodic task */
     vSlackSetTaskParams( atask_handles[ 0 ], APERIODIC_TASK, ATASK_MAX_DELAY,
-            0, ATASK_WCET, 1 );
+            0, ATASK_WCET );
     vSlackSetTaskParams( atask_handles[ 1 ], APERIODIC_TASK, ATASK_MAX_DELAY,
-            0, ATASK_WCET, 2 );
+            0, ATASK_WCET );
     vSlackSetTaskParams( atask_handles[ 2 ], APERIODIC_TASK, ATASK_MAX_DELAY,
-            0, ATASK_WCET, 3 );
+            0, ATASK_WCET );
 #endif
 
 #if defined( TRACEALYZER )

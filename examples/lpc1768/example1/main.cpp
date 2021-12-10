@@ -53,9 +53,6 @@ static TaskHandle_t task_handles[ TASK_CNT ];
 Serial pc( USBTX, USBRX );
 DigitalOut leds[] = { LED1, LED2, LED3, LED4 };
 SemaphoreHandle_t xMutex = NULL;
-#if defined( TRACEALYZER_v3_3_1 )
-traceString slack_channel;
-#endif
 
 /*****************************************************************************
  * Private functions
@@ -71,15 +68,19 @@ traceString slack_channel;
  */
 int main(void)
 {
-#if defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER )
     // Initializes the trace recorder, but does not start the tracing.
     vTraceEnable( TRC_INIT );
-    slack_channel = xTraceRegisterString("Slack Events");
 #endif
 
-	pc.baud( BAUDRATE );
-    pc.printf( "Example %d\n\r", EXAMPLE );
-    pc.printf( "Using FreeRTOS %s\n\r", tskKERNEL_VERSION_NUMBER );
+    pc.baud( BAUDRATE );
+    pc.printf( "LPC1768 -- Example %d\n\r", EXAMPLE );
+    pc.printf( "> FreeRTOS %s\n\r", tskKERNEL_VERSION_NUMBER );
+#if defined( TRACEALYZER )
+    pc.printf( "> Tracealyzer v3.3.1 %s\n\r");
+#else
+    pc.printf( "> Tracealyzer not compiled.\n\r");
+#endif
 
 	// turn off all the on board LEDs.
 	leds[0] = 0;
@@ -91,19 +92,19 @@ int main(void)
 	xMutex = xSemaphoreCreateMutex();
 
     // Periodic tasks.
-    xTaskCreate( vCommonPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
-    xTaskCreate( vCommonPeriodicTask, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
-    xTaskCreate( vCommonPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
-    xTaskCreate( vCommonPeriodicTask, "T4", 256, NULL, TASK_4_PRIO, &task_handles[ 3 ] );
+    xTaskCreate( vCommonPeriodicTask, "T1", 256, (void*) 1, TASK_1_PRIO, &task_handles[ 0 ] );
+    xTaskCreate( vCommonPeriodicTask, "T2", 256, (void*) 2, TASK_2_PRIO, &task_handles[ 1 ] );
+    xTaskCreate( vCommonPeriodicTask, "T3", 256, (void*) 3, TASK_3_PRIO, &task_handles[ 2 ] );
+    xTaskCreate( vCommonPeriodicTask, "T4", 256, (void*) 4, TASK_4_PRIO, &task_handles[ 3 ] );
 
 #if( configUSE_SLACK_STEALING == 1 )
-    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET, 1 );
-    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET, 2 );
-    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET, 3 );
-    vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET, 4 );
+    vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD, TASK_1_PERIOD, TASK_1_WCET );
+    vSlackSetTaskParams( task_handles[ 1 ], PERIODIC_TASK, TASK_2_PERIOD, TASK_2_PERIOD, TASK_2_WCET );
+    vSlackSetTaskParams( task_handles[ 2 ], PERIODIC_TASK, TASK_3_PERIOD, TASK_3_PERIOD, TASK_3_WCET );
+    vSlackSetTaskParams( task_handles[ 3 ], PERIODIC_TASK, TASK_4_PERIOD, TASK_4_PERIOD, TASK_4_WCET );
 #endif
 
-#if defined( TRACEALYZER_v3_3_1 )
+#if defined( TRACEALYZER )
     // Start the tracing.
     vTraceEnable( TRC_START );
 #endif

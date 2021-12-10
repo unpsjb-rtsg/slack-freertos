@@ -75,8 +75,6 @@ struct SsTCB
 
 	TickType_t xTtma;               /**< Maximally delayed completion time. */
 	TickType_t xDi;                 /**< Absolute deadline of the next release. */
-
-	BaseType_t xId;                 /**< Task id. */
 };
 
 typedef struct SsTCB SsTCB_t;
@@ -133,11 +131,10 @@ void vApplicationNotSchedulable( void );
  * @param xPeriod Period of the task.
  * @param xDeadline Relative deadline of the task.
  * @param xWcet Worst case execution time of the task.
- * @param xId A numerical identifier.
  */
 void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
         const TickType_t xPeriod, const TickType_t xDeadline,
-        const TickType_t xWcet, const BaseType_t xId );
+        const TickType_t xWcet );
 
 
 /**

@@ -92,8 +92,8 @@ void vCommonPrintSlacks( char s, int32_t * slackArray, SsTCB_t *pxTaskSsTCB )
     vTaskSuspendAll();
     sprintf(uartBuff, "%s\t[%4d] %c\t%d\t%d\t%d\t%d\t%d\t%d\n\r",
             pcTaskGetTaskName(NULL), pxTaskSsTCB->uxReleaseCount, s,
-            slackArray[0], slackArray[2], slackArray[3],
-            slackArray[4], slackArray[5], pxTaskSsTCB->xCur);
+            slackArray[0], slackArray[1], slackArray[2],
+            slackArray[3], slackArray[4], pxTaskSsTCB->xCur);
     uartWriteString( UART_USB, uartBuff );
     xTaskResumeAll();
 }
@@ -101,15 +101,15 @@ void vCommonPrintSlacks( char s, int32_t * slackArray, SsTCB_t *pxTaskSsTCB )
 
 void vCommonPeriodicTask( void* params )
 {
-    ( void ) params;
-
-    SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
+    int32_t taskId = (int32_t) params;
 
     int32_t slackArray[ 6 ];
 
+    SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
+
     for(;;)
     {
-        gpioWrite( leds[ pxTaskSsTCB->xId - 1], ON);
+        gpioWrite( leds[ taskId - 1], ON);
 
         vTasksGetSlacks( slackArray );
 
@@ -121,7 +121,7 @@ void vCommonPeriodicTask( void* params )
 
         vCommonPrintSlacks( 'E', slackArray, pxTaskSsTCB );
 
-        gpioWrite( leds[ pxTaskSsTCB->xId - 1], OFF);
+        gpioWrite( leds[ taskId - 1], OFF);
 
         xTaskDelayUntil( &( pxTaskSsTCB->xPreviousWakeTime ), pxTaskSsTCB->xPeriod );
     }

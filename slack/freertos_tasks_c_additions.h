@@ -541,12 +541,11 @@ void vSlackCalculateSlack( TaskHandle_t xTask, const TickType_t xTc )
 void vTasksGetSlacks( int32_t *pxArray )
 {
     pxArray[ 0 ] = xTaskGetTickCount();
-    pxArray[ 1 ] = getSsTCB( xTaskGetCurrentTaskHandle() )->xId;
-    pxArray[ 2 ] = xTaskGetAvailableSlack();
+    pxArray[ 1 ] = xTaskGetAvailableSlack();
 
     ListItem_t *pxTaskListItem = listGET_HEAD_ENTRY( &xSsTaskList );
 
-    BaseType_t xI = 3U;
+    BaseType_t xI = 2U;
 
     while( listGET_END_MARKER( &( xSsTaskList ) ) != pxTaskListItem )
     {
@@ -559,7 +558,7 @@ void vTasksGetSlacks( int32_t *pxArray )
 
 void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
         const TickType_t xPeriod, const TickType_t xDeadline,
-        const TickType_t xWcet, const BaseType_t xId )
+        const TickType_t xWcet )
 {
     UBaseType_t uxTaskPriority = uxTaskPriorityGet( xTask );
     SsTCB_t * pxNewSsTCB = pvPortMalloc( sizeof( SsTCB_t ) );
@@ -582,7 +581,6 @@ void vSlackSetTaskParams( TaskHandle_t xTask, const SsTaskType_t xTaskType,
     pxNewSsTCB->xWcet = xWcet;
     pxNewSsTCB->xA = xWcet;
     pxNewSsTCB->xB = xPeriod;
-    pxNewSsTCB->xId = xId;
 
     pxNewSsTCB->uxReleaseCount = 1U;
     pxNewSsTCB->xPreviousWakeTime = ( TickType_t ) 0U;
