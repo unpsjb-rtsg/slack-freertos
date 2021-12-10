@@ -126,11 +126,7 @@ BaseType_t xAlreadyYielded, xShouldDelay = pdFALSE;
                 xTaskSlackResume();
             }
         }
-    }
-    #endif
 
-    #if ( configUSE_SLACK_STEALING == 1 )
-    {
         #if ( configDO_SLACK_TRACE == 1 )
         {
             prvTaskRecSlack();
