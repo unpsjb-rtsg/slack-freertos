@@ -65,6 +65,19 @@ INCLUDE_PATHS += $(APP_INCLUDE_PATHS)
 
 ###############################################################################
 #
+# Tracealyzer sources, include paths and symbols.
+#
+ifeq ($(TZ), 1)
+  CC_SYMBOLS += -DTRACEALYZER
+  ifeq ($(TRACEALIZER_VERSION_NUMBER), v3.3.1)
+    INCLUDE_PATHS += -I../../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
+    INCLUDE_PATHS += -I../../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
+    CC_SYMBOLS += -DTRACEALYZER_v3_3_1
+  endif
+endif
+
+###############################################################################
+#
 # Flags and symbols required by the sAPI library.
 #
 CC_SYMBOLS += -DTICK_OVER_RTOS
