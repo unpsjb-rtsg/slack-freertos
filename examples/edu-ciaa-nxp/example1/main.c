@@ -102,9 +102,9 @@ int main(void)
 #endif
 
     // Periodic tasks.
-    xTaskCreate( vCommonPeriodicTask, "T1", 256, NULL, TASK_1_PRIO, &task_handles[ 0 ] );
-    xTaskCreate( vCommonPeriodicTask, "T2", 256, NULL, TASK_2_PRIO, &task_handles[ 1 ] );
-    xTaskCreate( vCommonPeriodicTask, "T3", 256, NULL, TASK_3_PRIO, &task_handles[ 2 ] );
+    xTaskCreate( vCommonPeriodicTask, "T1", 256, (void*) 1, TASK_1_PRIO, &task_handles[ 0 ] );
+    xTaskCreate( vCommonPeriodicTask, "T2", 256, (void*) 2, TASK_2_PRIO, &task_handles[ 1 ] );
+    xTaskCreate( vCommonPeriodicTask, "T3", 256, (void*) 3, TASK_3_PRIO, &task_handles[ 2 ] );
 
 #if ( configUSE_SLACK_STEALING == 1 )
     vSlackSetTaskParams( task_handles[ 0 ], PERIODIC_TASK, TASK_1_PERIOD,
