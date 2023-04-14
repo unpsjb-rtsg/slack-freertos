@@ -83,6 +83,9 @@ static TaskHandle_t atask_handles[ ATASK_CNT ];
 static char cMessage[ mainMAX_MSG_LEN ];
 static SemaphoreHandle_t mutex;
 
+static int ap_delays[] = {1000, 2500, 2700, 3000, 4000};
+static int ap_runtimes[] = {1000, 1200, 600, 1600, 900};
+
 /*****************************************************************************
  * Public data
  ****************************************************************************/
@@ -138,7 +141,10 @@ static void vAperiodicTask( void* params )
 
     SsTCB_t *pxTaskSsTCB = pvSlackGetTaskSsTCB( NULL );
 
-    vTaskDelay( rand() % ATASK_MAX_DELAY );
+    int32_t delay_index = 0;
+
+    //vTaskDelay( rand() % ATASK_MAX_DELAY );
+    vTaskDelay(ap_delays[delay_index % 5]);
 
     for(;;)
     {
@@ -152,7 +158,8 @@ static void vAperiodicTask( void* params )
             xSemaphoreGive( mutex );
         }
 
-        vUtilsBusyWait( rand() % ATASK_WCET );
+        //vUtilsBusyWait( rand() % ATASK_WCET );
+        vUtilsBusyWait(ap_runtimes[delay_index % 5]);
 
         vTasksGetSlacks( slackArray );
         if ( xSemaphoreTake( mutex, MUTEX_BLOCK_TIME ) == pdTRUE ) {
@@ -162,7 +169,8 @@ static void vAperiodicTask( void* params )
 
         gpioWrite( aleds[ taskId - 1], OFF );
 
-        vTaskDelay( rand() % ATASK_MAX_DELAY );
+        //vTaskDelay( rand() % ATASK_MAX_DELAY );
+        vTaskDelay(ap_delays[++delay_index % 5]);
 
         // uxReleaseCount is not incremented when vTaskDelay() is used.
         pxTaskSsTCB->uxReleaseCount += 1;
