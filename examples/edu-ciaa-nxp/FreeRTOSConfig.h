@@ -179,6 +179,9 @@ standard names - or at least those used in the unmodified vector table. */
 #ifdef TRACEALYZER_v3_3_1
 #include "trcRecorder.h"
 #endif
+#ifdef TRACEALYZER_v4_7_0
+#include "trcRecorder.h"
+#endif
 #endif
 
 #define configSS_ASSERT_EQUAL( x, y ) if( ( x ) != ( y ) ) { taskDISABLE_INTERRUPTS(); for( ;; ); }

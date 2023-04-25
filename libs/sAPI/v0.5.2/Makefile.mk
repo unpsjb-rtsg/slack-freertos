@@ -74,6 +74,11 @@ ifeq ($(TZ), 1)
     INCLUDE_PATHS += -I../../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
     CC_SYMBOLS += -DTRACEALYZER_v3_3_1
   endif
+  ifeq ($(TRACEALIZER_VERSION_NUMBER), v4.7.0)
+    INCLUDE_PATHS += -I../../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
+    INCLUDE_PATHS += -I../../Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
+    CC_SYMBOLS += -DTRACEALYZER_v4_7_0
+  endif
 endif
 
 ###############################################################################

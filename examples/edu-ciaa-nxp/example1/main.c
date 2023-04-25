@@ -76,7 +76,7 @@ gpioMap_t leds[] = { LED1, LED2, LED3 };
  ****************************************************************************/
 void vApplicationTickHook( void )
 {
-	vSlackDeadlineCheck();
+    vSlackDeadlineCheck();
 }
 
 /**
@@ -85,13 +85,13 @@ void vApplicationTickHook( void )
  */
 int main(void)
 {
-	vCommonSetupHardware();
+    vCommonSetupHardware();
 
 #if defined( TRACEALYZER )
     // Initializes the trace recorder, but does not start the tracing.
-    vTraceEnable( TRC_INIT );
+    //vTraceEnable( TRC_INIT );
+    xTraceEnable( TRC_START );
 #endif
-
     uartWriteString( UART_USB, "EDU-CIAA-NXP -- Example 1\r\n" );
     sprintf(cMessage, "> FreeRTOS %s\n\r", tskKERNEL_VERSION_NUMBER );
     uartWriteString( UART_USB, cMessage);

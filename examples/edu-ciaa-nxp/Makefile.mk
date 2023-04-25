@@ -96,6 +96,11 @@ ifeq ($(TZ), 1)
     INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
     CC_SYMBOLS += -DTRACEALYZER_v3_3_1
   endif
+  ifeq ($(TRACEALIZER_VERSION_NUMBER), v4.7.0)
+    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/include
+    INCLUDE_PATHS += -I../../libs/Tracealizer/$(TRACEALIZER_VERSION_NUMBER)/config
+    CC_SYMBOLS += -DTRACEALYZER_v4_7_0
+  endif
 endif
 
 ###############################################################################
@@ -141,7 +146,6 @@ endif
 ifeq ($(FREERTOS_KERNEL_VERSION_NUMBER), 10.4.6)
 WRAP = -Wl,--wrap=xTaskDelayUntil -Wl,--wrap=xTaskIncrementTick
 endif
-
 
 ###############################################################################
 #

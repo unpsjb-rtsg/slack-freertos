@@ -195,12 +195,8 @@ int main(void)
 
 #if defined( TRACEALYZER )
     // Initializes the trace recorder, but does not start the tracing.
-    vTraceEnable( TRC_INIT );
-#endif
-
-#if defined( TRACEALYZER )
-    // Initializes the trace recorder, but does not start the tracing.
-    vTraceEnable( TRC_INIT );
+    //vTraceEnable( TRC_INIT );
+    xTraceEnable( TRC_START );
 #endif
 
     uartWriteString( UART_USB, "EDU-CIAA-NXP -- Example 2\r\n" );
